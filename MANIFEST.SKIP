@@ -9,6 +9,7 @@
 ^myldr/par(?:\.\w+)?$
 ^myldr/sha1.[co]$
 ^myldr/.*\.pdb$
+^myldr/usernamefrompwuid\.h$
 ^package/parl-.*$
 ^script/parl(?:\.(?!pod).+)?$
 ^script/parldyn(?:\.(?!pod).+)?$
