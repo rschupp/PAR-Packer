@@ -1,0 +1,649 @@
+
+Where is it? What's it called? How do I get it?
+
+#####################################################################
+This is a description of where things go in a PAR package and where they get
+unpacked, how they are (re)named, and how to retrieve them from a running PAR
+program.
+
+Caveats up front: The following screens snips are from WinXP, ActiveState
+Perl 5.8.4 (build 810) and PAR 0.85. There are only a few Windows specifics,
+like the prompt and .exe file extensions, but the rest should apply to Linux as
+well. The program listings are shown at the bottom of this doc and will run
+anywhere.
+
+1 August 2004
+
+While looking my example outputs, I realized there is a bug in the pp -B
+option for PAR 0.85 on Win32, I also forgot to explain -B. In order to make
+the examples correct as shown, I have added -B to some of the pp command
+lines, and then explained -B later.
+
+4 August 2004 - Revision 1
+
+Added use of -l and -z options. The bug mentioned above has been patched,
+after PAR 0.85. The -z option was added after 0.85.
+
+6 September 2004 - Revision 2
+
+Documented use of "pp -X <parfile>" in PAR 0.86
+
+19 September 2004 - Revision 3
+#####################################################################
+
+PAR is all about packing up files and unpacking them, so a number of options
+to pp are there to control what gets included and what gets excluded. Those
+options are: -B -c -d -l -M -n -p -P -x -X for packing and -C for unpacking.
+
+The PAR packager "pp" can produce four kinds of PAR packages: PAR
+files, standalone Perl files, standalone binaries with the Perl lib bundled,
+and binaries without the Perl lib (see who_am_i.txt for a details about each).
+All four forms contain a zip file section which contains the main script and
+all of the files on which it depends.
+
+----------
+
+Let's generate some PAR files and look at the contents with an ordinary zip
+tool - zipinfo from Info-ZIP. Most zip tools can be used to examine pp
+generated executables as well, but will not preserve the PAR structure if you
+edit with them.
+
+Each time pp runs, the source will be passed to Module::ScanDeps for
+dependency analysis. First, a program that doesn't depend on anything.
+
+        C:\Perl\Par\using_par>cd \Par
+
+        C:\Par>pp -B -p -o example1.par example1.pl
+
+        C:\Par>zipinfo -1 example1.par
+        script/
+        MANIFEST
+        META.yml
+        script/example1.pl
+        script/main.pl
+
+        C:\Par>
+
+There is a MANIFEST file that contains a list of the files in the zip.
+META.yml contains the following:
+
+        build_requires: {}
+        conflicts: {}
+        dist_name: example1.par
+        distribution_type: par
+        dynamic_config: 0
+        generated_by: 'PAR::Packer version 0.12
+        license: unknown
+        par:
+        clean: 0
+        signature: ''
+        verbatim: 0
+        version: 0.85
+
+As of PAR 0.85, the only critical part of META.yml is the "clean: 0". This is
+where the frontend code discovers whether it was packaged with "pp -C".
+
+There is a script/ directory which contains our program "example1.pl" and a
+helper script "main.pl":
+
+   my $zip = $PAR::LibCache{$ENV{PAR_PROGNAME}} || Archive::Zip->new(__FILE__);
+   my $member = eval { $zip->memberNamed('script/example1.pl') }
+           or die qq(Can't open perl script "script/example1.pl": No such file
+   or directory ($zip));
+   PAR::_run_member($member, 1);
+
+After the frontend runs, execution continues with main.pl, which has the name
+of the program coded into it. Main.pl extracts the program and runs it.
+
+----------
+
+Now let's use a module, so there is a dependency. It's only "use strict;" so
+we don't need much.
+
+        C:\Par>pp -B -p -o example2.par example2.pl
+
+        C:\Par>zipinfo -1 example2.par
+        lib/
+        script/
+        MANIFEST
+        META.yml
+        lib/AutoLoader.pm
+        lib/Carp.pm
+        lib/Carp/Heavy.pm
+        lib/Config.pm
+        lib/DynaLoader.pm
+        lib/Exporter.pm
+        lib/Exporter/Heavy.pm
+        lib/File/Glob.pm
+        lib/List/Util.pm
+        lib/Scalar/Util.pm
+        lib/Term/Cap.pm
+        lib/Text/ParseWords.pm
+        lib/Thread.pm
+        lib/XSLoader.pm
+        lib/auto/DynaLoader/autosplit.ix
+        lib/auto/DynaLoader/dl_expandspec.al
+        lib/auto/DynaLoader/dl_find_symbol_anywhere.al
+        lib/auto/DynaLoader/dl_findfile.al
+        lib/auto/File/Glob/Glob.bs
+        lib/auto/File/Glob/Glob.dll
+        lib/auto/File/Glob/Glob.exp
+        lib/auto/List/Util/Util.bs
+        lib/auto/List/Util/Util.dll
+        lib/auto/List/Util/Util.exp
+        lib/auto/Thread/Thread.bs
+        lib/auto/Thread/Thread.dll
+        lib/auto/Thread/Thread.exp
+        lib/auto/re/re.bs
+        lib/auto/re/re.dll
+        lib/auto/re/re.exp
+        lib/auto/threads/shared/shared.bs
+        lib/auto/threads/shared/shared.dll
+        lib/auto/threads/shared/shared.exp
+        lib/overload.pm
+        lib/re.pm
+        lib/strict.pm
+        lib/threads/shared.pm
+        lib/vars.pm
+        lib/warnings.pm
+        lib/warnings/register.pm
+        script/example2.pl
+        script/main.pl
+
+        C:\Par>
+
+Wow ! We got strict.pm and a lot of other stuff. ScanDeps picks up anything
+and everything that may or may not be needed - any "use" or "require" and a
+couple other things, even if they are conditional. ScanDeps also has a table
+of preloaded dependencies for some well known modules, that aren't found by
+analysis. In this example, there is ~130K of extra stuff. You will probably
+always get more than you really need. Better safe than sorry.
+
+----------
+
+If you want to reduce the size of the PAR and you are sure that you will never
+invoke some module, you can exclude it with -X. I know this program will not
+need threads, so:
+
+        C:\Par>pp -X Thread -B -p -o example2.par example2.pl
+
+        C:\Par>zipinfo -1 example2.par
+        lib/
+        script/
+        MANIFEST
+        META.yml
+        lib/AutoLoader.pm
+        lib/Carp.pm
+        lib/Carp/Heavy.pm
+        lib/Config.pm
+        lib/DynaLoader.pm
+        lib/Exporter.pm
+        lib/Exporter/Heavy.pm
+        lib/File/Glob.pm
+        lib/List/Util.pm
+        lib/Scalar/Util.pm
+        lib/Term/Cap.pm
+        lib/Text/ParseWords.pm
+        lib/XSLoader.pm
+        lib/auto/DynaLoader/autosplit.ix
+        lib/auto/DynaLoader/dl_expandspec.al
+        lib/auto/DynaLoader/dl_find_symbol_anywhere.al
+        lib/auto/DynaLoader/dl_findfile.al
+        lib/auto/File/Glob/Glob.bs
+        lib/auto/File/Glob/Glob.dll
+        lib/auto/File/Glob/Glob.exp
+        lib/auto/List/Util/Util.bs
+        lib/auto/List/Util/Util.dll
+        lib/auto/List/Util/Util.exp
+        lib/auto/re/re.bs
+        lib/auto/re/re.dll
+        lib/auto/re/re.exp
+        lib/overload.pm
+        lib/re.pm
+        lib/strict.pm
+        lib/vars.pm
+        lib/warnings.pm
+        lib/warnings/register.pm
+        script/example2.pl
+        script/main.pl
+
+        C:\Par>
+
+Now Thread.pm and it's dependencies are gone. See later for more on using -X.
+
+----------
+
+Letting ScanDeps look for dependencies is the default method, but not the only
+one, and maybe not the best one. Let's prevent ScanDeps from analyzing the
+code itself (-n) and let the Perl compiler do it (-c).
+
+        C:\Par>pp -n -c -B -p -o example2.par example2.pl
+
+        C:\Par>zipinfo -1 example2.par
+        lib/
+        script/
+        MANIFEST
+        META.yml
+        lib/strict.pm
+        script/example2.pl
+        script/main.pl
+
+        C:\Par>
+
+That looks good. Just the strict.pm that we needed. Why not do this all of the
+time? Because Perl code can hide a use or require in eval's and strings and
+all kinds of conditional places that don't happen until the program runs.
+
+----------
+
+How about running the program (-x) and see what it needs?
+
+        C:\Par>pp -n -x -B -p -o example2.par example2.pl
+        My temp dir is
+        I was extracted as
+
+        C:\Par>zipinfo -1 example2.par
+        lib/
+        script/
+        MANIFEST
+        META.yml
+        lib/strict.pm
+        script/example2.pl
+        script/main.pl
+
+        C:\Par>
+
+Notice that example2.pl was executed and produced output (although not exactly
+valid, since it didn't have a PAR environment yet). This is the "ultimate"
+method, but when your program runs during the pp process, you have to be sure
+to exercise it through every branch that might conditionally use or require
+something. In the case of modules like LWP, that might mean making the program
+access several kinds of web pages and protocols, just to discover all the
+supporting modules needed.
+
+----------
+
+Both -c and -x execute the program. However, -c first turns the program into
+one giant subroutine that is never called. Perl compiles it, so any BEGIN and
+END blocks in the program will execute during pp.
+
+Using -c or -x without -n will add all the modules ScanDeps finds by
+analysis plus any additional modules that -c or -x finds.
+
+----------
+
+The last resort is -M to add a module manually. Let's add English.pm even
+though it isn't needed.
+
+        C:\Par>pp -n -c -M English -B -p -o example2.par example2.pl
+
+        C:\Par>zipinfo -1 example2.par
+        lib/
+        script/
+        MANIFEST
+        META.yml
+        lib/Carp.pm
+        lib/English.pm
+        lib/Exporter.pm
+        lib/strict.pm
+        lib/warnings.pm
+        script/example2.pl
+        script/main.pl
+
+        C:\Par>
+
+----------
+
+So much for program components. What if we want to put some data files into
+the PAR package? There are two data files listed below. The contents don't
+really matter for these examples. Let's add one file.
+
+        C:\Par>pp -B -p -o example1.par example1.pl -a some.dat
+
+        C:\Par>zipinfo -1 example1.par
+        script/
+        MANIFEST
+        META.yml
+        script/example1.pl
+        script/main.pl
+        some.dat
+
+        C:\Par>
+
+It's in the root directory of the zip. If we give a full path name:
+
+        C:\Par>pp -B -p -o example1.par example1.pl -a c:/Par/some.dat
+
+        C:\Par>zipinfo -1 example1.par
+        script/
+        MANIFEST
+        META.yml
+        script/example1.pl
+        script/main.pl
+        Par/some.dat
+
+        C:\Par>
+
+now it's in the Par/ directory. Since this is a Windows example, there was a
+drive letter in the full path. It was stripped off because drive letters make
+no sense inside the zip.
+
+You might want the file somewhere else in the zip besides root or the same
+path as the source file. You might also want to change it's name. The -a
+accepts aliases following the source name and separated by a semicolon.
+
+        C:\Par>pp -B -p -o example1.par example1.pl -a some.dat;that_dir/new.dat
+
+        C:\Par>zipinfo -1 example1.par
+        script/
+        MANIFEST
+        META.yml
+        script/example1.pl
+        script/main.pl
+        that_dir/new.dat
+
+        C:\Par>
+
+The file that_dir/new.dat in the zip is a copy of some.dat.
+
+Packaging a lot of files would require a lot of -a, but you can put a list of
+files (and their aliases) into a file and use -A. The syntax for each line
+inside of the -A list is the same as the -a option. Using a.lst shown below:
+
+        C:\Par>pp -B -p -o example1.par example1.pl -A a.lst
+
+        C:\Par>zipinfo -1 example1.par
+        script/
+        MANIFEST
+        META.yml
+        script/example1.pl
+        script/main.pl
+        deep/dir/a_new_name.dat
+        real/deep/dir/more.dat
+
+        C:\Par>
+
+The file deep/dir/a_new_name.dat is a copy of some.dat and
+real/deep/dir/more.dat is a copy of more.dat.
+
+Note: Windows users need to quote any path parts or file names that contain
+spaces. Paths in zip files always use forward slashes (/). Backslashes in -a
+and -A will be converted.
+
+----------
+
+The -B option is enabled automatically for standalone executables but not for
+-p or -P. Without -B, the -p and -P options will include required non-core
+modules, but not required core modules - ones that come standard with the Perl
+installation. Since -p or -P packages usually expect a Perl installation (perl
+and the perl lib) to run them, you may wish to assume the core modules are
+available from the installation.
+
+The -d option determines whether the perl lib will be packaged in standalone
+executables or not. It is not inside the PAR zip file, but packaged in front
+of it, where the binary frontend can unpack it, before the Perl interpreter
+starts and Zip functions become available.
+
+The modules that the Perl portion of the frontend needs to run are also
+packaged before the PAR zip. These are the dependencies for par.pl.
+
+If -d is used, or -p/-P is used without -B, and there will be no Perl
+installation on the target machine, you will have to deliver the perl
+executable and/or the perl lib (libperl.so or perl5x.dll) with the PAR
+package. Default libpaths may have to be overridden. On Windows, perl5x.dll
+can be placed in the same dir as the PAR executable and it will be found
+first, even if there is an installation elsewhere.
+
+----------
+
+Once all the right stuff is packaged and the program runs, some or all of it
+will be unpacked into a temp directory. What does the temp directory look
+like? That depends on whether the program is packaged with -C or the
+environment variable PAR_GLOBAL_CLEAN is true.
+
+        C:\Par>pp -o example1.exe example1.pl
+
+        C:\Par>set PAR_GLOBAL_CLEAN=1
+
+        C:\Par>example1.exe
+        My temp dir is C:\TEMP\par-astewart\temp-1796
+        I was extracted as C:\TEMP\par-astewart\temp-1796\9P9JWzM5Dq
+
+        C:\Par>set PAR_GLOBAL_CLEAN=0
+
+        C:\Par>example1.exe
+        My temp dir is C:\TEMP\par-astewart\cache-5d6e482c4d108512958af35b77e03
+        4164acfac08
+        I was extracted as C:\TEMP\par-astewart\cache-5d6e482c4d108512958af35b7
+        7e034164acfac08\2487795e.pl
+
+        C:\Par>set PAR_GLOBAL_CLEAN=
+
+        C:\Par>pp -C -o example1.exe example1.pl
+
+        C:\Par>example1.exe
+        My temp dir is C:\TEMP\par-astewart\temp-740
+        I was extracted as C:\TEMP\par-astewart\temp-740\TRW5NnPCan
+
+        C:\Par>
+
+Either -C or PAR_GLOBAL_CLEAN=1 causes the temp dir to be a short name based
+on my login name and the program pid. The temp dir will change each time
+because of pid and be deleted after execution because of "clean".
+PAR_GLOBAL_CLEAN overrides -C/not -C.
+
+If not "clean", the temp dir is a long name based on my login name and an SHA1
+hash of the entire PAR packaged program. It will not change from execution to
+execution, unless you modify and repackage the program. It will also not be
+deleted after each execution. The contents will be re-used and not
+re-extracted from the PAR. In addition, all of the source files in the zip
+file will be extracted into the $ENV{PAR_TEMP}."/inc/" directory. Binary
+shared libs will not be extracted to inc/. @INC will have additional entries
+pointing to inc/ and inc/lib/, causing .pm files to load from there.
+
+Whether "clean" or not "clean", some files will be extracted to the temp dir.
+Shared libs will always be extracted there. If running "clean", the .pm files
+that are actually loaded will be extracted there. The files extracted to the
+temp dir are renamed to CRC32 names to avoid conflicts and mapped to the real
+names inside PAR. The program itself is there under a CRC32 pseudonym. If you
+need to open and read the program as a file, or pass the program as a file to
+a module, it's temp name is in $ENV{PAR_0};
+
+Additional shared libraries packed with the -l option are packed in a
+directory named for the machine architecture under shlib/ rather than under
+inc/. When they are unpacked, they are in the temp dir.
+
+----------
+
+Two examples of using -l are msvcr70.dll (the runtime library for the VC++
+7.0 compiler) and wxmsw242.dll (from the Wx Perl module).
+
+If you compiled PAR using VC++ 7.0, the executables made with PAR need that
+runtime. If your target machine doesn't have it, then:
+
+        pp -l msvcr70.dll ...
+
+will search the PATH and include it. Since it ends up next to the executable
+in the temp dir, it will be linked.
+
+If you packaged a Wx Perl script without -l, PAR knows about Wx.dll because
+Wx.pm requests it, but doesn't know that Wx.dll loads wxmsw242.dll. Wx.dll
+would end up in the temp dir and wxmsw242.dll would end up in inc/. Wx.dll
+wouldn't be able to find wxmsw242.dll. Packaging with:
+
+        pp -l C:\Perl\site\lib\auto\Wx\wxmsw242u.dll ...
+
+moves it from inc/ to shlib/ in the package and unpacks to temp next to Wx.dll
+and it works!
+
+----------
+
+So how can I access the files I added with -a or -A ? Again, it depends on
+"clean". If the program is not running "clean", then everything is available
+in the $ENV{PAR_TEMP}."/inc/" dir. After packing with "-A a.lst", I can read
+some.dat with a standard filehandle:
+
+        my $file = $ENV{PAR_TEMP}."/inc/deep/dir/a_new_name.dat";
+        open FH, "<$file";
+        print while (<FH>);
+        close FH;
+
+If the program is running "clean", the inc/ dir is not available, but
+$PAR::LibCache{$ENV{PAR_PROGNAME}} is a zip file handle to the PAR zip. Using
+the a.lst to pack some.dat with example3.pl, it can be read with Archive::Zip
+functions:
+
+        C:\Par>pp -o example3.exe example3.pl -A a.lst
+
+        C:\Par>example3.exe
+        comma, separated, values
+        some, other, values
+
+        C:\Par>
+
+Note that $fh in example3.pl is not really a file handle, but a zip object
+with pointers into the zip file. It doesn't need to be closed after use.
+
+The Archive::Zip method will, of course, work even if there is an inc/ dir,
+but you pay twice to have it extracted. If you need to package really large
+data with the program, running "clean" and reading direct from the zip is a
+way to avoid extracting the whole file in advance and taking up disk space.
+
+----------
+
+And last, if the file is small and you just want to slurp it into a variable,
+PAR provides a shortcut function, read_file().
+
+        C:\Par>pp -c -o example4.exe example4.pl -A a.lst
+
+        C:\Par>example4.exe
+        qwertyuiop
+        asdfghjkl
+        zxcvbnm
+        C:\Par>
+
+PAR::read_file() will locate the file in any PAR file currently known. That
+includes the executable itself and any PAR/zip/executable given as arguments
+to PAR.pm:
+
+        use PAR qw( foo.par data.zip pp_packaged.exe );
+
+Note that "use PAR;" was not needed in example4.pl because it was already
+loaded by the frontend. Run by itself, example4.pl produces an undefined
+function error.
+
+----------
+
+If you need to make your PAR executables smaller, the -z option can be used to
+squeeze them a little more. By default, zlib compresses to level 6 on a 0 to 9
+scale. Using "pp -z 9" will do maximum compression. This will have a small
+impact on startup speed. However, this affects only the zip portion and not
+the modules that the frontend needs to do the unpacking.
+
+For Win32, UPX is available (http://upx.sourceforge.net) to squash the
+frontend code. More can be done by applying UPX to dll's prior to PAR packing.
+
+The -X option will exclude all the files contained in another zip or par or
+PAR executable file. If you have several PAR executables that are running on
+the same machine and use some of the same modules, you can exclude the common
+modules and put them in a separate PAR file that they all "use". For example,
+if I create a small script, common.pl:
+
+        use Tk;
+        use LWP;
+
+and package it with:
+
+        pp -p -o common.par common.pl
+
+I can compile scripts with:
+
+        pp -X common.par -o my_app.exe my_app.pl
+        pp -X common.par -o my_app2.exe my_app2.pl
+
+and ship common.par along with my_app.exe or my_app2.exe. The executables will
+not contain any of the Tk or LWP modules found in common.par, and will require
+common.par to run. One executable can also be made to depend on another:
+
+        pp -o main_app.exe main_app.pl
+        pp -X main_app.exe -o supporting_app.exe supporting_app.pl
+
+The supporting_app.exe will require main_app.exe to be present and will not
+contain any modules already in main_app.exe.
+
+The "pare" utility in contrib/pare/ can be used to do the same as -X to
+already compiled PAR executables.
+
+----------
+
+I hope all this helps. If you discover any errors in this doc or some
+radically different behaviour on another OS, let me know :)
+
+Alan Stewart
+astewart1@cox.net
+
+P.S. This doc is in the public domain.
+
+
+#####################################################################
+Listing: example1.pl
+#####################################################################
+#!perl
+
+print "My temp dir is $ENV{PAR_TEMP}\n";
+print "I was extracted as $ENV{PAR_0}\n";
+
+#####################################################################
+Listing: example2.pl
+#####################################################################
+#!perl
+use strict;
+
+print "My temp dir is $ENV{PAR_TEMP}\n";
+print "I was extracted as $ENV{PAR_0}\n";
+
+#####################################################################
+Listing: some.dat
+#####################################################################
+comma, separated, values
+some, other, values
+
+#####################################################################
+Listing: more.dat
+#####################################################################
+qwertyuiop
+asdfghjkl
+zxcvbnm
+
+#####################################################################
+Listing: a.lst
+#####################################################################
+some.dat;deep/dir/a_new_name.dat
+more.dat;real/deep/dir/more.dat
+
+#####################################################################
+Listing: example3.pl
+#####################################################################
+#!perl
+use strict;
+
+use Archive::Zip;
+use Archive::Zip::MemberRead;
+
+my $zip = $PAR::LibCache{$ENV{PAR_PROGNAME}};
+my $fh = new Archive::Zip::MemberRead($zip, "deep/dir/a_new_name.dat");
+my $line;
+while (defined($line = $fh->getline())) {
+    print "$line\n";
+}
+
+#####################################################################
+Listing: example4.pl
+#####################################################################
+#!perl
+use strict;
+
+my $more_dat = PAR::read_file("real/deep/dir/more.dat");
+print $more_dat;
+
+#####################################################################

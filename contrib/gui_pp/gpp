@@ -1,0 +1,488 @@
+#!perl -w
+use strict;
+
+our $VERSION = '2.2';
+
+use Tk;
+use Tk::ROText;
+use Tk::LabFrame;
+use Tk::Pane;
+use Tk::Balloon;
+use Tk::HistEntry;
+use Tk::NumEntry;
+
+use Cwd;
+use FindBin;
+use File::Spec;
+use Data::Dumper;
+use Pod::Simple::Text;
+
+use PAR::Packer;
+my $optref = PAR::Packer::OPTIONS;
+
+our ( @opts, @type, @def, @chkd, @value );
+our ( $source_file, $output_file, $log_file_ref, %hist_refs );
+
+my $mw = MainWindow->new( -title => "gpp $VERSION - gui for pp" );
+my $default_size = '500x500';    # for $mw, $hw and $lw
+$mw->geometry($default_size);
+$mw->minsize( 250, 250 );
+$mw->setPalette('cornsilk3');
+$mw->optionAdd( '*font' => 'Courier 10' );
+my $entry_font_color = 'blue';
+my $balloon_font     = 'Courier 8';
+my $balloon_color    = 'yellow';
+my $dots_font        = 'Courier 5';
+my $pl_types         = [ [ 'pp source', [ '.par', '.pl', '.ptk', '.pm' ] ], [ 'All files', '*' ] ];
+my $gpp_types        = [ [ 'gpp options', ['.gpp'] ], [ 'All files', '*' ] ];
+my $default_gpp_ext  = '.gpp';
+
+my $pp = find_pp();
+if ( !$pp ) {
+    $mw->messageBox( -title   => 'Error',
+                     -icon    => 'error',
+                     -message => "Can't find pp !!",
+                     -type    => 'OK'
+                   );
+    exit(1);
+}
+if ( !open PP, "<$pp" ) {
+    $mw->messageBox( -title   => 'Error',
+                     -icon    => 'error',
+                     -message => "Can't open $pp: $!",
+                     -type    => 'OK'
+                   );
+    exit(1);
+}
+my $pp_text;
+{
+    undef $/;
+    $pp_text = <PP>;
+}
+close PP;
+
+@opts = sort {
+    lc( substr( $a, 0, index( $a, '|' ) ) ) cmp lc( substr( $b, 0, index( $b, '|' ) ) )
+      || $a cmp $b
+} keys %$optref;
+for (@opts) { push @def, $$optref{$_} }
+
+# parse option specifiers
+for ( 0 .. $#opts ) {
+    my ($short) = ( $opts[$_] =~ /([^|]+)/ );
+    $type[$_]  = '';
+    $type[$_]  = $1 if $opts[$_] =~ /([=:].*)/;
+    $opts[$_]  = $short;
+    $chkd[$_]  = 0;
+    $value[$_] = 0 if $type[$_] =~ /i/;
+    $value[$_] = '' if $type[$_] =~ /[fs]/;
+    $log_file_ref = \$value[$_] if $opts[$_] eq 'L';
+}
+
+my $f = $mw->Frame( -borderwidth => 5 )->pack( -expand => 1, -fill => 'both' );
+
+my $fb = $f->Frame()->pack( -fill => 'x' );
+my $fb1 = $fb->Frame()->pack( -side => 'left', -expand => 'y', -fill => 'x' );
+$fb1->Button( -text => 'Pack', -command => sub { run_pp() } )->pack( -expand => 1, -fill => 'x' );
+$fb1->Button( -text => 'View Log', -command => sub { view_log() } )
+  ->pack( -expand => 1, -fill => 'x' );
+my $fb2 = $fb->Frame()->pack( -side => 'left', -expand => 'y', -fill => 'x' );
+$fb2->Button( -text    => 'Open Opts',
+              -command => sub { open_opts(); }
+            )->pack( -expand => 1, -fill => 'x' );
+$fb2->Button( -text    => 'Save Opts',
+              -command => sub { save_opts(); }
+            )->pack( -expand => 1, -fill => 'x' );
+my $fb3 = $fb->Frame()->pack( -side => 'left', -expand => 'y', -fill => 'x' );
+$fb3->Button( -text => 'Exit', -command => sub { save_hist() } )
+  ->pack( -expand => 1, -fill => 'x' );
+$fb3->Button( -text => 'Help', -command => sub { help() } )->pack( -expand => 1, -fill => 'x' );
+
+my $ff = $f->Frame( -borderwidth => 5, )->pack( -fill => 'x' );
+my $fn = $ff->Frame()->pack( -side => 'left' );
+$fn->Label( -text => 'Source File:' )->pack( -anchor => 'e' );
+$fn->Label( -text => 'Output File:' )->pack( -anchor => 'e' );
+my $fe = $ff->Frame()->pack( -side => 'left', -expand => 1, -fill => 'x' );
+my $source_entry = $fe->HistEntry( -textvariable     => \$source_file,
+                                   -width            => 1,
+                                   -fg               => $entry_font_color,
+                                   -selectbackground => $entry_font_color,
+                                   -dup              => 0,
+                                   -case             => 0,                   # works opposite of pod
+                                   -match            => 1,
+                                   -limit            => 10,
+                                   -command          => sub { }
+                                 )->pack( -expand => 1, -fill => 'x' );
+$source_entry->Subwidget('slistbox')->configure( -bg => 'white' );
+my $output_entry = $fe->HistEntry( -textvariable     => \$output_file,
+                                   -width            => 1,
+                                   -fg               => $entry_font_color,
+                                   -selectbackground => $entry_font_color,
+                                   -dup              => 0,
+                                   -case             => 0,                   # works opposite of pod
+                                   -match            => 1,
+                                   -limit            => 10,
+                                   -command          => sub { }
+                                 )->pack( -expand => 1, -fill => 'x' );
+$output_entry->Subwidget('slistbox')->configure( -bg => 'white' );
+my $fg = $ff->Frame()->pack( -side => 'left', -fill => 'y' );
+$fg->Button(
+    -text    => '...',
+    -font    => $dots_font,
+    -command => sub {
+        my $file = $mw->getOpenFile( -filetypes => $pl_types );
+        if ($file) {
+            $source_file = $file;
+            $source_file = '"' . $source_file . '"' if $source_file =~ / / and $^O =~ /win32/i;
+            $source_entry->xview('end');
+            $source_entry->historyAdd();
+        }
+    }
+)->pack(-expand => 'y', -fill => 'y');
+$fg->Button(
+    -text    => '...',
+    -font    => $dots_font,
+    -command => sub {
+        my $file = $mw->getSaveFile();
+        if ($file) {
+            $output_file = $file;
+            $output_file = '"' . $output_file . '"' if $output_file =~ / / and $^O =~ /win32/i;
+            $output_entry->xview('end');
+            $output_entry->historyAdd();
+        }
+    }
+)->pack(-expand => 'y', -fill => 'y');
+
+my $fo =
+  $f->LabFrame( -label => 'Options', -labelside => 'acrosstop' )
+  ->pack( -expand => 1, -fill => 'both' );
+my $p = $fo->Scrolled( 'Pane',
+                       -scrollbars => 'osw',
+                       -sticky     => 'we',
+                     )->pack( -expand => 1, -fill => 'both' );
+for ( 0 .. $#opts ) {
+    next if $opts[$_] =~ /^[oh]$/;
+
+    my $fp = $p->Frame()->pack( -expand => 'y', -fill => 'both' );
+    my $c = $fp->Checkbutton( -text        => $opts[$_],
+                              -variable    => \$chkd[$_],
+                              -selectcolor => 'white'
+                            )->pack( -side => 'left' );
+    $fp->Balloon( -bg => $balloon_color, -font => $balloon_font )
+      ->attach( $c, -balloonmsg => $def[$_] );
+    if ( $type[$_] =~ /[@%]/ ) {
+        if ( $type[$_] =~ /=/ ) {
+            $fp->Label( -text => '+' )->pack( -side => 'left' );
+        }
+        else {
+            $fp->Label( -text => '*' )->pack( -side => 'left' );
+        }
+    }
+    else {
+        $fp->Label( -text => ' ' )->pack( -side => 'left' );
+    }
+    my $he;
+    if ( $type[$_] =~ /[fs]/ ) {
+        $he = $fp->HistEntry( -textvariable     => \$value[$_],
+                              -width            => 1,
+                              -fg               => $entry_font_color,
+                              -selectbackground => $entry_font_color,
+                              -dup              => 0,
+                              -case             => 0,                   # works opposite of pod
+                              -match            => 1,
+                              -limit            => 10,
+                              -command          => sub { },
+                            )->pack( -side => 'left', -expand => 'y', -fill => 'x' );
+        $he->Subwidget('slistbox')->configure( -bg => 'white' );
+        $hist_refs{ $opts[$_] } = $he;
+    }
+    if ( $type[$_] =~ /f/ ) {
+        $he->Subwidget('entry')->configure( -validate => 'key' );
+        $he->Subwidget('entry')->configure(
+            -validatecommand => sub {
+                $_[0] =~ /^[+-]?\.?$|                                    # starting entry
+                          ^[+-]?(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d*))?$ # continuing entry
+                         /x;    # not validated if the entry ever actually finishes
+            }
+        );
+    }
+    if ( $type[$_] =~ /i/ ) {
+        $fp->NumEntry( -textvariable     => \$value[$_],
+                       -width            => 5,
+                       -fg               => $entry_font_color,
+                       -selectbackground => $entry_font_color,
+                     )->pack( -side => 'left' );
+    }
+}
+
+my ( $hw, $hwt );    # help toplevel/text
+my ( $lw, $lwt );    # view log toplevel/text
+$mw->waitVisibility;
+
+open_opts( $ARGV[0] ) if $ARGV[0];
+my $gpp_history = $ENV{HOME} || $ENV{HOMEPATH} || $FindBin::Bin;
+$gpp_history .= '/.gpp.history';
+open_hist();
+
+$source_entry->focus;
+MainLoop;
+
+sub find_pp {
+    my $pp = 'pp';
+    $pp .= '.bat' if $^O =~ /win32/i;
+    return File::Spec->catfile( cwd(), $pp ) if -e $pp;
+    my @path = File::Spec->path();
+    for (@path) {
+        my $full_name = File::Spec->catfile( $_, $pp );
+        return $full_name if -e $full_name;
+    }
+    return undef;
+}
+
+sub open_opts {
+    my $opts_file = shift;
+    if ( !$opts_file ) {
+        $opts_file = $mw->getOpenFile( -filetype => $gpp_types );
+    }
+    return if !$opts_file;
+    my ( $save_chkd, $save_value );
+    if ( !open OH, "<$opts_file" ) {
+        $mw->messageBox( -title   => 'Error',
+                         -icon    => 'error',
+                         -message => "$opts_file: $!",
+                         -type    => 'OK'
+                       );
+        return;
+    }
+    my $opts_dump;
+    {
+        undef $/;
+        $opts_dump = <OH>;
+    }
+    close OH;
+    if ( $opts_dump !~ /\$save_chkd\s*=.*?\$save_value\s*=/s ) {
+        $mw->messageBox( -title   => 'Error',
+                         -icon    => 'error',
+                         -message => "$opts_file: Not a gpp option file !!",
+                         -type    => 'OK'
+                       );
+        return;
+    }
+    eval $opts_dump;
+    if ($@) {
+        $mw->messageBox( -title   => 'Error',
+                         -icon    => 'error',
+                         -message => "$opts_file: $@",
+                         -type    => 'OK'
+                       );
+        return;
+    }
+    for ( 0 .. $#opts ) {
+        if ( exists $save_chkd->{ $opts[$_] } ) {
+            $chkd[$_]  = $save_chkd->{ $opts[$_] };
+            $value[$_] = $save_value->{ $opts[$_] };
+        }
+    }
+} ## end sub open_opts
+
+sub save_opts {
+    my $opts_file =
+      $mw->getSaveFile( -filetypes => $gpp_types, -defaultextension => $default_gpp_ext );
+    return if !$opts_file;
+    my ( %save_chkd, %save_value );
+    for ( 0 .. $#opts ) {
+        $save_chkd{ $opts[$_] }  = $chkd[$_];
+        $save_value{ $opts[$_] } = $value[$_];
+    }
+    if ( !open OH, ">$opts_file" ) {
+        $mw->messageBox( -title   => 'Error',
+                         -icon    => 'error',
+                         -message => "$opts_file: $!",
+                         -type    => 'OK'
+                       );
+        return;
+    }
+    print OH Data::Dumper->Dump( [ $source_file, $output_file, \%save_chkd, \%save_value ],
+                                 [qw( source_file output_file save_chkd save_value )] );
+    close OH;
+}
+
+sub open_hist {
+    return if !-e $gpp_history;
+    my ( $source_hist, $output_hist, $opts_hist );
+    if ( !open HH, "<$gpp_history" ) {
+        $mw->messageBox( -title   => 'Error',
+                         -icon    => 'error',
+                         -message => "$gpp_history: $!",
+                         -type    => 'OK'
+                       );
+        return;
+    }
+    my $hist_dump;
+    {
+        undef $/;
+        $hist_dump = <HH>;
+    }
+    close HH;
+    if ( $hist_dump !~ /\$source_hist\s*=.*?\$output_hist\s*=/s ) {
+        $mw->messageBox( -title   => 'Error',
+                         -icon    => 'error',
+                         -message => "$gpp_history: Not a gpp history file !!",
+                         -type    => 'OK'
+                       );
+        return;
+    }
+    eval $hist_dump;
+    if ($@) {
+        $mw->messageBox( -title   => 'Error',
+                         -icon    => 'error',
+                         -message => "$gpp_history: $@",
+                         -type    => 'OK'
+                       );
+        return;
+    }
+    $source_entry->history($source_hist);
+    $output_entry->history($output_hist);
+    for ( 0 .. $#opts ) {
+        if ( exists $opts_hist->{ $opts[$_] } ) {
+            $hist_refs{ $opts[$_] }->history( $opts_hist->{ $opts[$_] } );
+        }
+    }
+} ## end sub open_hist
+
+sub save_hist {
+    if ( !open HH, ">$gpp_history" ) {
+        $mw->messageBox( -title   => 'Error',
+                         -icon    => 'error',
+                         -message => "$gpp_history: $!",
+                         -type    => 'OK'
+                       );
+        return;
+    }
+    my ( $source_hist, $output_hist );
+    $source_hist = [ $source_entry->history() ];
+    $output_hist = [ $output_entry->history() ];
+    for ( keys %hist_refs ) {
+        $hist_refs{$_} = [ $hist_refs{$_}->history() ];
+    }
+    print HH Data::Dumper->Dump( [ $source_hist, $output_hist, \%hist_refs ],
+                                 [qw( source_hist output_hist opts_hist )] );
+    close HH;
+    exit();
+}
+
+sub view_log {
+    my $file = $$log_file_ref;
+    $file =~ s/^"(.*)"$/$1/;
+    return if !$file;
+    if ( !open LH, "<$file" ) {
+        $mw->messageBox( -title   => 'Error',
+                         -icon    => 'error',
+                         -message => "$file: $!",
+                         -type    => 'OK'
+                       );
+        return;
+    }
+    my $log_text;
+    {
+        undef $/;
+        $log_text = <LH>;
+    }
+    close LH;
+    if ( !Exists($lw) ) {
+        $lw = $mw->Toplevel( -title => 'Log file' );
+        my ( $x, $y ) = ( $mw->geometry() =~ /^\d+x\d+\+(\d+)\+(\d+)/ );
+        $lw->geometry( $default_size . '+' . ( $x + 20 ) . '+' . ( $y + 20 ) );
+        $lw->minsize( 200, 30 );
+        my $fb = $lw->Frame()->pack( -fill => 'x' );
+        $fb->Button( -text => 'Close', -command => sub { $lw->withdraw() } )
+          ->pack( -side => 'left', -expand => 'y', -fill => 'x' );
+        $fb->Button( -text    => 'Clear Log file',
+                     -command => sub { open LH, ">$file"; close LH; $lw->withdraw() }
+                   )->pack( -side => 'right' );
+        $lwt = $lw->Scrolled( "Text",
+                              -scrollbars => 'osw',
+                              -wrap       => 'none',
+                              -height     => 1,
+                              -width      => 1
+                            )->pack( -expand => 1, -fill => 'both' );
+        $lwt->insert( 'end', $log_text );
+        $lw->focus();
+    }
+    else {
+        $lwt->delete( '0.0', 'end' );
+        $lwt->insert( 'end', $log_text );
+        $lw->deiconify();
+        $lw->raise();
+        $lw->focus();
+    }
+} ## end sub view_log
+
+sub help {
+    if ( !Exists($hw) ) {
+        $hw = $mw->Toplevel( -title => 'Help for pp' );
+        my ( $x, $y ) = ( $mw->geometry() =~ /^\d+x\d+\+(\d+)\+(\d+)/ );
+        $hw->geometry( $default_size . '+' . ( $x + 40 ) . '+' . ( $y + 40 ) );
+        $hw->minsize( 100, 30 );
+        $hw->Button( -text => 'Close', -command => sub { $hw->withdraw } )->pack( -fill => 'x' );
+        my $parser = Pod::Simple::Text->new();
+        my $pod;
+        $parser->output_string( \$pod );
+        $parser->parse_string_document($pp_text);
+        $hwt = $hw->Scrolled( "Text",
+                              -scrollbars => 'osw',
+                              -wrap       => 'none',
+                              -height     => 1,
+                              -width      => 1
+                            )->pack( -expand => 1, -fill => 'both' );
+        $hwt->insert( 'end', $pod );
+        $hw->focus();
+    }
+    else {
+        $hw->deiconify();
+        $hw->raise();
+        $hw->focus();
+    }
+}
+
+sub run_pp {
+    my @pp_opts = ();
+    for ( 0 .. $#opts ) {
+        if ( $chkd[$_] ) {
+            if ( ( $type[$_] eq '' ) or ( $type[$_] =~ /:/ and $value[$_] eq '' ) ) {
+                push @pp_opts, '-' . $opts[$_];
+            }
+            elsif ( $type[$_] =~ /[ifs]$/ ) {
+                push @pp_opts, '-' . $opts[$_];
+                push @pp_opts, $value[$_];
+            }
+            elsif ( $type[$_] =~ /[fs][@%]/ ) {
+                my @multi = ();
+                my $value = $value[$_];
+
+                # Look for quoted strings first, then non-blank strings,
+                #   separated by spaces, commas or semicolons
+                while ( $value =~ /\G\s*((['"])[^\2]*?\2)\s*[,;]?|\G\s*([^\s,;]+)\s*[,;]?/g ) {
+                    push( @multi, defined($1) ? $1 : $3 );
+                }
+                for $value (@multi) {
+                    push @pp_opts, '-' . $opts[$_];
+                    push @pp_opts, $value;
+                }
+            }
+        }
+    }
+    if ($output_file) {
+        push @pp_opts, '-o';
+        push @pp_opts, $output_file;
+    }
+    if ($source_file) {
+        push @pp_opts, $source_file;
+    }
+    print "$pp @pp_opts\n";
+    $mw->Busy();
+
+    system $pp, @pp_opts;
+    $mw->Unbusy();
+    print "Done.\n\n";
+} ## end sub run_pp

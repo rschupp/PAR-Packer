@@ -1,0 +1,19 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+my $proc;
+if( $^O =~ /linux/i ) {
+    $proc = "/proc/$$/exe";
+} else {
+    $proc = "/proc/$$/file";
+}
+
+print "0 = $0\n";
+$ENV{PAR_PROGNAME} ||= '';
+print "PAR_PROGNAME = $ENV{PAR_PROGNAME}\n";
+$ENV{PAR_TEMP} ||= '';
+print "PAR_TEMP = $ENV{PAR_TEMP}\n";
+if( $proc ) {
+    print "exec = ", readlink( $proc  ), "\n";
+}

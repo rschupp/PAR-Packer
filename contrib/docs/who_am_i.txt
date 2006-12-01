@@ -1,0 +1,586 @@
+
+Who am I? What am I? Where am I? What else is there?
+
+#####################################################################
+This is a description of how a Perl program packaged with pp can find it's
+name, what kind of PAR package it is, where it's temp directories are, and
+what else there is in a PAR environment.
+
+Caveats up front: The following screens snips are from WinXP, ActiveState
+Perl 5.8.4 (build 810) and PAR 0.85. There are only a few Windows specifics,
+like the prompt and .exe file extensions, but the rest should apply to Linux as
+well. The program listings are shown at the bottom of this doc and will run
+anywhere.
+
+4 August 2004 - Revision 1
+#####################################################################
+
+The PAR packager "pp" can produce four kinds of PAR packages: PAR files (a
+modified zip file), standalone Perl files (plain text), standalone binaries
+with the Perl lib bundled, and binaries without the Perl lib. In addition, a
+developer may be testing the original Perl program before packaging, but with
+PAR related code included. And lastly, each version might be running "clean"
+or not.
+
+----------
+
+Let's package program1.pl in each of those ways and see what it shows about
+itself. In each case, I'll produce a package called "demo.xxx", where only the
+extension is different. I'll start running "clean":
+
+        C:\Par>set PAR_GLOBAL_CLEAN=1
+
+and I'll give three dummy args "a", "b", and "c" just to see them pass thru.
+
+----------
+
+First the original program1.pl unpackaged:
+
+        C:\Par>copy program1.pl demo.pl
+                1 file(s) copied.
+
+        C:\Par>perl demo.pl a b c
+        My basename is demo
+        $0 = demo.pl
+        My args are: a b c
+        My @INC is: c:/Perl/lib c:/Perl/site/lib .
+
+        I am NOT a PAR package
+        I am running as '$^X $0 @ARGV'
+                c:\Perl\bin\perl.exe demo.pl a b c
+
+        PAR environment:
+        PAR_GLOBAL_CLEAN=1
+
+        C:\Par>
+
+The only thing not typical Perl here is the PAR environment variable I set, but
+it has no effect, since this is not a PAR package.
+
+----------
+
+Next is program1.pl packaged as a standalone binary executable, Perl lib not
+bundled:
+
+        C:\Par>pp -d -o demo.exe program1.pl
+
+        C:\Par>demo.exe a b c
+        My basename is demo
+        $0 = demo.exe
+        My args are: a b c
+        My @INC is: CODE(0xdb6a80) c:/Perl/lib c:/Perl/site/lib .
+
+        I am a PAR package
+        I am a binary file
+        I am running as '$0 @ARGV'
+                demo.exe a b c
+
+        My temp dir is
+                c:\temp\par-astewart\temp-1560
+                and it will be deleted after the script finishes
+        A copy of this script was extracted as
+                C:\temp\par-astewart\temp-1560\QY7snBlZYa
+
+        PAR environment:
+        PAR_0=C:\temp\par-astewart\temp-1560\QY7snBlZYa
+        PAR_CLEAN=1
+        PAR_GLOBAL_CLEAN=1
+        PAR_INITIALIZED=2
+        PAR_PROGNAME=.\demo.exe
+        PAR_TEMP=c:\temp\par-astewart\temp-1560
+
+        C:\Par>
+
+What's new? The basename is the same (demo), but $0 is now the executable name
+and there is a PAR environment variable PAR_PROGNAME that is almost the same
+as $0. If I had run it as "c:\Par\demo.exe", they would have been exactly the
+same.
+
+There is a code ref in @INC. That's the PAR hook to load the bundled modules
+from the temp dir, instead of the installed Perl lib dirs. It comes first, but
+if a module failed to get bundled into demo.exe, it might still be found thru
+the remaining installed lib dirs.
+
+Demo.exe knows it's a PAR package because there is a %PAR::LibCache and it
+contains a key that matches it's own name. That's the line:
+
+        { no warnings; $is_a_PAR = defined $PAR::LibCache{$ENV{PAR_PROGNAME}}}
+
+in program1.pl. The "no warnings" avoids undef complaints if it's not a PAR
+package. The value of $PAR::LibCache{$ENV{PAR_PROGNAME}} is a zip handle and
+could be used to directly access the PAR inside demo.exe with Archive::Zip
+functions.
+
+There is a PAR temp dir created, made up of the environment variable TEMP plus
+"par-" plus my login name plus "temp-" plus the pid of demo.exe. And the whole
+string is in PAR_TEMP. Because it's based on the pid, it will be different
+each time demo.exe runs.
+
+We get this style of temp dir because PAR_CLEAN=1 during demo.exe and that's
+because PAR_GLOBAL_CLEAN=1. It would also have been so if we packaged demo.exe
+with "pp -C". And because it's "clean", the temp dir will be deleted when
+demo.exe successfully finishes. If demo.exe crashes, it won't be deleted.
+
+PAR_0 gives us the name of a copy of program1.pl that was extracted into the
+temp dir. That's useful for a program that wants to open itself as a file,
+perhaps to read __DATA__ sections.
+
+PAR_INITIALIZED is an internal state variable that is of no use to the
+program. It's used by the binary frontend. It should always equal 2.
+
+----------
+
+Let's run the same demo.exe again except, not "clean":
+
+        C:\Par>set PAR_GLOBAL_CLEAN=0
+
+        C:\Par>demo.exe
+        My basename is demo
+        $0 = demo.exe
+        My args are: a b c
+        My @INC is: c:\temp\par-astewart\cache-1d17637b82735e7e0e52c193b4fdd54e
+        7ddba73c/inc/lib c:\temp\par-astewart\cache-1d17637b82735e7e0e52c193b4f
+        dd54e7ddba73c/inc CODE(0xdd1968) c:/Perl/lib c:/Perl/site/lib .
+
+        I am a PAR package
+        I am a binary file
+        I am running as '$0 @ARGV'
+                demo.exe a b c
+
+        My temp dir is
+                c:\temp\par-astewart\cache-1d17637b82735e7e0e52c193b4fdd54e7ddb
+        a73c
+                and it will NOT be deleted after the script finishes
+        A copy of this script was extracted as
+                C:\temp\par-astewart\cache-1d17637b82735e7e0e52c193b4fdd54e7ddb
+        a73c\d2f130a4.pl
+
+        PAR environment:
+        PAR_0=C:\temp\par-astewart\cache-1d17637b82735e7e0e52c193b4fdd54e7ddba7
+        3c\d2f130a4.pl
+        PAR_CLEAN=0
+        PAR_GLOBAL_CLEAN=0
+        PAR_INITIALIZED=2
+        PAR_PROGNAME=.\demo.exe
+        PAR_TEMP=c:\temp\par-astewart\cache-1d17637b82735e7e0e52c193b4fdd54e7dd
+        ba73c
+
+        C:\Par>
+
+Three things happened. First, the temp dir is really long! It's
+made up of TEMP plus "par-" plus my login name plus "cache-" plus an SHA1 160
+bit hash of the demo.exe file. And it won't be deleted at the end of demo.exe.
+The next time demo.exe runs, it will be re-used and extraction will not be
+re-done. All because PAR_CLEAN=0 while demo.exe is running. The temp dir will
+only change if demo.exe is modified and re-packaged, creating a new SHA1 hash
+value.
+
+@INC also has two new values in it. Because demo.exe is not running "clean",
+all of the source files were extracted from the PAR into an "inc/" dir
+inside the temp dir. This is to facilitate modules that parse other modules.
+If you use such parsing modules, you can't run "clean". Shared libs are not
+extracted here - they are in the base temp dir, whether "clean" or not
+"clean".
+
+I set PAR_GLOBAL_CLEAN=0 which will force not "clean" even if I had packaged
+demo.exe with "pp -C". If I had undefined PAR_GLOBAL_CLEAN, then it would
+depend on the use of "-C" to set PAR_CLEAN.
+
+----------
+
+Let's go "clean" again, to avoid those long dir names, and bundle the Perl lib
+into the package:
+
+        C:\Par>set PAR_GLOBAL_CLEAN=1
+
+        C:\Par>pp -o demo.exe program1.pl
+
+        C:\Par>demo.exe a b c
+        My basename is demo
+        $0 = C:\Par\demo.exe
+        My args are: a b c
+        My @INC is: CODE(0xdb6d44) .
+
+        I am a PAR package
+        I am a binary file
+        I am running as '$0 @ARGV'
+                C:\Par\demo.exe a b c
+
+        My temp dir is
+                c:\temp\par-astewart\temp-1668
+                and it will be deleted after the script finishes
+        A copy of this script was extracted as
+                C:\temp\par-astewart\temp-1668\sXVehq3Yl0
+
+        PAR environment:
+        PAR_0=C:\temp\par-astewart\temp-1668\sXVehq3Yl0
+        PAR_ARGC=4
+        PAR_ARGV_0=demo.exe
+        PAR_ARGV_1=a
+        PAR_ARGV_2=b
+        PAR_ARGV_3=c
+        PAR_CLEAN=1
+        PAR_GLOBAL_CLEAN=1
+        PAR_INITIALIZED=2
+        PAR_PROGNAME=C:\Par\demo.exe
+        PAR_SPAWNED=1
+        PAR_TEMP=c:\temp\par-astewart\temp-1668
+
+A few more changes. $PAR_PROGNAME and $0 have full pathnames regardless of how
+I launch them. When a non-dependant PAR package runs, there is a two stage
+binary frontend: first the executable demo.exe that I ran, then a second
+demo.exe that is extracted to the temp dir and run as a child of the first. If
+you look at the process list while demo.exe runs, you'll see two processes
+with the same name. In the previous example, there was only the second
+process.
+
+You can see the first process telling the second that is a child
+(PAR_SPAWNED=1) and passing the command line args as environment variables
+(PAR_ARGC and PAR_ARGV_x).
+
+But what happened to the installed Perl lib paths in @INC ? This is a Windows
+effect. Because perl58.dll was bundled, extracted into temp and loaded from
+there, it could not find the installed lib dirs. In Linux, the lib dirs are
+coded into the shared lib and would appear in @INC even after moving the
+executable to another machine. So if all the modules you need are bundled in
+the PAR package, invalid Linux lib paths in @INC might be a problem. If you
+want to make sure that only bundled modules are used, add this to the top of
+your program:
+
+        BEGIN {
+        my @refinc = grep { ref } @INC;
+        @INC = @refinc if @refinc;
+        }
+
+If there is a PAR code hook in @INC, then the other fixed paths are removed.
+
+----------
+
+Now for a standalone Perl script.
+
+        C:\Par>pp -P -o demo.pl program1.pl
+
+        C:\Par>perl demo.pl a b c
+        My basename is demo
+        $0 = demo.pl
+        My args are: a b c
+        My @INC is: CODE(0x1cb4efc) c:/Perl/lib c:/Perl/site/lib .
+
+        I am a PAR package
+        I am a Perl script
+        I am running as '$^X $0 @ARGV'
+                c:\Perl\bin\perl.exe demo.pl a b c
+
+        My temp dir is
+                c:\temp\par-astewart\temp-1376
+                and it will be deleted after the script finishes
+        A copy of this script was extracted as
+                C:\temp\par-astewart\temp-1376\GinF3AxRux
+
+        PAR environment:
+        PAR_0=C:\temp\par-astewart\temp-1376\GinF3AxRux
+        PAR_CLEAN=1
+        PAR_GLOBAL_CLEAN=1
+        PAR_INITIALIZED=2
+        PAR_PROGNAME=.\demo.pl
+        PAR_TEMP=c:\temp\par-astewart\temp-1376
+
+        C:\Par>
+
+Looks a lot like "pp -d -o demo.exe program1.pl". The frontend is plain text
+Perl, no shared lib bundled. Using "-T $0" works because it doesn't check far
+enough into the file to see zip binary stuff in the back.
+
+Since this is Perl script, it can be run as an argument to $^X, or rely on the
+shebang line in Linux, or associate it with the perl.exe in Windows.
+
+An advantage to standalone Perl scripts over binary executables is that they
+can be made multi-arch and run on different OSes by packing the XS portions
+for each architecture. A binary executable is unique to the OS.
+
+----------
+
+The last form of a PAR package is a PAR file.
+
+        C:\Par>pp -p -o demo.par program1.pl
+
+        C:\Par>perl -MPAR demo.par a b c
+        My basename is demo
+        $0 = demo.par
+        My args are: a b c
+        My @INC is: C:\temp\par-astewart\cache-7a335837542a9519464f5484d8b281dd
+        f0a727ca/inc/lib C:\temp\par-astewart\cache-7a335837542a9519464f5484d8b
+        281ddf0a727ca/inc CODE(0x1890848) c:/Perl/lib c:/Perl/site/lib .
+
+        I am a PAR package
+        I am a binary file
+        I am running as '$^X -MPAR $0 @ARGV'
+                c:\Perl\bin\perl.exe -MPAR demo.par a b c
+
+        My temp dir is
+                C:\temp\par-astewart\cache-7a335837542a9519464f5484d8b281ddf0a7
+        27ca
+                and it will NOT be deleted after the script finishes
+        A copy of this script was extracted as
+                C:\temp\par-astewart\cache-7a335837542a9519464f5484d8b281ddf0a7
+        27ca\d2f130a4.pl
+
+        PAR environment:
+        PAR_0=C:\temp\par-astewart\cache-7a335837542a9519464f5484d8b281ddf0a727
+        ca\d2f130a4.pl
+        PAR_GLOBAL_CLEAN=1
+        PAR_PROGNAME=demo.par
+        PAR_TEMP=C:\temp\par-astewart\cache-7a335837542a9519464f5484d8b281ddf0a
+        727ca
+
+        C:\Par>
+
+This ran much like the standalone script, except invoking "-MPAR". But why
+didn't it run clean when PAR_GLOBAL_CLEAN=1 ? Because there is no frontend,
+binary or Perl, and therefore no way to clean up when the script finishes. If
+you need to run from a .par file and you need to clean up, you'll have to do
+it yourself.
+
+----------
+
+So far the temp dir has been based on the current value of $ENV{TEMP}. What if
+we want the temp dir to be some specific place for our application, regardless
+of system values ?
+
+        C:\Par>set PAR_GLOBAL_TEMP=c:\Par\temp
+
+        C:\Par>demo.exe a b c
+        My basename is demo
+        $0 = C:\Par\demo.exe
+        My args are: a b c
+        My @INC is: c:\Par\temp/inc/lib c:\Par\temp/inc CODE(0xdb2718) .
+
+        I am a PAR package
+        I am a binary file
+        I am running as '$0 @ARGV'
+                C:\Par\demo.exe a b c
+
+        My temp dir is
+                c:\Par\temp
+                and it will NOT be deleted after the script finishes
+        A copy of this script was extracted as
+                C:\Par\temp\d2f130a4.pl
+
+        PAR environment:
+        PAR_0=C:\Par\temp\d2f130a4.pl
+        PAR_ARGC=4
+        PAR_ARGV_0=demo.exe
+        PAR_ARGV_1=a
+        PAR_ARGV_2=b
+        PAR_ARGV_3=c
+        PAR_GLOBAL_CLEAN=1
+        PAR_GLOBAL_TEMP=c:\Par\temp
+        PAR_INITIALIZED=2
+        PAR_PROGNAME=C:\Par\demo.exe
+        PAR_SPAWNED=1
+        PAR_TEMP=c:\Par\temp
+
+        C:\Par>
+
+PAR_TEMP is set to PAR_GLOBAL_TEMP, but PAR_GLOBAL_CLEAN is overidden. If you
+chose a fixed temp dir, you also clean up after yourself. There is currently
+no way to define a fixed temp dir inside the PAR package, and since temp dir
+creation is done before the script runs, PAR_GLOBAL_TEMP must be set before
+running the PAR package.
+
+----------
+
+What about PAR packages with multiple scripts inside? First, a binary
+executable with two scripts inside. I'll package program2.pl and program3.pl
+(see listings below).
+
+        C:\Par>pp -o demo.exe program2.pl program3.pl
+
+        C:\Par>demo.exe a b c
+        Can't open perl script "demo": No such file or directory at script/main
+        .pl line 5.
+
+        C:\Par>
+
+What went wrong ? If there had been only one script inside, demo.exe would
+have run it. Since there is more than one, it determines the script name from
+it's own name.
+
+        C:\Par>copy demo.exe program2.exe
+                1 file(s) copied.
+
+        C:\Par>copy demo.exe program3.exe
+                1 file(s) copied.
+
+        C:\Par>program2.exe a b c
+        This is program2
+        My args are: a b c
+
+        C:\Par>program3.exe a b c
+        This is program3
+        My args are: a b c
+
+        C:\Par>
+
+----------
+
+And a PAR file with the same two programs:
+
+        C:\Par>pp -p -o demo.par program2.pl program3.pl
+
+        C:\Par>perl -MPAR demo.par program2 a b c
+        This is program2
+        My args are: a b c
+
+        C:\Par>perl -MPAR demo.par program3 a b c
+        This is program3
+        My args are: a b c
+
+        C:\Par>
+
+The names "program2" and "program3" are not passed as args. The value of $0 is
+"demo.par". I don't know of a way to get the command line script name.
+
+----------
+
+One last Windows user warning !! If you have a PAR package calling another PAR
+package with system() or exec(), beware of mixing dependant packages made with
+"pp -d" and non-dependant packages without "-d". One wants to use the
+perl5x.dll from the installed path and the other wants to use the perl5x.dll
+bundled in the package and loading from the temp dir. However, when one calls
+the other, Windows wants to use the perl5x.dll already in memory for the
+second one. Bad things can happen, since the Perl interpreter doesn't get
+initialized as expected. If you must mix, then wipe out the local PAR
+environment yourself before calling the other package, as program4.pl does.
+You may still see some peculiarities, such as:
+
+        C:\Par>set PAR_GLOBAL_TEMP=
+
+        C:\Par>pp -o program4.exe program4.pl
+
+        C:\Par>pp -d -o program5.exe program5.pl
+
+        C:\Par>program4.exe
+        This is program4
+        My @INC = CODE(0xdb6380) .
+        This is program5
+        My @INC = CODE(0xdb7134) .
+
+Even though program5.pl was packaged as "-d", it's @INC indicates that it is
+using the perl5x.dll in memory from program4.pl and therefore can't locate the
+installed lib dirs. I recommend not mixing package types !
+
+----------
+
+I hope all this helps. Package program1.pl in a variety of ways on your system
+and see what you get. If you discover any errors in this doc or some
+radically different behaviour on another OS, let me know :)
+
+Alan Stewart
+astewart1@cox.net
+
+P.S. This doc is in the public domain.
+
+
+#####################################################################
+Listing: program1.pl
+#####################################################################
+#!perl
+use strict;
+use warnings;
+use File::Basename;
+
+my $basename = basename($0, qw( .par .pl .exe ));
+print "My basename is $basename\n\$0 = $0\n";
+print "My args are: @ARGV\n";
+print "My \@INC is: @INC\n";
+print "\n";
+
+my $is_a_PAR;
+{ no warnings; $is_a_PAR = defined $PAR::LibCache{$ENV{PAR_PROGNAME}}}
+
+if ($is_a_PAR) {
+    print "I am a PAR package\n";
+    my $is_text = -T $0;
+    print $is_text ? "I am a Perl script\n" : "I am a binary file\n";
+
+    if ($0 =~ /\.par/) {
+        print "I am running as '\$^X -MPAR \$0 \@ARGV'\n";
+        print "\t$^X -MPAR $0 @ARGV\n"
+    }
+    elsif ($0 =~ /\.pl$/) {
+        print "I am running as '\$^X \$0 \@ARGV'\n";
+        print "\t$^X $0 @ARGV\n";
+    }
+    elsif ($0 =~ /\.exe/) {
+        print "I am running as '\$0 \@ARGV'\n";
+        print "\t$0 @ARGV\n";
+    }
+    else {
+        if ($is_text) {
+            print "I am running as '\$^X \$0 \@ARGV'\n";
+            print "\t$^X $0 @ARGV\n";
+        }
+        else {
+            print "I am running as '\$0 \@ARGV'/n";
+            print "\t$0 @ARGV/n";
+        }
+    }
+    print "\n";
+    print "My temp dir is \n\t$ENV{PAR_TEMP}\n";
+    print "\tand it will ", $ENV{PAR_CLEAN} ? "" : "NOT ";
+    print "be deleted after the script finishes\n";
+    print "A copy of this script was extracted as \n\t$ENV{PAR_0}\n";
+}
+else {
+    print "I am NOT a PAR package\n";
+    print "I am running as '\$^X \$0 \@ARGV'\n";
+    print "\t$^X $0 @ARGV\n";
+}
+
+print "\n";
+print "PAR environment:\n";
+for (sort keys %ENV) {
+   print "$_=$ENV{$_}\n" if /^PAR_/;
+}
+
+
+#####################################################################
+## Listing: program2.pl
+#####################################################################
+#!perl
+
+print "This is program2\n";
+print "My args are: @ARGV\n";
+
+
+#####################################################################
+## Listing: program3.pl
+#####################################################################
+#!perl
+
+print "This is program3\n";
+print "My args are: @ARGV\n";
+
+
+#####################################################################
+## Listing: program4.pl
+#####################################################################
+#!perl
+
+print "This is program4\n";
+print "My \@INC = @INC\n";
+for (keys %ENV) {delete $ENV{$_} if /^PAR_(?!GLOBAL)/}
+system "program5.exe";
+
+
+#####################################################################
+## Listing: program5.pl
+#####################################################################
+#!perl
+
+print "This is program5\n";
+print "My \@INC = @INC\n";
+
+
+#####################################################################
