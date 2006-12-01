@@ -1,8 +1,10 @@
-This is the README file for PAR, a toolkit to create and use perl scripts
-and modules stored inside compressed .par files.
+This is the README file for PAR-Packer, a part of the PAR toolkit.
+PAR-Packer is the PAR component that can generate stand-alone executables
+and ".par" archives.
 
-Please type "perldoc PAR" after installation to see the module usage
-information, and "perldoc PAR::FAQ" for frequently answered questions.
+The main front-end for PAR-Packer is the "pp" utility.
+
+Please type "perldoc PAR::FAQ" for frequently answered questions.
 
 For packing scripts with prerequisite modules into stand-alone scripts
 or executables (aka PerlApp, Perl2exe, or 'perlcc that works'), see
@@ -10,15 +12,17 @@ or executables (aka PerlApp, Perl2exe, or 'perlcc that works'), see
 
 For running ".par" files directly, see "perldoc parl".
 
-To generate/execute self-contained perl scripts, see "perldoc par.pl".
+To generate/execute self-contained perl scripts, see "perldoc pp"
+or "perldoc par.pl".
 
 An extensive "Cross-Platform Packaging and Deployment with PAR" tutorial
-is available as "perldoc PAR::Tutorial".  A slightly outdated version is
+is available as "perldoc PAR::Tutorial" from the PAR distribution which is
+a prerequisite for this distribution.  A slightly outdated version is
 also available online at <http://www.autrijus.org/par-tutorial/>.
 
 * Installation
 
-PAR uses the standard perl module install process:
+PAR-Packer uses the standard perl module install process:
 
     cpansign -v         # optional; see SIGNATURE for details
     perl Makefile.PL
@@ -26,33 +30,34 @@ PAR uses the standard perl module install process:
     make test
     make install
 
-If your system has a C compiler, or if somebody has built a PAR package for
-your architecture, the 'pp' tool and a stand-alone binary version of par.pl
-will be installed, so you can generate self-executable binaries like this:
+If your system has a C compiler, or if somebody has built a PAR-Packer
+package for your architecture, the 'pp' tool and a stand-alone binary
+version of par.pl will be installed, so you can generate self-executable
+binaries like this:
 
     pp -o foo.exe /home/test.pl
 
-* Binary installation with pre-built PAR files
+* Binary installation with pre-built PAR-Packer files
 
 This distribution uses the Module::Install framework to offer
-pre-compiled, architecture-dependent PAR packages to save your
+pre-compiled, architecture-dependent PAR-Packer packages to save your
 compilation time.  This process is completely automatic -- no
 actions are required on your part.
 
 However, if nobody has generated such a package for your architecture,
 you will see a short messages like this:
 
-    Fetching 'PAR-0.91-i386-freebsd-5.8.0.par' from www.cpan.org...
+    Fetching 'PAR-Packer0.97-i386-freebsd-5.8.0.par' from www.cpan.org...
     *** No installation package available for your architecture.
     However, you may wish to generate one with 'make par' and send
-    it to <AUTRIJUS@cpan.org>, so other people on the same platform
+    it to <SMUELLER@cpan.org>, so other people on the same platform
     can benefit from it.
     *** Proceeding with normal installation...
 
 If you are on a platform where normal users do not have a C compiler
 installed (MSWin32, darwin, etc.), please follow the instruction above
-and mail the generated PAR package (or more preferably, a URL to download
-that package) to me.  Thanks!
+and mail the generated PAR-Packer package (or more preferably, a URL
+to download that package) to me.  Thanks!
 
 * Notes for Windows users
 
@@ -78,8 +83,8 @@ with 'nmake' in the last three lines.
 
 Also, if you do not have the compiler used to compile your version or
 Perl (e.g. MinGW, GCC on Cygwin, or Microsoft Visual C++ for ActivePerl),
-and nobody has generated a Windows-specific PAR yet, you will not be able to
-generate binary executables using 'pp'.
+and nobody has generated a Windows-specific PAR-Packer yet, you will not
+be able to generate binary executables using 'pp'.
 
 Microsoft Visual C++ users: Do not forget to run "vcvars32.bat" (or equivalent)
 before "perl Makefile.PL"!
@@ -121,7 +126,8 @@ settings:
 Note that if your perl was built with a shared library, the
 'Stand-alone setup' above will still need a separate perl5x.dll or
 libperl.so to function correctly.  Patches to include a copy
-of libperl with the executable are most welcome.
+of libperl with the executable are most welcome. (Note: This might not
+apply any more.)
 
 Please consult the documentation of 'pp' for more information.
 
@@ -129,7 +135,11 @@ Please consult the documentation of 'pp' for more information.
 
 You can check out the most recent revision from PAR's Subversion repository:
 
-    http://svn.openfoundry.org/par/trunk/
+    http://svn.openfoundry.org/par/PAR-Packer
+
+Same applies to the main PAR distribution:
+
+    http://svn.openfoundry.org/par/trunk
 
 There is anonymous access to all. Commit access is handed out liberally;
 contact the mailing list for details.

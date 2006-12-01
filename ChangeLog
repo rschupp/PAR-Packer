@@ -1,4 +1,12 @@
 
+[Changes for 0.97 - Nov 28, 2006]
+* This is the first release of PAR-Packer as a separate distribution.
+* PAR and PAR-Packer (+pp, parl, etc.) have been separated because there
+  is usually no reason for the PAR Packager to be present on a user system
+  which just needs PAR.pm to access .par archives.
+* PAR-Packer will include all development tools such as those included
+  in the contrib/ subdirectory.
+
 [Changes for 0.961 - Nov 23, 2006]
 * Bug fixes, etc.
     - PAR::StrippedPARL::Base->write_parl() failed to work if the @INC

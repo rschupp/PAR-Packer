@@ -3,22 +3,21 @@
 use 5.006;
 use inc::Module::Install;
 
-name        'PAR';
-abstract    'Perl Archive Tookit';
-all_from    'lib/PAR.pm';
+name        'PAR-Packer';
+abstract    'PAR Packager';
+all_from    'lib/PAR/Packer.pm';
 
 requires    'File::Temp'        => 0.05;
 requires    'Compress::Zlib'    => ($^O eq 'MSWin32') ? 1.16 : 1.30;
 requires    'Archive::Zip'      => 1.00;
-requires    'Module::ScanDeps'  => 0.69;
+requires    'Module::ScanDeps'  => 0.70;
 requires    'PAR::Dist'         => 0.21;
+requires    'PAR'               => 0.97;
 requires    'Getopt::ArgvFile'  => 1.07;
 
 if ($^O eq 'MSWin32') {
-    feature 'Windows --icon and --info support',
-    recommends
-            'Parse::Binary'     => 0.04,
-            'Win32::Exe'        => 0.04;
+    requires  'Parse::Binary'     => 0.04;
+    requires  'Win32::Exe'        => 0.04;
 }
 
 if (can_use('Crypt::OpenPGP') or can_run('gpg')) {
@@ -69,7 +68,7 @@ sub par_prehook {
     # XXX: this branch is currently not entered
     if ($cc and $par) {
         my $answer = prompt(
-            "*** Pre-built PAR package found.  Use it instead of recompiling [y/N]?"
+            "*** Pre-built PAR-Packer package found.  Use it instead of recompiling [y/N]?"
         );
         if ($answer !~ /^[Yy]/) {
             load('preamble')->{preamble} = '';

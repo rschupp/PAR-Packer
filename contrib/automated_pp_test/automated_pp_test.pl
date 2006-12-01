@@ -4782,13 +4782,13 @@ sub pp_help_tests {
   # Outline
   # -------
   # . pipe "pp -h" and collect the results
-  # . The string "Perl Packager" should have been collected.
+  # . The string "PAR Packager" should have been collected.
   # 
   #--------------------------------------------------------------------
   my $error = EXIT_FAILURE;
   my $pipe_command_string = 'pp -h';
   my $sub_test = 0;
-  my $expected_string = 'Perl Packager';
+  my $expected_string = 'PAR Packager';
   my $print_cannot_locate_message = $FALSE;
 
 

@@ -1,5 +1,5 @@
 package PAR::Packer;
-$PAR::Packer::VERSION = '0.17';
+$PAR::Packer::VERSION = '0.97';
 
 use 5.006;
 use strict;
@@ -7,7 +7,7 @@ use warnings;
 
 =head1 NAME
 
-PAR::Packer - App::Packer backend for making PAR files
+PAR::Packer - PAR Packager
 
 =head1 DESCRIPTION
 
@@ -15,8 +15,12 @@ This module implements the B<App::Packer::Backend> interface, for generating
 stand-alone executables, perl scripts and PAR files.
 
 Currently, this module is used by the command line tool B<pp> internally, as
-well as by the contributed F<contrib/gui_pp/gpp> program.  Improvements on
-documenting the API will be most appreciated.
+well as by the contributed F<contrib/gui_pp/gpp> program.
+
+Since version 0.97 of PAR, this module and its related tools such as C<pp>
+have been stripped from the PAR distribution and are now distributed as
+the C<PAR-Packer> distribution so that PAR users need not necessarily
+have a C compiler.
 
 =cut
 
