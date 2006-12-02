@@ -7,6 +7,11 @@
 * PAR-Packer will include all development tools such as those included
   in the contrib/ subdirectory.
 
+* Bug fixes, etc.
+    - Moved most code from script/pp to lib/pp.pm so it gets picked up by the
+      CPAN indexer. Hence you will be able to write "install pp" in the CPAN
+      shell to install pp/PAR::Packer.
+
 [Changes for 0.961 - Nov 23, 2006]
 * Bug fixes, etc.
     - PAR::StrippedPARL::Base->write_parl() failed to work if the @INC
