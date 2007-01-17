@@ -42,6 +42,19 @@ auto_provides;
 
 par_base 'SMUELLER';
 
+
+if (defined($ENV{PERL5LIB}) || defined($ENV{PERLLIB})) {
+    warn <<'WARNING';
+*** You have extra Perl library paths set in your environment.
+    Please note that these paths (set with PERL5LIB or PERLLIB)
+    are not honored by perl when running under taint mode, which
+    may lead to problems. This is a limitation (by design) of
+    Perl, not of PAR::Packer; but some of the problems may
+    manifest here during installation.
+
+WARNING
+}
+
 par_prehook();
 WriteAll sign => 1;
 par_posthook();
