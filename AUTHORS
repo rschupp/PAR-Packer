@@ -1,0 +1,10 @@
+With release 0.970 the once monolithic PAR distribution was split
+into two separate distributions: PAR and PAR-Packer. The AUTHORS
+file which lists the names of contributors is maintained as a single
+file in the PAR distribution. You can most likely access the newest
+version at the following URL or find it in the PAR distribution on
+CPAN.
+
+http://search.cpan.org/dist/PAR/AUTHORS
+
+-- Steffen
