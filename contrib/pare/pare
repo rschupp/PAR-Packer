@@ -1,0 +1,163 @@
+#!perl -w
+use strict;
+
+use Archive::Zip qw ( :ERROR_CODES );
+use IO::File;
+use File::Basename;
+use Getopt::Std;
+
+my $VERSION = '1.1';
+my %opt;
+getopt( 'lu', \%opt );
+my @files = @ARGV;
+
+if ( !$opt{u} or !@files ) {
+    print <<".";
+Pare version $VERSION - pare down PAR file sizes by removing files found
+in another PAR and making the reduced PAR "use" the other PAR.
+
+Usage: pare [-l <logfile>] -u <usedfile> <reducedfiles> . . .
+.
+
+    exit;
+}
+
+my $lh;
+if ( $opt{l} ) {
+    my $mode = -f $opt{l} ? '>>' : '>';
+    open $lh, "$mode$opt{l}" or die "Can't open log file $opt{l}: $!\n";
+}
+else {
+    open $lh, ">&STDOUT";
+}
+print $lh <<".";
+-----------------------------------
+Common files in $opt{u} removed from:
+    @files
+-----------------------------------
+.
+
+for (@files) {
+    remove( $_, $opt{u} );
+}
+
+close $lh;
+
+sub remove {
+    my ( $par, $dep_par ) = @_;
+
+    my ( $loader, $buf, $cache_name );
+
+    my $fh = IO::File->new( $par, 'r' ) or die "Can't open $par: $!\n";
+    binmode($fh);
+    my $th = IO::File->new_tmpfile() or die "Can't open temp file: $!\n";
+    binmode($th);
+    select( ( select($th), $| = 1 )[0] );
+
+    $loader = 0;
+    read $fh, $buf, 4;
+    if ( $buf ne "PK\003\004" ) {
+        seek $fh, -8, 2;
+        read $fh, $buf, 8;
+        if ($buf ne "\nPAR.pm\n") {
+            die "File $par doesn't look like a zip or PAR file!\n";
+        }
+
+        seek $fh, -12, 2;
+        read $fh, $buf, 4;
+        seek $fh, -12 - unpack( "N", $buf ), 2;
+        $loader = tell $fh;
+
+        seek $fh, -18, 2;
+        read $fh, $buf, 6;
+        if ($buf eq "\0CACHE") {
+            seek $fh, -58, 2;
+            read $fh, $cache_name, 41;
+        }
+
+        seek $fh, 0, 0;
+        read $fh, $buf, $loader;
+        print $th $buf;
+
+        read $fh, $buf, 4;
+        while ( $buf eq "FILE" ) {
+            print $th $buf;
+
+            # file name
+            read $fh, $buf, 4;
+            print $th $buf;
+            read $fh, $buf, unpack( "N", $buf );
+            print $th $buf;
+
+            # file contents
+            read $fh, $buf, 4;
+            print $th $buf;
+            read $fh, $buf, unpack( "N", $buf );
+            print $th $buf;
+
+            read $fh, $buf, 4;
+        }
+
+        if ($buf ne "PK\003\004") {
+            die "Can't find start of zip in $par\n";
+        }
+        seek $fh, -4, 1;
+
+    }
+
+    my $par_zip = Archive::Zip->new();
+    $par_zip->readFromFileHandle($fh, $par) == AZ_OK or die "Can't read zip in $par\n";
+    my $manifest = $par_zip->contents('MANIFEST');
+    die "Can't find MANIFEST in $par\n" if !$manifest;
+    my $main_pl  = $par_zip->contents('script/main.pl');
+    die "Can't find main.pl in $par\n" if !$main_pl;
+    my $dep_zip  = Archive::Zip->new($dep_par);
+    die "Can't find or read $dep_par\n" if !$dep_zip;
+
+    print $lh "$par depends on $dep_par for:\n";
+    my $base_par = basename($dep_par);
+    my $used     = 'use PAR qw(';
+    if ( $main_pl =~ /^\Q$used/ ) {
+        if ( $main_pl !~ /$base_par/ ) {
+            $main_pl =~ s/^\Q$used/$used $base_par/;
+        }
+    }
+    else {
+        $main_pl = "use PAR qw( $base_par );\n$main_pl";
+    }
+
+    for ( $dep_zip->memberNames() ) {
+        if ( $par_zip->memberNamed($_) ) {
+            if ( !( /MANIFEST/ or /META.yml/ or /^script\// ) ) {
+                $par_zip->removeMember($_);
+                $manifest =~ s/$_\n//;
+                print $lh "    $_\n";
+            }
+        }
+    }
+    print $lh "\n";
+
+    $par_zip->contents( 'MANIFEST',       $manifest );
+    $par_zip->contents( 'script/main.pl', $main_pl );
+    $par_zip->writeToFileHandle($th);
+
+    if ($loader) {
+        if ($cache_name) {
+            $th->print($cache_name, "CACHE");
+        }
+        $th->print( pack( 'N', $th->tell - $loader ) );
+        $th->print("\nPAR.pm\n");
+    }
+
+    $fh->close;
+    $fh = IO::File->new( $par, 'w' ) or die "Can't open $par for writing: $!\n";
+    binmode($fh);
+
+    seek $th, 0, 0;
+
+    while ( read( $th, $buf, 32768 ) ) {
+        print $fh $buf;
+    }
+
+    close $fh;
+} ## end sub remove

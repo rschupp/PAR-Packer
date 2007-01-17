@@ -1,0 +1,900 @@
+#!/usr/bin/perl
+
+our $VERSION = '1.11';
+
+=head1 NAME
+
+tkpp - frontend to pp written in Perl/Tk
+
+=head1 SYNOPSIS
+
+B<tkpp>
+
+=head1 DESCRIPTION
+
+Tkpp is a GUI frontend to L<pp>, which can turn perl scripts into stand-alone
+PAR files, perl scripts or executables.
+
+Below is a short explanation of all available screen elements; it is also
+displayed from the C<Help> - C<Help Contents> menu item.
+
+=head2 Source file
+
+The file you want to pack.
+
+=head2 Output file (--output, --par, --perlscript)
+
+The file you want the source file packed as.  This option recognizes the
+C<.par>, C<.pl> and executable extensions, and supplies the corresponding build
+option automatically.
+
+=head2 Use icon (--icon)
+
+The icon file you want your output file to use.  This option will only work
+when building Microsoft Windows C<.exe> files.  Currently, this option only
+accepts C<.ico> files.
+
+=head2 Add modules/files (--add)
+
+Add the specified items into the package, along with their dependencies.
+Multiple items should be seperated by a comma (C<,>) or semicolon (C<;>).
+
+=head2 Exclude modules (--exclude)
+
+Exclude the given module from the dependency search path and from
+the package.  Multiple modules should be seperated by a comma (C<,>) or
+semicolon (C<;>).
+
+=head2 Scan dependencies (--compile, --execute, --noscan)
+
+Specify the dependency scanning method to use.  See L<pp> for explanations
+of the options.
+
+=head2 GUI (--gui)
+
+Build an executable that does not have a console window.  This option is
+only applicable on Microsoft Windows, and is ignored when the output file
+is a C<.par> file.
+
+=head2 Log (--log)
+
+Log the output of packaging to a file.  The log file, F<tkpp.log>, will
+be written in the user's home directory.
+
+=head2 Verbose (--verbose)
+
+Increase verbosity of output; from 1 to 3, 3 being the most verbose.
+This option is ignored if logging is not enabled.
+
+=head2 Build
+
+Starts building the package.
+
+=head2 File Menu->Preferences
+
+Specify the location to F<perl> and F<pp>.  They must be set before Tkpp
+will build anything.  The Tkpp configuration file, F<.tkpprc>, is
+stored in the user's home directory.
+
+=head1 NOTES
+
+I write code for a living not literature, so any misspelled words in any
+comments or anything, whoops ;)
+
+=cut
+
+###################################################
+# use modules
+###################################################
+use strict;
+use warnings;
+
+use Config;
+use FindBin;
+use File::Spec;
+use File::Basename;
+use Tk;
+use Tk::Balloon;
+use Tk::Dialog;
+use Tk::LabEntry;
+
+###################################################
+# global variables
+###################################################
+my $homedir = $ENV{USERPROFILE} || $ENV{HOME};
+my $addmodules;
+my $configfile = File::Spec->catfile($homedir, ".tkpprc");
+my $dogui;
+my $dolog;
+my $doverbose;
+my $excludemodules;
+my $scanmethod;
+my $gpgpath;
+my $iconfile;
+my $logfile = File::Spec->catfile($homedir, "tkpp.log");
+my $outputfile;
+my $perlfile = $^X;
+my $perlpath;
+my $pppath;
+my $sourcefile;
+my $statusbar;
+my $verboselevel;
+my $verboselevelbox;
+my $version    = "1.1";
+my $ppfile     = ($^O eq 'MSWin32') ? "pp.bat" : "pp";
+my @win32_only = ($^O eq 'MSWin32') ? () : (-state => 'disabled');
+
+###################################################
+# declare subroutines
+###################################################
+sub build;
+sub checkconfig;
+sub editpreferences;
+sub help;
+sub myicon;
+sub openfile;
+sub savefile;
+sub showdialog;
+sub splashimage;
+
+$| = 1;
+
+# begin building the gui
+#
+my $main      = MainWindow->new();
+my $iconimage = &myicon(1);
+$main->title("Tkpp");
+
+# make the menu bar
+#
+$main->configure(-menu => my $menu_bar = $main->Menu);
+my $file_mb = $menu_bar->cascade(
+    -label   => "~File",
+    -tearoff => 0
+);
+my $help_mb = $menu_bar->cascade(
+    -label   => "~Help",
+    -tearoff => 0,
+);
+$file_mb->command(
+    -label   => "~Preferences",
+    -command => \&editpreferences
+);
+$file_mb->command(
+    -label   => "E~xit",
+    -command => sub { $main->destroy }
+);
+$help_mb->command(
+    -label   => "~Help Contents",
+    -command => \&help
+);
+$help_mb->command(
+    -label   => "~About Tkpp",
+    -command => [
+        sub { &showdialog },
+        "About Tkpp", << ".",
+Tkpp was written by Doug Gruber <doug(a)dougthug.com>.
+In the event this application breaks, you get both pieces ; )
+
+Tkpp Version: $version
+.
+        "info"
+    ]
+);
+
+# the frame from which all frames will come
+#
+my $bigframe = $main->Frame(-borderwidth => 10);
+
+# make the top frame
+#
+my $frame = $bigframe->Frame();
+$frame->Label(-text => "Source file ")->grid(
+    (   $frame->Entry(
+	    -textvariable => \$sourcefile,
+	    -background   => "white",
+	    -width        => 30
+	)
+    ),
+    (   $frame->Button(
+            -image   => $main->Getimage("srcfile"),
+            -command => [
+                sub { &openfile },
+                [                 [ "Perl Files", [ ".par", ".pl", ".pm" ] ],
+                    [ "All Files", ["*"] ]
+                ],
+                \$sourcefile
+            ]
+        )
+    ),
+    -padx => 1,
+    -pady => 2
+);
+
+$frame->Label(-text => "Output file ")->grid(
+    (   $frame->Entry(
+	    -textvariable => \$outputfile,
+	    -background   => "white",
+	    -width        => 30
+	)
+    ),
+    (   $frame->Button(
+            -image   => $main->Getimage("textfile"),
+            -command => [
+                sub { &savefile },
+                [                 [ "Binary Files", ["*$Config{_exe}"] ],
+                    [ "PAR Files",    [".par"] ],
+                    [ "All Files",    ["*"] ]
+                ],
+                \$outputfile
+            ]
+        )
+    ),
+    -padx => 1,
+    -pady => 2,
+  );
+$frame->Label(-text => "Use icon    ")->grid(
+    (   $frame->Entry(
+	    -textvariable => \$iconfile,
+	    -background   => "white",
+	    -width        => 30
+	)
+    ),
+    (   $frame->Button(
+            -image   => $main->Getimage("file"),
+            -command => [
+                sub { &openfile }, [ [ "ICO Files", [".ico"] ] ], \$iconfile
+            ]
+        )
+    ),
+    -padx => 1,
+    -pady => 2,
+  )
+  if ($^O eq 'MSWin32');
+
+# make the middle frame with the module lists
+#
+my $frame2 = $bigframe->Frame(-borderwidth => 1);
+my $frame2balloon = $frame2->Balloon();
+$frame2->Label(-text => "Add modules     ")->grid(
+    my $addmoduleentry = $frame2->Entry(
+	-textvariable => \$addmodules,
+	-background   => "white",
+	-width        => 30
+    ),
+    -padx => 1,
+    -pady => 2
+);
+
+$frame2->Label(-text => "Exclude modules ")->grid(
+    my $excludemoduleentry = $frame2->Entry(
+	-textvariable => \$excludemodules,
+	-background   => "white",
+	-width        => 30
+    ),
+    -padx => 1,
+    -pady => 2
+);
+
+$frame2->Label(-text => "Scan dependencies ")->grid(
+    my $scanmethodbox = $frame2->Optionmenu(
+        -options => [
+            ['static'           => undef],
+            ['compile + static' => ['--compile']],
+            ['execute + static' => ['--execute']],
+            ['compile only'     => ['--compile', '--noscan']],
+            ['execute only'     => ['--execute', '--noscan']],
+        ],
+        -variable => \$scanmethod,
+    ),
+    -padx => 1,
+    -pady => 2
+);
+
+$frame2balloon->attach(
+    $addmoduleentry,
+    -balloonposition => "mouse",
+    -balloonmsg      =>
+"Adds the specified module(s) into the package, along with its dependencies, seperate each module with a comma or semicolon"
+);
+$frame2balloon->attach(
+    $excludemoduleentry,
+    -balloonposition => "mouse",
+    -balloonmsg      =>
+"Excludes the given module(s) from the dependency search path and from the package, seperate each module with a comma or semicolon"
+);
+
+# make the middle frame with the checkboxes
+#
+my $frame3        = $bigframe->Frame(-borderwidth => 5);
+my $frame3balloon = $frame3->Balloon();
+my $guicheck      = $frame3->Checkbutton(
+    -text     => "GUI",
+    -variable => \$dogui,
+    -onvalue  => "--gui",
+    -offvalue => "",
+    @win32_only
+  )->grid(
+    (   my $logcheck = $frame3->Checkbutton(
+            -text     => "Log",
+            -variable => \$dolog,
+            -onvalue  => "--log=$logfile",
+            -offvalue => ""
+        )
+    ),
+    (   my $verbosecheck = $frame3->Checkbutton(
+            -text     => "Verbose",
+            -variable => \$doverbose,
+            -onvalue  => "--verbose=",
+            -offvalue => ""
+        )
+    ),
+    (   $verboselevelbox = $frame3->Optionmenu(
+            -options => [ 3, 2, 1 ],
+            -variable => \$verboselevel,
+        )
+    )
+  );
+
+my $guiballon =
+  (($^O eq "MSWin32")
+    ? "Build an executable that does not have a console window"
+    : "This option is only available under Windows");
+$frame3balloon->attach(
+    $guicheck,
+    -balloonposition => "mouse",
+    -balloonmsg      => $guiballon
+);
+$frame3balloon->attach(
+    $logcheck,
+    -balloonposition => "mouse",
+    -balloonmsg      => "Log the output of packaging to a file"
+);
+$frame3balloon->attach(
+    $verbosecheck,
+    -balloonposition => "mouse",
+    -balloonmsg      =>
+"Increase verbosity of output, this option is ignored if logging is not enabled"
+);
+$frame3balloon->attach(
+    $verboselevelbox,
+    -balloonposition => "mouse",
+    -balloonmsg => "The verbosity level from 1 to 3, 3 being the most verbose"
+);
+
+# make the bottom frame
+#
+my $frame4 = $bigframe->Frame(-borderwidth => 5);
+$frame4->Button(
+    -text      => "Build",
+    -width     => 10,
+    -underline => 0,
+    -command   => \&build
+)->grid();
+$main->bind("<Alt-b>" => \&build);
+$main->bind("<Alt-B>" => \&build);
+
+# make the status bar (for future use)
+#
+$statusbar = "Ready";
+my $statusbottom = $main->Label(
+    -textvariable => \$statusbar,
+    -anchor       => "w",
+    -relief       => "sunken"
+  )->pack(
+    -side => "bottom",
+    -fill => "x"
+  );
+
+$frame->pack();
+$frame2->pack();
+$frame3->pack();
+$frame4->pack();
+$bigframe->pack();
+
+# create the splashscreen
+#
+my $splashimage = &splashimage(1);
+$main->withdraw();
+if (my $splash = eval { require Tk::Splashscreen; $main->Splashscreen }) {
+$splash->Label(
+    -text       => "Tkpp",
+    -font       => [ -size => "10", -weight => "bold" ],
+    -background => "#746b6b"
+  )->pack(
+    -fill   => "both",
+    -expand => 1
+  );
+$splash->Label(
+    -image => $main->Photo("image", -data => $splashimage, -format => "gif"),
+    -background => "#746b6b"
+)->pack();
+$splash->Splash(1000);
+$splash->Destroy();
+}
+checkconfig();
+$main->iconify();
+$main->deiconify();
+
+#$main->raise();
+
+my $icon = $main->Photo(
+    "image",
+    -data   => $iconimage,
+    -format => "gif"
+);
+$main->idletasks;
+$main->iconimage($icon);
+
+# align the main window appx with the middle of the screen
+#
+my $centerwidth  = int(($main->screenwidth / 2) -  ($main->width / 2));
+my $centerheight = int(($main->screenheight / 2) - ($main->height / 2));
+$main->geometry("+$centerwidth+$centerheight");
+
+MainLoop;
+
+###################################################
+# begin subroutines
+###################################################
+
+sub build {
+    if (!(-e $configfile)) {
+        showdialog("Preferences not set", << ".", "error");
+Your preferences have not been set or your preferences file has been removed.
+You will not be able to build your file untill this is complete.
+Please go to File -> Preferences to continue.
+.
+    }
+    elsif (!$pppath) {
+        showdialog("Path not set", << ".", "error");
+The path to $ppfile has not been set.
+Please go to File -> Preferences to continue.
+.
+    }
+    elsif ($perlpath eq "") {
+        showdialog("Path not set", << ".", "error");
+The path to perl$Config{_exe} has not been set.
+Please go to File -> Preferences to continue.
+.
+    }
+    elsif (!(-e $pppath)) {
+        showdialog("Invalid path", << ".", "error");
+The path to $ppfile is invalid.
+Check that the file exits and that your path is setup correctly.
+Please go to File -> Preferences to change the setting.
+.
+    }
+    elsif (!(-e $perlpath)) {
+        showdialog("Invalid path", << ".", "error");
+The path to perl$Config{_exe} is invalid.
+Check that the file exits and that your path is setup correctly.
+Please go to File -> Preferences to change the setting.
+.
+    }
+    elsif ($sourcefile eq "") {
+        showdialog("Missing parameter",
+            "You must specify a source file to build.", "error");
+    }
+    elsif ($outputfile eq "") {
+        showdialog("Missing parameter",
+            "You must specify an output file to write.", "error");
+    }
+    else {
+        $statusbar = "Building...";
+        $main->Busy();
+        my @args = ("$pppath", "--output=$outputfile");
+
+        if ($outputfile =~ /\.par$/i) {
+            push(@args, "--par");
+        }
+        elsif ($outputfile =~ /\.pl$/i) {
+            push(@args, "--perlscript");
+        }
+        elsif ($outputfile !~ /\Q$Config{_exe}\E$/i) {
+            showdialog("Invalid File Format", << ".", "error");
+You are trying to write your output file as an invalid file format.
+It must be either a $Config{_exe} or .par file.
+.
+            $main->Unbusy();
+            $statusbar = "Ready";
+            return ();
+        }
+
+        if ($iconfile) {
+            push(@args, "--icon=$iconfile");
+        }
+        if ($dogui) {
+            push(@args, $dogui);
+        }
+        if ($dolog) {
+            push(@args, $dolog);
+        }
+        if ($doverbose) {
+            push(@args, "$doverbose$verboselevel");
+        }
+        if ($addmodules) {
+            foreach (split(/,|;/, $addmodules)) {
+                $_ =~ s/^\s//;
+                push(@args, "--add=$_");
+            }
+        }
+        if ($excludemodules) {
+            foreach (split(/,|;/, $excludemodules)) {
+                $_ =~ s/^\s//;
+                push(@args, "--exclude=$_");
+            }
+        }
+        if ($scanmethod) {
+            push @args, @$scanmethod;
+        }
+
+        unlink($logfile);
+        system($^X, @args, $sourcefile);
+        if ($dolog) {
+            open LOGFILE, ">>$logfile";
+            print LOGFILE "Executed Command: @args\n";
+            close LOGFILE;
+        }
+        $main->Unbusy();
+        $statusbar = "Ready";
+        # $statusbar .= "(Error $?: $!)" if $?;
+    }
+}
+
+sub checkconfig {
+    if (-e $configfile) {
+        open CONFIGFILE, "$configfile";
+        while (<CONFIGFILE>) {
+            if ($_ =~ m/perlpath = (.*)/) {
+                $perlpath = $1;
+            }
+            elsif ($_ =~ m/pppath = (.*)/) {
+                $pppath = $1;
+            }
+            elsif ($_ =~ m/gpgpath = (.*)/) {
+                $gpgpath = $1;
+            }
+        }
+        close CONFIGFILE;
+    }
+    else {
+        editpreferences();
+    }
+}
+
+sub editpreferences {
+    if (-e $configfile) {
+        open CONFIGFILE, "+<$configfile";
+        while (<CONFIGFILE>) {
+            if ($_ =~ m/perlpath = (.*)/) {
+                $perlpath = $1;
+            }
+            elsif ($_ =~ m/pppath = (.*)/) {
+                $pppath = $1;
+            }
+            elsif ($_ =~ m/gpgpath = (.*)/) {
+                $gpgpath = $1;
+            }
+        }
+    }
+    else {
+        $perlpath = can_run($^X);
+        $pppath = File::Spec->catfile($FindBin::Bin, $ppfile);
+        $pppath = File::Spec->catfile(dirname($perlpath), $ppfile)
+	    unless -e $pppath;
+        $perlpath = '' unless -e $perlpath;
+        $pppath = '' unless -e $pppath;
+        open CONFIGFILE, ">>$configfile";
+    }
+    my $preferences = $main->DialogBox(-title          => "Preferences");
+    my $prefframe   = $preferences->Frame(-borderwidth => 5);
+
+    $prefframe->Label(-text => "Path to perl ")->grid(
+	(          $prefframe->Entry(
+		-textvariable => \$perlpath,
+		-background   => "white",
+		-width        => 30
+	    )
+	),
+	(          $prefframe->Button(
+		-image   => $main->Getimage("openfold"),
+		-command => [     sub { &openfile },
+		    [ [ "Perl", ["$perlfile"] ], [ "All Files", ["*"] ] ],
+		    \$perlpath
+		]
+	    )
+	),
+	-padx => 1,
+	-pady => 2
+    );
+
+    $prefframe->Label(-text => "Path to pp   ")->grid(
+	(          $prefframe->Entry(
+		-textvariable => \$pppath,
+		-background   => "white",
+		-width        => 30
+	    )
+	),
+        (          $preferences->Button(
+                -image   => $main->Getimage("openfold"),
+                -command => [     sub { &openfile },
+                    [                 [   "pp Batch File",
+                            [ $ppfile ]
+                        ],
+                        [ "All Files", ["*"] ]
+                    ],
+                    \$pppath
+                ]
+            )
+        ),
+        -padx => 1,
+        -pady => 2,
+      );
+    $prefframe->pack();
+    my $answer = $preferences->Show();
+    if ($answer eq "OK") {
+        no warnings "uninitialized";
+        print CONFIGFILE "perlpath = $perlpath\n";
+        print CONFIGFILE "pppath = $pppath\n";
+        print CONFIGFILE "gpgpath = $gpgpath\n";
+        close CONFIGFILE;
+        sub { $preferences->destroy };
+    }
+}
+
+my $help_text;
+sub help {
+    my $help = $main->DialogBox(-title => "Tkpp Help");
+    if (!$help_text) {
+        local $/;
+        seek DATA, 0, 0;
+        $help_text = <DATA>;
+        $help_text =~ s/.*?=head2/=head2/s;
+        $help_text =~ s/=head1 NOTES.*//s;
+        $help_text =~ s/=head2 (.*)\s+/* $1:\n/g;
+        $help_text =~ s/[LF]<(.*?)>/$1/g;
+        $help_text =~ s/C<(.*?)>/"$1"/g;
+    };
+    $help->Label(
+        -text    => $help_text,
+        -justify => "left"
+    )->pack(-fill => "x");
+    $help->Show();
+}
+
+sub openfile {
+    my $types = shift();
+    my $file  = shift();
+
+    $$file = $main->getOpenFile(
+        -filetypes  => $types,
+        -initialdir => $$file
+    );
+    return ();
+}
+
+sub savefile {
+    my $types = shift();
+    my $file  = shift();
+
+    $$file = $main->getSaveFile(
+        -filetypes  => $types,
+        -initialdir => $$file
+    );
+    return ();
+}
+
+sub showdialog {
+    my $title   = shift();
+    my $message = shift();
+    my $icon    = shift();
+
+    if ($^O eq "MSWin32") {
+        my $messageBox = $main->messageBox(
+            -title   => "$title",
+            -message => "$message",
+            -type    => "OK",
+            -icon    => "$icon"
+        );
+    }
+    else {
+        my $dialog = $main->DialogBox(-title     => $title);
+        my $frame  = $dialog->Frame(-borderwidth => 2);
+        $frame->Label(-width  => 4)->grid($frame->Label());
+        $frame->Label(-bitmap => $icon)->grid(
+            $frame->Label(
+                -text    => $message,
+                -justify => "left"
+            )
+        );
+        $frame->pack();
+        $dialog->bell();
+        $dialog->Show();
+    }
+
+    return 0;
+}
+
+sub splashimage {
+    my $splash_gif = << '.';
+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
+.
+
+    my %send_back = (1 => $splash_gif);
+
+    return ($send_back{ $_[0] });
+}
+
+sub myicon {
+    my $icon_gif = << '.';
+R0lGODlhIAAgAOcAAComItra1qKiok5OSoqKfnp6dl5eXrKyrmpqZuLi2sLCuk5KRkZGOp6enubm
+4nZ2coaGfpqWlu7u6tbWzkI+Om5ubmZmZn5+fpKOilJSTs7Oyra2rjIyKvLy7q6qonZubnZyblZW
+VmZeXr66ssbGvpaOjvr6+oKCgmZiYnZqavb28mpmZlpaUn52do6GhioqJpaSknJmZsrKwm5iYt7e
+2pqaljYyKnpubnJqaoqCgqaenoJ+epKKiurq5sK+tn56eqqmopqSknpybjY2Lm5mYjIuKo6KhtLS
+yq6uoi4uJk5GRoZ+flpSUmJaWkpGQmpiYmpeXsrKyr6+usK+voqGgp6alt7a2l5aVi4uKlZOTl5W
+VoJ6dpKSjm5mZtrW0uLi3sbGwtLS0np2crKuqo6KimJiVqKemp6WlkZCPrayrubi4rq2trq6uoaG
+hq6qpjY2NqainlZSTvby8lpWUoaCfoqGhlpaWlJOSpKOjm5qZnJubnp2dvLy8sbCvsrGxlpWVmJe
+XtLOyrq2sjo2LtbS0r66uoaCgsrKxkpGRqaiot7e3urq6tra2ubm5srGvtbSys7Kyk5KSoJ+ftbW
+0vb29npycoJ6ep6amlZSUu7u7nZycjYyLl5aWlJOTqKenqqmpm5qarKyssLCvpqamuLi4rKurq6q
+qjY2MkZCQraysv//////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////yH+FUNyZWF0ZWQgd2l0aCBU
+aGUgR0lNUAAh+QQBCgD/ACwAAAAAIAAgAAAI/gD/mTDRwUGCgzQCKPQyqaFDhg4bTnh0hAaNf//U
+qPEz5pMnT1XOlCiBwYiLky6MkEHJkkpKI0gSsGFzKQgMMmSW/NCkKcUHHF26xMABNCiRoE+giJgz
+h4WGRIlsljhJZ0ulqz+J+vT5MyhSEVmyFJGhQ4fUk0sstWhR6UMKPXq4pkgBdMaMFTNE3LmTxBEc
+ODBK8MCZI63aFppu3NADSAsgQDG6rMD75EnYF46g2uTBk8meHIUt/QiaoUKDT58M3V3xRIQIJkyS
+yPiIJ4SByQIK4aSTwxLTCDQyqVBhpYXdyiLixMH8sYQkKQr5qFizxgUVLXv2qKHEnZKKT5WT/r5m
+ggVSWRhBdJAixX3KFCqYHmjQoKI79y9rlULBhOkFWR0l4LECGGBwt8EGmrRhBR982McdH4II0toT
+sPX1EQx4FNBII5TwkUoqQFhhAoPcZbJhJpQsskglUDyhhRYvQPKXYGSoSIkDJ5wAQQWUjDLKGipE
+0EADCBRIiRSSvYiFIxeWUIeNimCAASl/MFJFFRXwwYWKbYTCnQaXEPHHH0s2WUJDlAQwwAAWNIBH
+BRW8kQkLoICCSIOU6GBKFxWSEEEEZOCBB1SNhCGJJCZQEkIUUexRyArcGRAFgz/AMANsL/QRRBA4
+8eCpDoIYYkgmi4zCICOhJMLdJXWsd4Mm/iuMiYUCf55UB044SZmGBBgQyIcXfmzYwg4NiYEXpj5I
+aQgVVNRxqwt00FGHIi3k2IgpMBxySGWhhGLJE10o6cNIhYGWA7NLLFGHKZVkdwRiH+YFWgtPzDBm
+EVLglO6+ou4LAw5/JkLUJZd08cRke1QGGxY+eGqJJUuAltYPPzzgQiV/TiIEJ5PNEN4HK4j5RxJS
+nNTCDxCntVYLH1RywwcfRICEZHgRgQIKkfFJ3gg47dHCw4ddhUIlmsCMQyimVLZCF1BAkUdQTTRR
+xAgnqVXJWlcFJYJbrmUhhg8xxDBDF1FnJa6nK19VSRchhNATDnPhELZXXSCAgCU/ccJJhxEN82D1
+VTd0UeceH+hBlOBDEQXz4jgwxTBOaRP9gWIv06XV4lvNlUIMmFLtwsNpL35DW4rDzNPiP4HSxWUe
+7As61oqJ/nLLgGcV2RNDDAHAP044oUQnWUQi/PCIFF+8EsgLjwgqzKNCARYvvDDIPwYYwMAQHGyy
+CQfcd++995vY4H0RGP0TEAA7
+.
+
+    my %send_back = (1 => $icon_gif);
+
+    return ($send_back{ $_[0] });
+}
+
+sub can_run {
+    my $cmd = $_[0];
+
+    require Config;
+    require ExtUtils::MakeMaker;
+
+    my $_cmd = $cmd;
+    return $_cmd if (-x $_cmd or $_cmd = MM->maybe_command($_cmd));
+
+    for my $dir ((split /$Config::Config{path_sep}/, $ENV{PATH}), '.') {
+        my $abs = File::Spec->catfile($dir, $_[0]);
+        return $abs if (-x $abs or $abs = MM->maybe_command($abs));
+    }
+
+    return;
+}
+
+__DATA__
+
+=head1 SEE ALSO
+
+L<pp>, L<PAR>
+
+=head1 AUTHORS
+
+Tkpp was written by Doug Gruber.
+In the event this application breaks, you get both pieces ;)
+
+=head1 COPYRIGHT
+
+Copyright 2003, 2004, 2005, 2006 by Doug Gruber E<lt>doug(a)dougthug.comE<gt>,
+Audrey Tang E<lt>cpan@audreyt.orgE<gt>.
+
+Neither this program nor the associated L<pp> program impose any
+licensing restrictions on files generated by their execution, in
+accordance with the 8th article of the Artistic License:
+
+    "Aggregation of this Package with a commercial distribution is
+    always permitted provided that the use of this Package is embedded;
+    that is, when no overt attempt is made to make this Package's
+    interfaces visible to the end user of the commercial distribution.
+    Such use shall not be construed as a distribution of this Package."
+
+Therefore, you are absolutely free to place any license on the resulting
+executable, as long as the packed 3rd-party libraries are also available
+under the Artistic License.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+See L<http://www.perl.com/perl/misc/Artistic.html>
+
+=cut
