@@ -1,8 +1,17 @@
 
-[Changes for 0.971 - Dec  6, 2006]
+[Changes for 0.971 - Jan 23, 2007]
+* New features
+    - If PERL5LIB is set, that variable may be ignored in some parts
+      of the myldr/ build process. We now warn the user during Makefile.PL
+      if PERL5LIB is set. (Gaal Yahas)
+
 * Bug fixes, etc.
     - Cosmetics: Add "use strict;" and "use warnings;" to some files that
       lacked it.
+    - Several bug fixes for the tests from Malcolm Nooning. Related to
+      making them work on Windows with spaces in paths.
+    - Added regexp escaping to the "pp -X foo.par" use case.
+      (Eric Wilhelm)
 
 [Changes for 0.970 - Dec  3, 2006]
 * This is the first release of PAR-Packer as a separate distribution.
