@@ -574,7 +574,7 @@ YAML
         $dep_list = join ', ', keys %dep_zips;
         $self->_vprint(0, "$self->{output} will require $dep_list at runtime");
 
-        $manifest =~ s/$_\n// for (keys %dep_zip_files);
+        $manifest =~ s/\Q$_\E\n// for (keys %dep_zip_files);
     }
 
     $self->_vprint(2, "... updating $_") for qw(MANIFEST META.yml);
