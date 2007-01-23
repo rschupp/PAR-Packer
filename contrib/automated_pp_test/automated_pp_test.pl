@@ -271,7 +271,7 @@ sub find_par_temp_base {
 
     if ($ENV{PAR_TEMP} and $ENV{PAR_TEMP} =~ /(.+)/) {
         $par_temp = $1;
-        return;
+        return $par_temp;
     }
 
     foreach $path (
