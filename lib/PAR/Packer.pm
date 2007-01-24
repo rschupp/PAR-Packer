@@ -3,7 +3,7 @@ use 5.006;
 use strict;
 use warnings;
 
-our $VERSION = '0.970';
+our $VERSION = '0.971';
 
 =head1 NAME
 
@@ -661,6 +661,9 @@ sub pack_manifest_hash {
         $self->_name2moddata($name, \@modules, \@data);
     }
 
+    # Skip either
+    # a) all files from a .par file or
+    # b) A module
     foreach my $name ('PAR', @{ $opt->{X} || [] }) {
         if (-f $name and my $dep_zip = Archive::Zip->new($name)) {
             for ($dep_zip->memberNames()) {
