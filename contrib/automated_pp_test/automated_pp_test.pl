@@ -23,7 +23,7 @@
 #
 #
 ########################################################################
-our $VERSION = 0.16;
+our $VERSION = 0.17;
 ########################################################################
 # Prior to each test
 #   . Remove any possible files that could exist from a previous
@@ -2457,7 +2457,7 @@ sub hidden_print {
   print ("\n"); # To add a line after the above expected error messages.
 
   #.................................................................
-  $cmd = 'pp --lib  ' . "$foo_dir foo.pl";
+  $cmd = 'pp --lib  ' . "\"$foo_dir\" foo.pl";
   if (system("$cmd")) {
     $$message_ref = "\namsg180: sub $test_name_string cannot system $cmd\n";
     return (EXIT_FAILURE);
@@ -5994,7 +5994,7 @@ sub pp_test_small_minus_a {
     return (EXIT_FAILURE);
   }
   #.................................................................
-  $cmd = "pp -o $hello_executable -a $orig_fqpn hello.pl";
+  $cmd = "pp -o $hello_executable -a \"$orig_fqpn\" hello.pl";
 
   if (system("$cmd")) {
     $$message_ref = "\namsg596: sub $test_name_string cannot system $cmd\n";
@@ -6088,7 +6088,7 @@ sub pp_test_small_minus_a {
   }
 
   #.................................................................
-  $cmd = "pp -o $hello_executable -a $forward_fqpn hello.pl";
+  $cmd = "pp -o $hello_executable -a \"$forward_fqpn\" hello.pl";
   if (system("$cmd")) {
     $$message_ref = "\namsg602: sub $test_name_string cannot system $cmd\n";
     return (EXIT_FAILURE);
@@ -6667,8 +6667,8 @@ sub pp_test_large_minus_A {
   }
 
   #.................................................................
-  $cmd = "pp -o $hello_executable -A $all_text_files_fqpn " .
-                                " -a $all_text_files_fqpn " .
+  $cmd = "pp -o $hello_executable -A \"$all_text_files_fqpn\" " .
+                                " -a \"$all_text_files_fqpn\" " .
                                 " $hello_pl_file";
   print ("\namsg654: About to system $cmd\n") if $verbose;
   if (system("$cmd")) {
@@ -6773,8 +6773,8 @@ sub pp_test_large_minus_A {
 
   #.................................................................
   $all_text_files_fqpn =~ s!\\!\/!g;
-  $cmd = "pp -o $hello_executable -A $all_text_files_fqpn " .
-                                " -a $all_text_files_fqpn " .
+  $cmd = "pp -o $hello_executable -A \"$all_text_files_fqpn\" " .
+                                " -a \"$all_text_files_fqpn\" " .
                                 " $hello_pl_file";
   print ("\namsg672: About to system $cmd\n") if $verbose;
   if (system("$cmd")) {
@@ -6957,7 +6957,9 @@ $hello_executable = "hello$_out";
 $foo_executable = "foo$_out";
 $bar_executable = "bar$_out";
 
-$startdir ||= File::Spec->catdir(File::Spec->tmpdir, 'pp_switch_tests');
+if ($startdir eq "")  {
+    $startdir = File::Spec->catdir($orig_dir, 'pp_switch_tests');
+}
 File::Path::rmtree([$startdir]) if -d $startdir;
 
 # Clean up after us.
