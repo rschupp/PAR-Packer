@@ -279,9 +279,11 @@ sub license_from {
 
     if (
         $self->_slurp($file) =~ m/
-        =head \d \s+
-        (?:licen[cs]e|licensing|copyright|legal)\b
-        (.*?)
+        (
+            =head \d \s+
+            (?:licen[cs]e|licensing|copyright|legal)\b
+            .*?
+        )
         (=head\\d.*|=cut.*|)
         \z
     /ixms
@@ -298,6 +300,7 @@ sub license_from {
             'LGPL'                                            => 'lgpl',
             'BSD'                                             => 'bsd',
             'Artistic'                                        => 'artistic',
+            'MIT'                                             => 'MIT',
         );
         while ( my ( $pattern, $license ) = splice( @phrases, 0, 2 ) ) {
             $pattern =~ s{\s+}{\\s+}g;

@@ -1,5 +1,5 @@
 
-[Changes for 0.971 - Jan 23, 2007]
+[Changes for 0.973 - Feb  3, 2007]
 * New features
     - If PERL5LIB is set, that variable may be ignored in some parts
       of the myldr/ build process. We now warn the user during Makefile.PL
