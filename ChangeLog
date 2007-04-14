@@ -1,4 +1,8 @@
 
+[Changes for 0.974 - Apr 14, 2007]
+* Bug fixes, etc.
+    - No longer assume -B when using pp -P (or -p). (Roderich Schupp)
+
 [Changes for 0.973 - Feb  3, 2007]
 * New features
     - If PERL5LIB is set, that variable may be ignored in some parts
