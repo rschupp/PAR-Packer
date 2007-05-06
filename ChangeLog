@@ -1,3 +1,7 @@
+[Changes for 0.975 - May 06, 2007]
+* Bug fixes, etc.
+    - trailing backslashes in @INC paths handled in
+    PAR::StrippedParl::Base
 
 [Changes for 0.975 - May 01, 2007]
 * Bug fixes, etc.

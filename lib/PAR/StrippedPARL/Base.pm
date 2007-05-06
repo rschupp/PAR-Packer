@@ -2,7 +2,7 @@ package PAR::StrippedPARL::Base;
 use 5.006;
 use strict;
 use warnings;
-our $VERSION = '0.958';
+our $VERSION = '0.975';
 
 use File::Temp ();
 use File::Spec;
@@ -68,7 +68,11 @@ sub write_parl {
     chmod(oct('755'), $tfile);
 
     # Use this to generate a real parl
-    my @libs = (map {"-I\"$_\""} @INC);
+    my @libs = ();
+    for my $ilib ( @INC ) {
+        $ilib =~ s/\\$/\\\\/;
+        push(@libs, qq(-I\"$ilib\") );
+    }
     my @args = (@libs, qw/-q -B/);
 
     # prepend ./ if applicable
