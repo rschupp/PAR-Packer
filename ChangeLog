@@ -1,15 +1,9 @@
 [Changes for 0.975 - May 06, 2007]
 * Bug fixes, etc.
-    - trailing backslashes in @INC paths handled in
-    PAR::StrippedParl::Base
-
-[Changes for 0.975 - May 01, 2007]
-* Bug fixes, etc.
+    - Trailing backslashes in @INC paths handled in
+      PAR::StrippedParl::Base
     - Win32 added to 'required modules' to handle changes in Win32 core
       present in ActiveState build 820 and development branches.
-
-[Changes for 0.974 - Apr 14, 2007]
-* Bug fixes, etc.
     - No longer assume -B when using pp -P (or -p). (Roderich Schupp)
 
 [Changes for 0.973 - Feb  3, 2007]
