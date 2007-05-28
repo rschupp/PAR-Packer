@@ -102,17 +102,30 @@ int main ( int argc, char **argv, char **env )
       PL_cshlen = strlen(PL_cshname);
 #endif
 
+#ifdef PERL_PROFILING
+#define PROFILING_OPTION 1
+#else
+#define PROFILING_OPTION 0
+#endif
+
 #ifdef ALLOW_PERL_OPTIONS
 #define EXTRA_OPTIONS 3
 #else
 #define EXTRA_OPTIONS 4
 #endif /* ALLOW_PERL_OPTIONS */
-    New(666, fakeargv, argc + EXTRA_OPTIONS + 1, char *);
+    New(666, fakeargv, argc + EXTRA_OPTIONS + 1 + PROFILING_OPTION, char *);
 
     fakeargv[0] = argv[0];
+#ifdef PERL_PROFILING
+    fakeargv[1] = "-d:DProf";
+    fakeargv[2] = "-e";
+    fakeargv[3] = load_me_2;
+    options_count = 4;
+#else
     fakeargv[1] = "-e";
     fakeargv[2] = load_me_2;
     options_count = 3;
+#endif
 
 #ifndef ALLOW_PERL_OPTIONS
     fakeargv[options_count] = "--";
