@@ -69,7 +69,7 @@ $dynperl = 1 if $pldflags =~ /\B-lperl\b/; # Gentoo lies to us!
 
 my $cc = $Config{cc};
 my $ld = $Config{ld} || (($^O eq 'MSWin32') ? 'link.exe' : $Config{cc});
-$ld = $Config{cc} if ($^O =~ /^(?:dec_osf|aix)$/);
+$ld = $Config{cc} if ($^O =~ /^(?:dec_osf|aix|hpux)$/);
 
 my $f2c = File::Spec->catfile('.', "file2c.pl");
 my $par_pl = File::Spec->catfile('..', 'script', "par.pl");
