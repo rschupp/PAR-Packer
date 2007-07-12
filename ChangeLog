@@ -6,8 +6,12 @@
       a binary by a significant factor.
       (Total running time went from 8 seconds to 1.4 seconds in a
       simplistic test.)
+    - The preprocessor option/define PERL_PROFILING can be used while
+      compiling myldr/ (parl) to enable Devel::DProf profiling of
+      the archive extraction.
 
 * Bug fixes, etc.
+    - myldr/Makefile workaround for HPUX. (RT #24950)
     - Makefile.PL doesn't require 5.006 any more but uses 'strict' now.
     - Makefile.PL doesn't use Module::AutoInstall any more. It's evil.
     - Dependency on PAR.pm upgraded to 0.974_01.
