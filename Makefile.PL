@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-use 5.006;
+use strict;
 use inc::Module::Install;
 
 name        'PAR-Packer';
@@ -12,7 +12,7 @@ requires    'Compress::Zlib'    => ($^O eq 'MSWin32') ? 1.16 : 1.30;
 requires    'Archive::Zip'      => 1.00;
 requires    'Module::ScanDeps'  => 0.74;
 requires    'PAR::Dist'         => 0.22;
-requires    'PAR'               => '0.973';
+requires    'PAR'               => '0.974_01';
 requires    'Getopt::ArgvFile'  => 1.07;
 
 if ($^O eq 'MSWin32') {
@@ -37,7 +37,6 @@ if (can_use('Crypt::OpenPGP') or can_run('gpg')) {
 
 include_deps        'Test::More';
 no_index            directory => 'contrib';
-auto_install_now    -default => 0;
 auto_provides;
 
 par_base 'SMUELLER';
