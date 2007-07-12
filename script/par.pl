@@ -690,6 +690,7 @@ sub require_modules {
     require PAR::Filter::PodStrip;
     eval { require Win32 };
     eval { require Scalar::Util };
+    eval { require Archive::Unzip::Burst };
 }
 
 # The C version of this code appears in myldr/mktmpdir.c
