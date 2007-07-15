@@ -17,7 +17,7 @@ sub _carp {
 
 
 use vars qw($VERSION @ISA @EXPORT %EXPORT_TAGS $TODO);
-$VERSION = '0.66';
+$VERSION = '0.70';
 $VERSION = eval $VERSION;    # make the alpha version come out as a number
 
 use Test::Builder::Module;
@@ -144,9 +144,7 @@ sub can_ok ($@) {
 
     my @nok = ();
     foreach my $method (@methods) {
-        local($!, $@);  # don't interfere with caller's $@
-                        # eval sometimes resets $!
-        eval { $proto->can($method) } || push @nok, $method;
+        $tb->_try(sub { $proto->can($method) }) or push @nok, $method;
     }
 
     my $name;
@@ -160,7 +158,7 @@ sub can_ok ($@) {
     return $ok;
 }
 
-#line 525
+#line 523
 
 sub isa_ok ($$;$) {
     my($object, $class, $obj_name) = @_;
@@ -177,10 +175,10 @@ sub isa_ok ($$;$) {
     }
     else {
         # We can't use UNIVERSAL::isa because we want to honor isa() overrides
-        local($@, $!);  # eval sometimes resets $!
-        my $rslt = eval { $object->isa($class) };
-        if( $@ ) {
-            if( $@ =~ /^Can't call method "isa" on unblessed reference/ ) {
+        my($rslt, $error) = $tb->_try(sub { $object->isa($class) });
+        if( $error ) {
+            if( $error =~ /^Can't call method "isa" on unblessed reference/ ) {
+                # Its an unblessed reference
                 if( !UNIVERSAL::isa($object, $class) ) {
                     my $ref = ref $object;
                     $diag = "$obj_name isn't a '$class' it's a '$ref'";
@@ -188,9 +186,8 @@ sub isa_ok ($$;$) {
             } else {
                 die <<WHOA;
 WHOA! I tried to call ->isa on your object and got some weird error.
-This should never happen.  Please contact the author immediately.
 Here's the error.
-$@
+$error
 WHOA
             }
         }
@@ -215,7 +212,7 @@ WHOA
 }
 
 
-#line 595
+#line 592
 
 sub pass (;$) {
     my $tb = Test::More->builder;
@@ -227,7 +224,7 @@ sub fail (;$) {
     $tb->ok(0, @_);
 }
 
-#line 656
+#line 653
 
 sub use_ok ($;@) {
     my($module, @imports) = @_;
@@ -236,7 +233,7 @@ sub use_ok ($;@) {
 
     my($pack,$filename,$line) = caller;
 
-    local($@,$!);   # eval sometimes interferes with $!
+    local($@,$!,$SIG{__DIE__});   # isolate eval
 
     if( @imports == 1 and $imports[0] =~ /^\d+(?:\.\d+)?$/ ) {
         # probably a version check.  Perl needs to see the bare number
@@ -269,7 +266,7 @@ DIAGNOSTIC
     return $ok;
 }
 
-#line 705
+#line 702
 
 sub require_ok ($) {
     my($module) = shift;
@@ -281,7 +278,8 @@ sub require_ok ($) {
     # Module names must be barewords, files not.
     $module = qq['$module'] unless _is_module_name($module);
 
-    local($!, $@); # eval sometimes interferes with $!
+    local($!, $@, $SIG{__DIE__}); # isolate eval
+    local $SIG{__DIE__};
     eval <<REQUIRE;
 package $pack;
 require $module;
@@ -312,7 +310,7 @@ sub _is_module_name {
     $module =~ /^[a-zA-Z]\w*$/;
 }
 
-#line 781
+#line 779
 
 use vars qw(@Data_Stack %Refs_Seen);
 my $DNE = bless [], 'Does::Not::Exist';
@@ -413,7 +411,7 @@ sub _type {
     return '';
 }
 
-#line 921
+#line 919
 
 sub diag {
     my $tb = Test::More->builder;
@@ -422,7 +420,7 @@ sub diag {
 }
 
 
-#line 990
+#line 988
 
 #'#
 sub skip {
@@ -450,7 +448,7 @@ sub skip {
 }
 
 
-#line 1077
+#line 1075
 
 sub todo_skip {
     my($why, $how_many) = @_;
@@ -471,7 +469,7 @@ sub todo_skip {
     last TODO;
 }
 
-#line 1130
+#line 1128
 
 sub BAIL_OUT {
     my $reason = shift;
@@ -480,7 +478,7 @@ sub BAIL_OUT {
     $tb->BAIL_OUT($reason);
 }
 
-#line 1169
+#line 1167
 
 #'#
 sub eq_array {
@@ -604,7 +602,7 @@ WHOA
 }
 
 
-#line 1300
+#line 1298
 
 sub eq_hash {
     local @Data_Stack;
@@ -637,7 +635,7 @@ sub _eq_hash {
     return $ok;
 }
 
-#line 1357
+#line 1355
 
 sub eq_set  {
     my($a1, $a2) = @_;
@@ -663,6 +661,6 @@ sub eq_set  {
     );
 }
 
-#line 1547
+#line 1545
 
 1;

@@ -9,7 +9,7 @@ $^C ||= 0;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = '0.35';
+$VERSION = '0.70';
 $VERSION = eval $VERSION;    # make the alpha version come out as a number
 
 # Make Test::Builder thread-safe for ithreads.
@@ -227,7 +227,7 @@ sub skip_all {
     exit(0);
 }
 
-#line 381
+#line 382
 
 sub ok {
     my($self, $test, $name) = @_;
@@ -313,26 +313,22 @@ sub _unoverload {
     my $self  = shift;
     my $type  = shift;
 
-    local($@,$!);
-
-    eval { require overload } || return;
+    $self->_try(sub { require overload } ) || return;
 
     foreach my $thing (@_) {
-        eval { 
-            if( _is_object($$thing) ) {
-                if( my $string_meth = overload::Method($$thing, $type) ) {
-                    $$thing = $$thing->$string_meth();
-                }
+        if( $self->_is_object($$thing) ) {
+            if( my $string_meth = overload::Method($$thing, $type) ) {
+                $$thing = $$thing->$string_meth();
             }
-        };
+        }
     }
 }
 
 
 sub _is_object {
-    my $thing = shift;
+    my($self, $thing) = @_;
 
-    return eval { ref $thing && $thing->isa('UNIVERSAL') } ? 1 : 0;
+    return $self->_try(sub { ref $thing && $thing->isa('UNIVERSAL') }) ? 1 : 0;
 }
 
 
@@ -365,7 +361,7 @@ sub _is_dualvar {
 
 
 
-#line 533
+#line 530
 
 sub is_eq {
     my($self, $got, $expect, $name) = @_;
@@ -429,7 +425,7 @@ DIAGNOSTIC
 
 }    
 
-#line 611
+#line 608
 
 sub isnt_eq {
     my($self, $got, $dont_expect, $name) = @_;
@@ -464,7 +460,7 @@ sub isnt_num {
 }
 
 
-#line 663
+#line 660
 
 sub like {
     my($self, $this, $regex, $name) = @_;
@@ -480,74 +476,8 @@ sub unlike {
     $self->_regex_ok($this, $regex, '!~', $name);
 }
 
-#line 704
 
-
-sub maybe_regex {
-    my ($self, $regex) = @_;
-    my $usable_regex = undef;
-
-    return $usable_regex unless defined $regex;
-
-    my($re, $opts);
-
-    # Check for qr/foo/
-    if( ref $regex eq 'Regexp' ) {
-        $usable_regex = $regex;
-    }
-    # Check for '/foo/' or 'm,foo,'
-    elsif( ($re, $opts)        = $regex =~ m{^ /(.*)/ (\w*) $ }sx           or
-           (undef, $re, $opts) = $regex =~ m,^ m([^\w\s]) (.+) \1 (\w*) $,sx
-         )
-    {
-        $usable_regex = length $opts ? "(?$opts)$re" : $re;
-    }
-
-    return $usable_regex;
-};
-
-sub _regex_ok {
-    my($self, $this, $regex, $cmp, $name) = @_;
-
-    my $ok = 0;
-    my $usable_regex = $self->maybe_regex($regex);
-    unless (defined $usable_regex) {
-        $ok = $self->ok( 0, $name );
-        $self->diag("    '$regex' doesn't look much like a regex to me.");
-        return $ok;
-    }
-
-    {
-        my $test;
-        my $code = $self->_caller_context;
-
-        local($@, $!);
-
-        # Yes, it has to look like this or 5.4.5 won't see the #line directive.
-        # Don't ask me, man, I just work here.
-        $test = eval "
-$code" . q{$test = $this =~ /$usable_regex/ ? 1 : 0};
-
-        $test = !$test if $cmp eq '!~';
-
-        local $Level = $Level + 1;
-        $ok = $self->ok( $test, $name );
-    }
-
-    unless( $ok ) {
-        $this = defined $this ? "'$this'" : 'undef';
-        my $match = $cmp eq '=~' ? "doesn't match" : "matches";
-        $self->diag(sprintf <<DIAGNOSTIC, $this, $match, $regex);
-                  %s
-    %13s '%s'
-DIAGNOSTIC
-
-    }
-
-    return $ok;
-}
-
-#line 779
+#line 685
 
 
 my %numeric_cmps = map { ($_, 1) } 
@@ -566,8 +496,7 @@ sub cmp_ok {
 
     my $test;
     {
-        local($@,$!);   # don't interfere with $@
-                        # eval() sometimes resets $!
+        local($@,$!,$SIG{__DIE__});  # isolate eval
 
         my $code = $self->_caller_context;
 
@@ -615,8 +544,7 @@ sub _caller_context {
     return $code;
 }
 
-
-#line 858
+#line 771
 
 sub BAIL_OUT {
     my($self, $reason) = @_;
@@ -626,12 +554,12 @@ sub BAIL_OUT {
     exit 255;
 }
 
-#line 871
+#line 784
 
 *BAILOUT = \&BAIL_OUT;
 
 
-#line 883
+#line 796
 
 sub skip {
     my($self, $why) = @_;
@@ -663,7 +591,7 @@ sub skip {
 }
 
 
-#line 925
+#line 838
 
 sub todo_skip {
     my($self, $why) = @_;
@@ -692,7 +620,106 @@ sub todo_skip {
 }
 
 
-#line 993
+#line 916
+
+
+sub maybe_regex {
+    my ($self, $regex) = @_;
+    my $usable_regex = undef;
+
+    return $usable_regex unless defined $regex;
+
+    my($re, $opts);
+
+    # Check for qr/foo/
+    if( ref $regex eq 'Regexp' ) {
+        $usable_regex = $regex;
+    }
+    # Check for '/foo/' or 'm,foo,'
+    elsif( ($re, $opts)        = $regex =~ m{^ /(.*)/ (\w*) $ }sx           or
+           (undef, $re, $opts) = $regex =~ m,^ m([^\w\s]) (.+) \1 (\w*) $,sx
+         )
+    {
+        $usable_regex = length $opts ? "(?$opts)$re" : $re;
+    }
+
+    return $usable_regex;
+};
+
+sub _regex_ok {
+    my($self, $this, $regex, $cmp, $name) = @_;
+
+    my $ok = 0;
+    my $usable_regex = $self->maybe_regex($regex);
+    unless (defined $usable_regex) {
+        $ok = $self->ok( 0, $name );
+        $self->diag("    '$regex' doesn't look much like a regex to me.");
+        return $ok;
+    }
+
+    {
+        my $test;
+        my $code = $self->_caller_context;
+
+        local($@, $!, $SIG{__DIE__}); # isolate eval
+
+        # Yes, it has to look like this or 5.4.5 won't see the #line directive.
+        # Don't ask me, man, I just work here.
+        $test = eval "
+$code" . q{$test = $this =~ /$usable_regex/ ? 1 : 0};
+
+        $test = !$test if $cmp eq '!~';
+
+        local $Level = $Level + 1;
+        $ok = $self->ok( $test, $name );
+    }
+
+    unless( $ok ) {
+        $this = defined $this ? "'$this'" : 'undef';
+        my $match = $cmp eq '=~' ? "doesn't match" : "matches";
+        $self->diag(sprintf <<DIAGNOSTIC, $this, $match, $regex);
+                  %s
+    %13s '%s'
+DIAGNOSTIC
+
+    }
+
+    return $ok;
+}
+
+
+# I'm not ready to publish this.  It doesn't deal with array return
+# values from the code or context.
+#line 999
+
+sub _try {
+    my($self, $code) = @_;
+    
+    local $!;               # eval can mess up $!
+    local $@;               # don't set $@ in the test
+    local $SIG{__DIE__};    # don't trip an outside DIE handler.
+    my $return = eval { $code->() };
+    
+    return wantarray ? ($return, $@) : $return;
+}
+
+#line 1021
+
+sub is_fh {
+    my $self = shift;
+    my $maybe_fh = shift;
+    return 0 unless defined $maybe_fh;
+
+    return 1 if ref $maybe_fh  eq 'GLOB'; # its a glob
+    return 1 if ref \$maybe_fh eq 'GLOB'; # its a glob ref
+
+    return eval { $maybe_fh->isa("IO::Handle") } ||
+           # 5.5.4's tied() and can() doesn't like getting undef
+           eval { (tied($maybe_fh) || '')->can('TIEHANDLE') };
+}
+
+
+#line 1066
 
 sub level {
     my($self, $level) = @_;
@@ -704,7 +731,7 @@ sub level {
 }
 
 
-#line 1026
+#line 1099
 
 sub use_numbers {
     my($self, $use_nums) = @_;
@@ -716,7 +743,7 @@ sub use_numbers {
 }
 
 
-#line 1060
+#line 1133
 
 foreach my $attribute (qw(No_Header No_Ending No_Diag)) {
     my $method = lc $attribute;
@@ -735,7 +762,7 @@ foreach my $attribute (qw(No_Header No_Ending No_Diag)) {
 }
 
 
-#line 1114
+#line 1187
 
 sub diag {
     my($self, @msgs) = @_;
@@ -762,7 +789,7 @@ sub diag {
     return 0;
 }
 
-#line 1151
+#line 1224
 
 sub _print {
     my($self, @msgs) = @_;
@@ -786,7 +813,7 @@ sub _print {
     print $fh $msg;
 }
 
-#line 1185
+#line 1258
 
 sub _print_diag {
     my $self = shift;
@@ -796,7 +823,7 @@ sub _print_diag {
     print $fh @_;
 }    
 
-#line 1222
+#line 1295
 
 sub output {
     my($self, $fh) = @_;
@@ -831,7 +858,7 @@ sub _new_fh {
     my($file_or_fh) = shift;
 
     my $fh;
-    if( $self->_is_fh($file_or_fh) ) {
+    if( $self->is_fh($file_or_fh) ) {
         $fh = $file_or_fh;
     }
     else {
@@ -842,21 +869,6 @@ sub _new_fh {
     }
 
     return $fh;
-}
-
-
-sub _is_fh {
-    my $self = shift;
-    my $maybe_fh = shift;
-    return 0 unless defined $maybe_fh;
-
-    return 1 if ref \$maybe_fh eq 'GLOB'; # its a glob
-
-    return UNIVERSAL::isa($maybe_fh,               'GLOB')       ||
-           UNIVERSAL::isa($maybe_fh,               'IO::Handle') ||
-
-           # 5.5.4's tied() and can() doesn't like getting undef
-           UNIVERSAL::can((tied($maybe_fh) || ''), 'TIEHANDLE');
 }
 
 
@@ -897,7 +909,7 @@ sub _open_testhandles {
 }
 
 
-#line 1337
+#line 1395
 
 sub _message_at_caller {
     my $self = shift;
@@ -926,7 +938,7 @@ sub _plan_check {
     }
 }
 
-#line 1385
+#line 1443
 
 sub current_test {
     my($self, $num) = @_;
@@ -962,7 +974,7 @@ sub current_test {
 }
 
 
-#line 1430
+#line 1488
 
 sub summary {
     my($self) = shift;
@@ -970,14 +982,14 @@ sub summary {
     return map { $_->{'ok'} } @{ $self->{Test_Results} };
 }
 
-#line 1485
+#line 1543
 
 sub details {
     my $self = shift;
     return @{ $self->{Test_Results} };
 }
 
-#line 1510
+#line 1568
 
 sub todo {
     my($self, $pack) = @_;
@@ -990,7 +1002,7 @@ sub todo {
                                      : 0;
 }
 
-#line 1531
+#line 1589
 
 sub caller {
     my($self, $height) = @_;
@@ -1000,9 +1012,9 @@ sub caller {
     return wantarray ? @caller : $caller[0];
 }
 
-#line 1543
+#line 1601
 
-#line 1557
+#line 1615
 
 #'#
 sub _sanity_check {
@@ -1015,7 +1027,7 @@ sub _sanity_check {
           'Somehow you got a different number of results than tests ran!');
 }
 
-#line 1578
+#line 1636
 
 sub _whoa {
     my($self, $check, $desc) = @_;
@@ -1028,7 +1040,7 @@ WHOA
     }
 }
 
-#line 1600
+#line 1658
 
 sub _my_exit {
     $? = $_[0];
@@ -1037,7 +1049,7 @@ sub _my_exit {
 }
 
 
-#line 1613
+#line 1671
 
 $SIG{__DIE__} = sub {
     # We don't want to muck with death in an eval, but $^S isn't
@@ -1157,6 +1169,6 @@ END {
     $Test->_ending if defined $Test and !$Test->no_ending;
 }
 
-#line 1788
+#line 1846
 
 1;
