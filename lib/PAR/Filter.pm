@@ -2,7 +2,7 @@ package PAR::Filter;
 use 5.006;
 use strict;
 use warnings;
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head1 NAME
 
@@ -38,10 +38,6 @@ The default list of filters include:
 
 The archetypical obfuscating filter.
 
-=item * L<PAR::Filter::Bytecode>
-
-Use L<B::Bytecode> to strip away indents and comments.
-
 =item * L<PAR::Filter::Obfuscate>
 
 Use L<B::Deobfuscate> to strip away indents and comments, as well as mangling
@@ -54,6 +50,13 @@ Fix PAR-incompatible modules, applied to modules by default.
 =item * L<PAR::Filter::PodStrip>
 
 Strip away POD sections, applied to modules by default.
+
+=item * L<PAR::Filter::Bytecode>
+
+Use L<B::Bytecode> to strip away indents and comments.
+B<This filter is deprecated!> For source hiding,
+have a look at L<PAR::Filter::Crypto> instead and make
+sure to read about its caveats.
 
 =back
 
@@ -92,7 +95,7 @@ Audrey Tang E<lt>cpan@audreyt.orgE<gt>
 
 =head1 COPYRIGHT
 
-Copyright 2003, 2004, 2005, 2006 by Audrey Tang E<lt>cpan@audreyt.orgE<gt>.
+Copyright 2003-2007 by Audrey Tang E<lt>cpan@audreyt.orgE<gt>.
 
 This program is free software; you can redistribute it and/or 
 modify it under the same terms as Perl itself.

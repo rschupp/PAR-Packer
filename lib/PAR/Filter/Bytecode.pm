@@ -15,6 +15,11 @@ PAR::Filter::Bytecode - Bytecode filter
 
 =head1 DESCRIPTION
 
+B<This filter is deprecated. The B::Bytecode code has been removed from
+the newest development series of perl and will not be included in perl
+5.10 any more. Please have a look at Steve Hay's L<PAR::Filter::Crypto>
+module if you want to hide your sources.>
+
 This filter uses L<B::Bytecode> to turn the script into comment-free,
 architecture-specific Perl bytecode, and uses L<ByteLoader> to load
 back on execution.
@@ -31,6 +36,8 @@ This backend exhibits all bugs listed in L<B::Bytecode>, and then some.
 
 Bytecode support is considered to be extremely fragile on Perl versions
 earlier than 5.8.1, and is still far from robust (as of this writing).
+
+Bytecode is not supported by perl 5.9 and later.
 
 =cut
 
@@ -64,6 +71,8 @@ sub apply {
 
 L<PAR::Filter>, L<B::Bytecode>, L<ByteLoader>
 
+L<Filter::Crypto>, L<PAR::Filter::Crypto>
+
 =head1 AUTHORS
 
 Audrey Tang E<lt>cpan@audreyt.orgE<gt>
@@ -76,7 +85,7 @@ Please submit bug reports to E<lt>bug-par@rt.cpan.orgE<gt>.
 
 =head1 COPYRIGHT
 
-Copyright 2003, 2004, 2005, 2006 by Audrey Tang E<lt>cpan@audreyt.orgE<gt>.
+Copyright 2003-2007 by Audrey Tang E<lt>cpan@audreyt.orgE<gt>.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

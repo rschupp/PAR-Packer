@@ -15,6 +15,8 @@
     - Makefile.PL doesn't require 5.006 any more but uses 'strict' now.
     - Makefile.PL doesn't use Module::AutoInstall any more. It's evil.
     - Dependency on PAR.pm upgraded to 0.974_01.
+    - Marked PAR::Filter::Bytecode as deprecated. Added references to
+      PAR::Filter::Crypto.
 
 [Changes for 0.975 - May 06, 2007]
 * Bug fixes, etc.
