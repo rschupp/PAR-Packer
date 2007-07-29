@@ -1,4 +1,4 @@
-[Changes for 0.975_01 - Jul 12, 2007]
+[Changes for 0.976 - Jul 29, 2007]
 * New features
     - If available, the packager will include the new and slightly
       experimental Archive::Unzip::Burst module in generated binary
@@ -14,7 +14,7 @@
     - myldr/Makefile workaround for HPUX. (RT #24950)
     - Makefile.PL doesn't require 5.006 any more but uses 'strict' now.
     - Makefile.PL doesn't use Module::AutoInstall any more. It's evil.
-    - Dependency on PAR.pm upgraded to 0.974_01.
+    - Dependency on PAR.pm upgraded to 0.976.
     - Marked PAR::Filter::Bytecode as deprecated. Added references to
       PAR::Filter::Crypto.
 
