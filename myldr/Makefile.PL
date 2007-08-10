@@ -87,7 +87,7 @@ my $strippedparldyn_mod = File::Spec->catfile(
 );
 my $lib_path = join(' ', map qq(-I"$_"), @INC);
 
-my( $out, $ccdebug, $lddebug, $warn, $rm, $mv, $res, $long_literal );
+my( $out, $ccdebug, $lddebug, $warn, $rm, $mv, $res, $long_literal, $mt_cmd );
 
 if( $cc =~ m/^cl\b/i ) {
     $out = '-out:';
@@ -96,6 +96,13 @@ if( $cc =~ m/^cl\b/i ) {
     $warn = $debug ? '-W3' : '';
     $res = 'win32.obj';
     $long_literal = 0;
+    # Embed the manifest file for VC 2005 (aka VC8) or higher, but not for the
+    # 64-bit Platform SDK compiler
+    if( $Config{ivsize} == 4 and $Config{ccversion} =~ /^(\d+)/ and $1 >= 14 ) {
+        $mt_cmd = 'mt -nologo -manifest $@.manifest -outputresource:$@;1';
+    } else {
+        $mt_cmd = '-$(NOOP)';
+    }
 } elsif ($cc =~ m/^gcc\b/i or ($cc =~ m/^cc\b/i and $gccversion)) {
     $out = '--output ';
     $ccdebug = $debug ? '-g ' : '';
@@ -103,6 +110,7 @@ if( $cc =~ m/^cl\b/i ) {
     $warn = $debug ? '-Wall -Wno-comments ' : '';
     $res = ($^O =~ /^(?:MSWin|cygwin)/) ? 'win32.coff' : '';
     $long_literal = 1;
+    $mt_cmd = '-$(NOOP)';
 } else {
     $out = '-o ';
     $ccdebug = '';
@@ -110,6 +118,7 @@ if( $cc =~ m/^cl\b/i ) {
     $warn = '';
     $res = '';
     $long_literal = 0; # better safe than sorry
+    $mt_cmd = '-$(NOOP)';
 }
 
 
@@ -238,6 +247,7 @@ distclean: clean
 
 $par_exe: sha1$o \$(OBJECTS) my_par_pl$o
 	\$(LD) \$(OBJECTS) \$(PERL_LDFLAGS) $out$par_exe_link
+	$mt_cmd
 
 my_par_pl.c: $par_pl
 	\$(PERL) $f2c $par_pl \$@ load_me_2 $long_literal
@@ -270,6 +280,7 @@ static$o: my_perl.c my_par.c mktmpdir.c
 
 $static_exe: sha1$o static$o
 	\$(LD) static$o \$(STATIC_LDFLAGS) $res $out$static_exe_link
+	$mt_cmd
 	\$(PERL) parlsig.pl $static_exe $par_exe $dynperl $chunk_size
 
 my_perl.c:
