@@ -1,3 +1,6 @@
+
+    - added eletion of 'orig_parl' on Win32 in PAR::Packer
+    
 [Changes for 0.976 - Jul 29, 2007]
 * New features
     - If available, the packager will include the new and slightly

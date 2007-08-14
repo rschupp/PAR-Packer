@@ -1253,6 +1253,7 @@ sub _par_to_exe {
 
         $self->_fix_console();
         unlink($self->{parl});
+        unlink($self->{orig_parl});
         unlink("$self->{parl}.bak");
         return;
     }
