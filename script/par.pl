@@ -688,6 +688,7 @@ sub require_modules {
     require PAR::Heavy;
     require PAR::Dist;
     require PAR::Filter::PodStrip;
+    eval { require Cwd };
     eval { require Win32 };
     eval { require Scalar::Util };
     eval { require Archive::Unzip::Burst };
@@ -825,8 +826,8 @@ sub _fix_progname {
     }
 
     # XXX - hack to make PWD work
-    my $pwd = (defined &Win32::GetCwd) ? Win32::GetCwd() : $ENV{PWD};
-    $pwd = `pwd` if !defined $pwd;
+    my $pwd = (defined &Cwd::getcwd) ? Cwd::getcwd()
+                : ((defined &Win32::GetCwd) ? Win32::GetCwd() : `pwd`);
     chomp($pwd);
     $progname =~ s/^(?=\.\.?\Q$Config{_delim}\E)/$pwd$Config{_delim}/;
 

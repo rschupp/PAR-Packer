@@ -1,5 +1,6 @@
 
-    - added eletion of 'orig_parl' on Win32 in PAR::Packer
+    - Included PWD fix. See RT #29050.
+    - Added deletion of 'orig_parl' on Win32 in PAR::Packer
     
 [Changes for 0.976 - Jul 29, 2007]
 * New features
