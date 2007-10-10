@@ -1,4 +1,5 @@
-
+    - Use the P_tmpdir macro as temporary directory on Unix if available.
+      See RT #29784.
     - Included PWD fix. See RT #29050.
     - Added deletion of 'orig_parl' on Win32 in PAR::Packer
     

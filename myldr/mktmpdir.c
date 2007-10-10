@@ -8,6 +8,10 @@
 #  define OPEN_O_BINARY 0
 #endif
 
+#ifndef P_tmpdir
+#define P_tmpdir "/tmp"
+#endif
+
 void par_setup_libpath( const char * stmpdir )
 {
    const char *key = NULL , *val = NULL;
@@ -42,8 +46,7 @@ char *par_mktmpdir ( char **argv ) {
     char *c;
     const char *tmpdir = NULL;
     const char *key = NULL , *val = NULL;
-
-    const char *temp_dirs[4] = { "C:\\TEMP", "/tmp", ".", "" };
+    const char *temp_dirs[4] = { "C:\\TEMP", P_tmpdir, ".", "" };
     const char *temp_keys[6] = { "PAR_TMPDIR", "TMPDIR", "TEMPDIR", "TEMP", "TMP", "" };
     const char *user_keys[3] = { "USER", "USERNAME", "" };
 
