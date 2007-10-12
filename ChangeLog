@@ -1,3 +1,6 @@
+    - If running with the "clean" option, go through extra pain in par.pl
+      to clean up if the OS doesn't allow opened shared libraries to be
+      deleted. (Scott Stanton)
     - Use the P_tmpdir macro as temporary directory on Unix if available.
       See RT #29784.
     - Included PWD fix. See RT #29050.

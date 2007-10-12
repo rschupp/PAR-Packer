@@ -159,10 +159,33 @@ followed by a 8-bytes magic string: "C<\012PAR.pm\012>".
 
 my ($par_temp, $progname, @tmpfile);
 END { if ($ENV{PAR_CLEAN}) {
+    my $topdir = $par_temp;
+    $topdir =~ s{[^\\/]*[\\/]?$}{};
     unlink @tmpfile;
-    rmdir $par_temp;
-    $par_temp =~ s{[^\\/]*[\\/]?$}{};
-    rmdir $par_temp;
+    if (rmdir $par_temp or not -e $par_temp) {
+        # try to remove the par-$USER dir, but disregard the error if it's
+        # not empty.
+        rmdir $topdir;
+    } else {
+        # Something went wrong unlinking the temporary directory.  This
+        # typically happens on platforms that disallow unlinking shared
+        # libraries and executables that are in use.
+        #
+        # Try unlinking with an exec'ed shell command so the files are no
+        # longer in use by this process.  Note that this will terminate the
+        # current process so no further END block processing will follow.
+
+        my $cmd;
+        if ($^O =~ m/win32/i) {
+            $cmd = 'rmdir /q /s "' . $par_temp . '" >nul 2>nul && rmdir "'
+            . $topdir . '" >nul 2>nul ';
+        } else {
+            $cmd = "rm -rf '" . $par_temp . "' >/dev/null 2>&1 ; rmdir '"
+            . $topdir . "'  >/dev/null 2>&1 ; true";
+        }
+       outs(qq(Unable to remove all temp files, using exec($cmd)));
+       exec($cmd);
+    }
 } }
 
 BEGIN {
@@ -659,7 +682,7 @@ sub CreatePath {
     
     require File::Path;
     
-	File::Path::mkpath($path) unless(-e $path); # mkpath dies with error
+    File::Path::mkpath($path) unless(-e $path); # mkpath dies with error
 }
 
 sub require_modules {
