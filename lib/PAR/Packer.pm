@@ -3,7 +3,7 @@ use 5.006;
 use strict;
 use warnings;
 
-our $VERSION = '0.976';
+our $VERSION = '0.976_01';
 
 =head1 NAME
 
@@ -1676,7 +1676,7 @@ Please submit bug reports to E<lt>bug-par@rt.cpan.orgE<gt>.
 
 =head1 COPYRIGHT
 
-Copyright 2004, 2005, 2006 by Audrey Tang E<lt>cpan@audreyt.orgE<gt>.
+Copyright 2004-2007 by Audrey Tang E<lt>cpan@audreyt.orgE<gt>.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

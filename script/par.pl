@@ -159,32 +159,56 @@ followed by a 8-bytes magic string: "C<\012PAR.pm\012>".
 
 my ($par_temp, $progname, @tmpfile);
 END { if ($ENV{PAR_CLEAN}) {
-    my $topdir = $par_temp;
-    $topdir =~ s{[^\\/]*[\\/]?$}{};
-    unlink @tmpfile;
-    if (rmdir $par_temp or not -e $par_temp) {
-        # try to remove the par-$USER dir, but disregard the error if it's
-        # not empty.
-        rmdir $topdir;
-    } else {
+    require File::Temp;
+    require File::Basename;
+    my $topdir = File::Basename::dirname($par_temp);
+    outs(qq{Removing files in "$par_temp"});
+    File::Find::finddepth(sub { ( -d ) ? rmdir : unlink }, $par_temp);
+    rmdir $par_temp;
+    rmdir $topdir;
+
+    if (-d $par_temp) {
         # Something went wrong unlinking the temporary directory.  This
         # typically happens on platforms that disallow unlinking shared
-        # libraries and executables that are in use.
-        #
-        # Try unlinking with an exec'ed shell command so the files are no
-        # longer in use by this process.  Note that this will terminate the
-        # current process so no further END block processing will follow.
+        # libraries and executables that are in use. Unlink with a background
+        # shell command so the files are no longer in use by this process.
 
-        my $cmd;
+        my $tmp = new File::Temp(
+            TEMPLATE => 'tmpXXXXX',
+            DIR => File::Basename::dirname($topdir),
+            SUFFIX => '.cmd',
+            UNLINK => 0,
+        );
+
         if ($^O =~ m/win32/i) {
-            $cmd = 'rmdir /q /s "' . $par_temp . '" >nul 2>nul && rmdir "'
-            . $topdir . '" >nul 2>nul ';
+            print $tmp "
+:loop
+rmdir /q /s \"$par_temp\"
+if exist \"$par_temp\" goto loop
+rmdir \"$topdir\"
+rm \"" . $tmp->filename . "\"
+";
+            close $tmp;
+            my $proc;
+            Win32::Process::Create(
+                $proc, $ENV{COMSPEC},
+                "$ENV{COMSPEC} /c \"" . $tmp->filename . "\" >nul 2>nul ",
+                1, NORMAL_PRIORITY_CLASS, "."
+            );
         } else {
-            $cmd = "rm -rf '" . $par_temp . "' >/dev/null 2>&1 ; rmdir '"
-            . $topdir . "'  >/dev/null 2>&1 ; true";
+            print $tmp "#!/bin/sh
+while [ -d '$par_temp' ]; do
+   rm -rf '$par_temp'
+done
+rmdir '$topdir'
+rm '" . $tmp->filename . "'
+";
+            chmod 0700,$tmp->filename;
+            my $cmd = $tmp->filename . ' >/dev/null 2>&1 &';
+            close $tmp;
+            system($cmd);
         }
-       outs(qq(Unable to remove all temp files, using exec($cmd)));
-       exec($cmd);
+        outs(qq(Spawned background process to perform cleanup));
     }
 } }
 
