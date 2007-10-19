@@ -737,6 +737,7 @@ sub require_modules {
     require PAR::Filter::PodStrip;
     eval { require Cwd };
     eval { require Win32 };
+    eval { require Win32::Process };
     eval { require Scalar::Util };
     eval { require Archive::Unzip::Burst };
 }
