@@ -1,3 +1,7 @@
+    - PAR::Packer now depends on Module::ScanDeps 0.78 because 0.77
+      had a critical bug. If you are having trouble with M::SD 0.78,
+      please a) report it in the bug tracker and b) try versions of
+      M::SD below 0.77.
     - If running with the "clean" option, go through extra pain in par.pl
       to clean up if the OS doesn't allow opened shared libraries to be
       deleted. (Scott Stanton)
