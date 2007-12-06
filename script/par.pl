@@ -161,6 +161,7 @@ my ($par_temp, $progname, @tmpfile);
 END { if ($ENV{PAR_CLEAN}) {
     require File::Temp;
     require File::Basename;
+    require File::Spec;
     my $topdir = File::Basename::dirname($par_temp);
     outs(qq{Removing files in "$par_temp"});
     File::Find::finddepth(sub { ( -d ) ? rmdir : unlink }, $par_temp);
@@ -179,6 +180,21 @@ END { if ($ENV{PAR_CLEAN}) {
             SUFFIX => '.cmd',
             UNLINK => 0,
         );
+
+        # Because the par_temp directory is going to be deleted in a
+        # background process, the parent process id may be reused before the
+        # background process completes.  To ensure that the temporary
+        # directory does not get reused while it is being deleted, try to
+        # rename it to a name that is related to the temporary script file.
+
+        my $tmpname = (File::Spec->splitpath($tmp->filename))[2]; # filename
+        $tmpname =~ s/\.[^.]*$/.dir/;
+        my $newDir = File::Spec->catpath(
+            (File::Spec->splitpath($par_temp))[0..1], $tmpname);
+        if (rename $par_temp, $newDir) {
+            outs("Renamed $par_temp to $newDir");
+            $par_temp = $newDir;
+        }
 
         if ($^O =~ m/win32/i) {
             print $tmp "

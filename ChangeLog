@@ -1,3 +1,6 @@
+    - When deleting the temp directory in the background, rename the
+      directory to a unique name to avoid potential collisions caused
+      by pid reuse (primarily an issue on Windows).
     - PAR::Packer now depends on Module::ScanDeps 0.78 because 0.77
       had a critical bug. If you are having trouble with M::SD 0.78,
       please a) report it in the bug tracker and b) try versions of
