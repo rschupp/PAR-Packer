@@ -1,3 +1,11 @@
+[Changes for 0.977 - Dec 20, 2007]
+
+* New features
+    - Support for Perl 5.10 and later.
+    - New -E flag for "pp" that works just like "perl -E" for Perl 5.10+,
+      namely enabling new syntactic features like "say".
+
+* Bug fixes, etc.
     - When deleting the temp directory in the background, rename the
       directory to a unique name to avoid potential collisions caused
       by pid reuse (primarily an issue on Windows).
@@ -11,7 +19,7 @@
     - Use the P_tmpdir macro as temporary directory on Unix if available.
       See RT #29784.
     - Included PWD fix. See RT #29050.
-    - Added deletion of 'orig_parl' on Win32 in PAR::Packer
+    - Added deletion of 'orig_parl' on Win32 in PAR::Packer.
     
 [Changes for 0.976 - Jul 29, 2007]
 * New features
