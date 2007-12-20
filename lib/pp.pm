@@ -226,6 +226,11 @@ if perl is built as a shared library.
 
 Package a one-liner, much the same as C<perl -e '...'>
 
+=item B<-E>, B<--evalfeature>=I<STRING>
+
+Behaves just like C<-e>, except that it implicitly enables all optional features
+(in the main compilation unit) with Perl 5.10 and later.  See L<feature>.
+
 =item B<-x>, B<--execute>
 
 Run C<perl inputfile> to determine additonal run-time dependencies.

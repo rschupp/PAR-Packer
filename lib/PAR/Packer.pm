@@ -3,7 +3,7 @@ use 5.006;
 use strict;
 use warnings;
 
-our $VERSION = '0.976_01';
+our $VERSION = '0.977';
 
 =head1 NAME
 
@@ -44,6 +44,7 @@ use constant OPTIONS => {
     'c|compile'      => 'Compile code to get dependencies',
     'd|dependent'    => 'Do not include libperl',
     'e|eval:s'       => 'Packing one-liner',
+    'E|evalfeature:s'=> 'Packing one-liner with new syntactic features',
     'x|execute'      => 'Execute code to get dependencies',
     'X|exclude:s@'   => 'Exclude modules',
     'f|filter:s@'    => 'Input filters for scripts',
@@ -300,6 +301,11 @@ sub _parse_opts {
 
     $self->{logfh} = $self->_open('>>', $opt->{L})
       if length $opt->{L};
+
+    if ($opt->{E}) {
+        $opt->{e} = "use $];\n#line 1\n$opt->{E}";
+        push @{$opt->{M}||=[]}, 'feature' if $] >= 5.009;
+    }
 
     if ($opt->{e}) {
         $self->_warn("Using -e 'code' as input file, ignoring @$args\n")
