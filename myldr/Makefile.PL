@@ -217,7 +217,7 @@ OBJECTS=main$o my_par_pl$o $res
 
 all: $all
 
-main.$o: main.c
+main$o: main.c perlxsi.c mktmpdir.c internals.c mktmpdir.h utils.c sha1.c
 
 main.c: perlxsi.c mktmpdir.c internals.c
 
