@@ -72,8 +72,8 @@ XS(XS_Internals_PAR_BOOT) {
         }
 #if (PERL_REVISION == 5 && PERL_VERSION == 8 \
         && ( PERL_SUBVERSION >= 1 && PERL_SUBVERSION <= 5)) || \
-    (PERL_REVISION == 5 && PERL_VERSION >= 9 && PERL_SUBVERSION <= 1)
-        /* 5.8.1 and later perl versions no longer copies fakeargv, sigh */
+    (PERL_REVISION == 5 && PERL_VERSION == 9 && PERL_SUBVERSION <= 1)
+        /* 5.8.1 through 5.8.5, as well as 5.9.0 does not copy fakeargv, sigh */
         {
             char *p;
             STRLEN len = strlen( fakeargv[0] );
