@@ -9,7 +9,7 @@ $^C ||= 0;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = '0.70';
+$VERSION = '0.72';
 $VERSION = eval $VERSION;    # make the alpha version come out as a number
 
 # Make Test::Builder thread-safe for ithreads.
@@ -690,7 +690,8 @@ DIAGNOSTIC
 
 # I'm not ready to publish this.  It doesn't deal with array return
 # values from the code or context.
-#line 999
+
+#line 1000
 
 sub _try {
     my($self, $code) = @_;
@@ -703,15 +704,15 @@ sub _try {
     return wantarray ? ($return, $@) : $return;
 }
 
-#line 1021
+#line 1022
 
 sub is_fh {
     my $self = shift;
     my $maybe_fh = shift;
     return 0 unless defined $maybe_fh;
 
-    return 1 if ref $maybe_fh  eq 'GLOB'; # its a glob
-    return 1 if ref \$maybe_fh eq 'GLOB'; # its a glob ref
+    return 1 if ref $maybe_fh  eq 'GLOB'; # its a glob ref
+    return 1 if ref \$maybe_fh eq 'GLOB'; # its a glob
 
     return eval { $maybe_fh->isa("IO::Handle") } ||
            # 5.5.4's tied() and can() doesn't like getting undef
@@ -719,7 +720,7 @@ sub is_fh {
 }
 
 
-#line 1066
+#line 1067
 
 sub level {
     my($self, $level) = @_;
@@ -731,7 +732,7 @@ sub level {
 }
 
 
-#line 1099
+#line 1100
 
 sub use_numbers {
     my($self, $use_nums) = @_;
@@ -743,7 +744,7 @@ sub use_numbers {
 }
 
 
-#line 1133
+#line 1134
 
 foreach my $attribute (qw(No_Header No_Ending No_Diag)) {
     my $method = lc $attribute;
@@ -762,7 +763,7 @@ foreach my $attribute (qw(No_Header No_Ending No_Diag)) {
 }
 
 
-#line 1187
+#line 1188
 
 sub diag {
     my($self, @msgs) = @_;
@@ -789,7 +790,7 @@ sub diag {
     return 0;
 }
 
-#line 1224
+#line 1225
 
 sub _print {
     my($self, @msgs) = @_;
@@ -813,7 +814,7 @@ sub _print {
     print $fh $msg;
 }
 
-#line 1258
+#line 1259
 
 sub _print_diag {
     my $self = shift;
@@ -823,7 +824,7 @@ sub _print_diag {
     print $fh @_;
 }    
 
-#line 1295
+#line 1296
 
 sub output {
     my($self, $fh) = @_;
@@ -909,7 +910,7 @@ sub _open_testhandles {
 }
 
 
-#line 1395
+#line 1396
 
 sub _message_at_caller {
     my $self = shift;
@@ -938,7 +939,7 @@ sub _plan_check {
     }
 }
 
-#line 1443
+#line 1444
 
 sub current_test {
     my($self, $num) = @_;
@@ -974,7 +975,7 @@ sub current_test {
 }
 
 
-#line 1488
+#line 1489
 
 sub summary {
     my($self) = shift;
@@ -982,14 +983,14 @@ sub summary {
     return map { $_->{'ok'} } @{ $self->{Test_Results} };
 }
 
-#line 1543
+#line 1544
 
 sub details {
     my $self = shift;
     return @{ $self->{Test_Results} };
 }
 
-#line 1568
+#line 1569
 
 sub todo {
     my($self, $pack) = @_;
@@ -1002,7 +1003,7 @@ sub todo {
                                      : 0;
 }
 
-#line 1589
+#line 1590
 
 sub caller {
     my($self, $height) = @_;
@@ -1012,9 +1013,9 @@ sub caller {
     return wantarray ? @caller : $caller[0];
 }
 
-#line 1601
+#line 1602
 
-#line 1615
+#line 1616
 
 #'#
 sub _sanity_check {
@@ -1027,7 +1028,7 @@ sub _sanity_check {
           'Somehow you got a different number of results than tests ran!');
 }
 
-#line 1636
+#line 1637
 
 sub _whoa {
     my($self, $check, $desc) = @_;
@@ -1040,7 +1041,7 @@ WHOA
     }
 }
 
-#line 1658
+#line 1659
 
 sub _my_exit {
     $? = $_[0];
@@ -1049,7 +1050,7 @@ sub _my_exit {
 }
 
 
-#line 1671
+#line 1672
 
 $SIG{__DIE__} = sub {
     # We don't want to muck with death in an eval, but $^S isn't
@@ -1169,6 +1170,6 @@ END {
     $Test->_ending if defined $Test and !$Test->no_ending;
 }
 
-#line 1846
+#line 1847
 
 1;
