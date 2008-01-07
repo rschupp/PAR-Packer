@@ -104,6 +104,10 @@ sub par_prehook {
 
     clean_files(@bin) if $par or $cc;
 
+    # Do not run 10parl-generation tests in case of a pre built .par (doesn't work)
+    my $pgentest = (!$par and $cc) ? ' t/10-parl-generation.t ' : '';
+    my $tests = qq(t/00-pod.t$pgentest t/20-pp.t t/30-current_exec.t);
+
     makemaker_args(
         MAN1PODS		=> {
             'script/par.pl'	=> 'blib/man1/par.pl.1',
@@ -130,6 +134,7 @@ sub par_prehook {
           ) : (),
         ],
         NEEDS_LINKING	        => 1,
+        test => { TESTS => $tests },
     );
 }
 

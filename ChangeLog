@@ -1,3 +1,5 @@
+    - The parl-generation tests are not skipped if a pre-built .par
+      binary is being used. (Mark Dootson)
     - Shared library extraction now checks first whether the file exists
       and whether it has the same size as the one to be extracted. In that
       case, the extraction is skipped. This should fix an issue with
