@@ -696,8 +696,13 @@ if ($out) {
             }x;
             my $extract_name = $1;
             my $dest_name = File::Spec->catfile($ENV{PAR_TEMP}, $extract_name);
-            $member->extractToFileNamed($dest_name);
-            outs(qq(Extracting "$member_name" to "$dest_name"));
+            if (! -f $dest_name or -s _ != $member->uncompressedSize()) {
+                $member->extractToFileNamed($dest_name);
+                outs(qq(Extracting "$member_name" to "$dest_name"));
+            } else {
+                outs(qq(Skipping "$member_name" since it already exists
+at "$dest_name"));
+            }
         }
     }
     # }}}

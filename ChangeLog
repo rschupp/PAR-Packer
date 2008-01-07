@@ -1,3 +1,8 @@
+    - Shared library extraction now checks first whether the file exists
+      and whether it has the same size as the one to be extracted. In that
+      case, the extraction is skipped. This should fix an issue with
+      overwriting DLLs on Windows. (Scott Stanton)
+
 [Changes for 0.977 - Dec 20, 2007]
 
 * New features
