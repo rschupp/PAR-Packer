@@ -2,7 +2,7 @@ use strict;
 use warnings;
 # Used in myldr/Makefile.PL / myldr/Makefile.
 # This script appends the uuencoded contents of $ARGV[0] to the file
-# specified as $ARGV[1] if the file in $ARGV[1] ends with an empty __DATA__
+# specified as $ARGV[1] as __DATA__ section. Any previous _DATA_ is replaced.
 # section.
 #
 # 2006, Steffen Mueller
@@ -20,17 +20,17 @@ my $outfile = shift @ARGV;
 die $usage if not defined $outfile or not -f $outfile;
 
 open my $fh, '<', $outfile or die $!;
+binmode $fh;
 my $contents = <$fh>;
 close $fh;
-if (not defined $contents or $contents !~ /__DATA__\s*$/s) {
-    warn "Output file '$outfile' does not have an empty __DATA__ section. Not appending encoded data from '$infile'. This is NOT a fatal error!";
-    exit();
-}
+$contents =~ s/^__DATA__\r?\n.*\z//ms;
 
 open my $ih, '<', $infile or die $!;
 binmode $ih;
-open $fh, '>>', $outfile or die $!;
+open $fh, '>', $outfile or die $!;
 binmode $fh;
+print $fh $contents;
+print $fh "\n__DATA__\n";
 print $fh pack 'u', <$ih>;
 close $ih;
 close $fh;

@@ -3,7 +3,11 @@
     - Shared library extraction now checks first whether the file exists
       and whether it has the same size as the one to be extracted. In that
       case, the extraction is skipped. This should fix an issue with
-      overwriting DLLs on Windows. (Scott Stanton)
+      overwriting DLLs on Windows, see
+      http://www.nntp.perl.org/group/perl.par/3325 (Scott Stanton)
+    - When re-building the distribution because of a change in 
+      e.g. script/par.pl, the DATA sections of
+      blib\PAR\StrippedPARL\{Dynamic,Static}.pm were not updated accordingly.
 
 [Changes for 0.977 - Dec 20, 2007]
 
