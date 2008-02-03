@@ -18,6 +18,7 @@ requires    'Getopt::ArgvFile'  => 1.07;
 if ($^O eq 'MSWin32') {
     requires  'Parse::Binary'     => 0.04;
     requires  'Win32::Exe'        => 0.04;
+    requires  'Win32::Process';
 }
 
 if (can_use('Crypt::OpenPGP') or can_run('gpg')) {
