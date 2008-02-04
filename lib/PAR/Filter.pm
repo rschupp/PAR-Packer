@@ -95,7 +95,7 @@ Audrey Tang E<lt>cpan@audreyt.orgE<gt>
 
 =head1 COPYRIGHT
 
-Copyright 2003-2007 by Audrey Tang E<lt>cpan@audreyt.orgE<gt>.
+Copyright 2003-2008 by Audrey Tang E<lt>cpan@audreyt.orgE<gt>.
 
 This program is free software; you can redistribute it and/or 
 modify it under the same terms as Perl itself.

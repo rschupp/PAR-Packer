@@ -27,7 +27,7 @@ sub PATCH_CONTENT () { +{
         ' = $ENV{PAR_0} || $0',
     ],
     # Some versions of Spreadsheet::ParseExcel have a weird non-POD construct =cmmt
-    # that is used to comment out a block of code. perl treats it as POD ans strips it.
+    # that is used to comment out a block of code. perl treats it as POD and strips it.
     # Since it's not POD, POD parsers ignore it.
     # PAR::Filter::PodStrip only strips valid POD. Hence we remove it here.
     'Spreadsheet/ParseExcel.pm' => [
@@ -140,7 +140,7 @@ Please submit bug reports to E<lt>bug-par@rt.cpan.orgE<gt>.
 
 =head1 COPYRIGHT
 
-Copyright 2003, 2004, 2005, 2006 by Audrey Tang E<lt>cpan@audreyt.orgE<gt>.
+Copyright 2003, 2004, 2005, 2006, 2007, 2008 by Audrey Tang E<lt>cpan@audreyt.orgE<gt>.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
