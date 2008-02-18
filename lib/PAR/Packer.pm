@@ -431,7 +431,9 @@ sub run_pack {
     my $output = $self->{output};
     my $args   = $self->{args};
 
-    $output = File::Spec->catfile(".", $output);
+    if (!File::Spec->file_name_is_absolute($output)) {
+	$output = File::Spec->catfile(".", $output);
+    }
 
     my @loader = ();
     push(@loader, $^X) if ($opt->{P});
