@@ -413,11 +413,13 @@ if (!$start_pos or ($ARGV[0] eq '--par-options' && shift)) {
         s   sign_par
         v   verify_par
     );
+
+    my @add_to_inc;
     while (@ARGV) {
         $ARGV[0] =~ /^-([AIMOBLbqpiusTv])(.*)/ or last;
 
         if ($1 eq 'I') {
-            unshift @INC, $2;
+            push @add_to_inc, $2;
         }
         elsif ($1 eq 'M') {
             eval "use $2";
@@ -455,6 +457,8 @@ if (!$start_pos or ($ARGV[0] eq '--par-options' && shift)) {
             exit;
         }
     }
+
+    unshift @INC, @add_to_inc;
 }
 
 # XXX -- add --par-debug support!
