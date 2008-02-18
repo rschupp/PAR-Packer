@@ -14,6 +14,6 @@ $ENV{PAR_PROGNAME} ||= '';
 print "PAR_PROGNAME = $ENV{PAR_PROGNAME}\n";
 $ENV{PAR_TEMP} ||= '';
 print "PAR_TEMP = $ENV{PAR_TEMP}\n";
-if( $proc ) {
+if( $proc && $^O ne 'freebsd') { # /proc/$$/file is unreliable on FreeBSD
     print "exec = ", readlink( $proc  ), "\n";
 }
