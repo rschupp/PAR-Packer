@@ -1,4 +1,16 @@
-    - The parl-generation tests are not skipped if a pre-built .par
+
+[Changes for 0.978 - Feb 28, 2008]
+
+* Bug fixes, etc.
+
+    - Fix pp -r for absolute file names (RT #33355) (Slaven Rezic)
+    - Fix for FreeBSD's unreliable procfs (RT #33349) (Slaven Rezic)
+    - Fix @INC ordering in par.pl: This might just fix the infamous
+      "Only available with the XS version..." bug (see #24192)
+      (Michael Schwern, Slaven Rezic)
+    - Fix pp.pm version (Audrey)
+    - Require Win32::Process on win32 (Audrey)
+    - The parl-generation tests are now skipped if a pre-built .par
       binary is being used. (Mark Dootson)
     - Shared library extraction now checks first whether the file exists
       and whether it has the same size as the one to be extracted. In that
