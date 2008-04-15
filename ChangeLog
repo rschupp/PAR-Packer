@@ -1,3 +1,8 @@
+* Bug fixes, etc.
+
+    - Add a preprocessor conditional to myldr/internals.c to
+      make PAR::Packer compile with blead
+      (Avar Bjarmason, Nicholas Clark)
 
 [Changes for 0.978 - Feb 28, 2008]
 
