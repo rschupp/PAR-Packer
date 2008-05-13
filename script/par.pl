@@ -187,14 +187,18 @@ END { if ($ENV{PAR_CLEAN}) {
         # directory does not get reused while it is being deleted, try to
         # rename it to a name that is related to the temporary script file.
 
-        my $tmpname = (File::Spec->splitpath($tmp->filename))[2]; # filename
-        $tmpname =~ s/\.[^.]*$/.dir/;
-        my $newDir = File::Spec->catpath(
-            (File::Spec->splitpath($par_temp))[0..1], $tmpname);
-        if (rename $par_temp, $newDir) {
-            outs("Renamed $par_temp to $newDir");
-            $par_temp = $newDir;
-        }
+# FIXME: This breaks threaded applications. A fix is in the works, but may
+#        still take a while. The fix would be to make sure that this is only
+#        run in the LAST REMAINING thread.
+        
+#        my $tmpname = (File::Spec->splitpath($tmp->filename))[2]; # filename
+#        $tmpname =~ s/\.[^.]*$/.dir/;
+#        my $newDir = File::Spec->catpath(
+#            (File::Spec->splitpath($par_temp))[0..1], $tmpname);
+#        if (rename $par_temp, $newDir) {
+#            outs("Renamed $par_temp to $newDir");
+#            $par_temp = $newDir;
+#        }
 
         if ($^O =~ m/win32/i) {
             print $tmp "

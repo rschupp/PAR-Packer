@@ -1,8 +1,15 @@
+[Changes for 0.979 - May 13, 2008]
 * Bug fixes, etc.
 
     - Add a preprocessor conditional to myldr/internals.c to
       make PAR::Packer compile with blead
       (Avar Bjarmason, Nicholas Clark)
+    - Also strip =encoding POD directive during
+      PAR::Filter::PodStrip.
+    - Temporarily disable the shared-libraries cleanup code in par.pl
+      that was introduced in 0.977 by Scott. This may result in
+      stale cache directories even if PAR_CLEAN is in effect. On the
+      other hand, this means threaded applications work again.
 
 [Changes for 0.978 - Feb 28, 2008]
 
