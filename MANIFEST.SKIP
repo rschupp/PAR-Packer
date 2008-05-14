@@ -21,3 +21,4 @@
 ^blibdirs
 \B\.svn\b
 ^debian/
+^nohup.out
