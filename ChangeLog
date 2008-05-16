@@ -1,6 +1,8 @@
 [Changes for 0.981 - May 14, 2008]
 * Bug fixes, etc.
     - Make get_username_from_getpwuid work for uid=0. (Scott Stanton)
+    - Fixed crash in get_username_from_getpwuid when getpwuid fails.
+      (Scott Stanton)
 
 [Changes for 0.980 - May 14, 2008]
 * Emergency bug fix release
