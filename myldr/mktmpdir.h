@@ -28,17 +28,17 @@
 
 #ifndef S_ISLNK
 #   ifdef _S_ISLNK
-#	define S_ISLNK(m) _S_ISLNK(m)
+#       define S_ISLNK(m) _S_ISLNK(m)
 #   else
-#	ifdef _S_IFLNK
-#	    define S_ISLNK(m) ((m & S_IFMT) == _S_IFLNK)
-#	else
-#	    ifdef S_IFLNK
-#		define S_ISLNK(m) ((m & S_IFMT) == S_IFLNK)
-#	    else
-#		define S_ISLNK(m) (0)
-#	    endif
-#	endif
+#       ifdef _S_IFLNK
+#           define S_ISLNK(m) ((m & S_IFMT) == _S_IFLNK)
+#       else
+#           ifdef S_IFLNK
+#               define S_ISLNK(m) ((m & S_IFMT) == S_IFLNK)
+#           else
+#               define S_ISLNK(m) (0)
+#           endif
+#       endif
 #   endif
 #endif
 

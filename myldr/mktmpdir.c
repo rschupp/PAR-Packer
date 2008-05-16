@@ -33,7 +33,7 @@ void par_setup_libpath( const char * stmpdir )
             );
             sprintf(
                 ld_path_env,
-				"%s%s%s",
+                "%s%s%s",
                 stmpdir, path_sep, val
             );
             par_setenv(key, ld_path_env);
