@@ -5,7 +5,7 @@
 #endif
 
 /* This piece of code uses getpwuid from pwd.h to determine the current
- * use name.
+ * user name.
  * Since pwd.h might not be available and perl's configure script probed
  * for this, we require access to perl's config.h. Whether or not we have that
  * can be determined by the Makefile.PL in myldr/. It writes the
@@ -15,17 +15,12 @@
  */
 
 char *get_username_from_getpwuid () {
+    char *username = NULL;
 #ifdef I_PWD
-    char *username = NULL;
     struct passwd *userdata = NULL;
-    uid_t uid;
-    uid = getuid();
-    if (uid) {
-        userdata = getpwuid(uid);
+    userdata = getpwuid(getuid());
+    if (userdata)
         username = userdata->pw_name;
-    }
-#else
-    char *username = NULL;
 #endif
     return(username);
 }
