@@ -104,7 +104,7 @@ if( $cc =~ m/^cl\b/i ) {
         $mt_cmd = '-$(NOOP)';
     }
 } elsif ($cc =~ m/^gcc\b/i or ($cc =~ m/^cc\b/i and $gccversion)) {
-    $out = '--output ';
+    $out = '-o ';
     $ccdebug = $debug ? '-g ' : '';
     $lddebug = ($debug or $^O eq 'darwin') ? '' : '-s ';
     $warn = $debug ? '-Wall -Wno-comments ' : '';
