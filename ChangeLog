@@ -5,6 +5,8 @@
       (Scott Stanton)
     - Fix broken build on win32 when searching for dll and finding static perl
       library. (Alexey Borzenkov)
+    - Fix compilation on MacOS 10.5's gcc because that doesn't seem to support
+      the --output option. (Matthew Andersen)
 
 [Changes for 0.980 - May 14, 2008]
 * Emergency bug fix release
