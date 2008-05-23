@@ -135,7 +135,7 @@ replaced by F<a.exe> instead.
 
     # Pack 'hello' into a console-less 'out.exe' with icon (Win32 only)
     % pp --gui --icon hello.ico -o out.exe hello
-    
+
     % pp @file hello.pl         # Pack 'hello.pl' but read _additional_
                                 # options from file 'file'
 
@@ -419,13 +419,13 @@ different expected settings:
 
 =item Perl interpreter only, without core modules:
 
-    % pp -B -P -o packed.pl source.pl   # makes packed.exe
+    % pp -P -o packed.pl source.pl      # makes packed.pl
     # Now, deploy 'packed.exe' to target machine...
     $ perl packed.pl                    # run it
 
 =item Perl with core module installed:
 
-    % pp -P -o packed.pl source.pl      # makes packed.exe
+    % pp -B -P -o packed.pl source.pl   # makes packed.pl
     # Now, deploy 'packed.pl' to target machine...
     $ perl packed.pl                    # run it
 
