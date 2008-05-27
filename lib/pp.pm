@@ -411,25 +411,41 @@ different expected settings:
 
 =over 4
 
-=item Building a stand-alone executable
+=item Stone-alone setup:
+
+To make a stand-alone executable, suitable for running on a
+machine that doesn't have perl installed:
+
 
     % pp -o packed.exe source.pl        # makes packed.exe
     # Now, deploy 'packed.exe' to target machine...
-    $ packed.exe                        # run it, no perl required
+    $ packed.exe                        # run it
 
-=item Building a packed .pl file 
+=item Perl interpreter only, without core modules:
 
-    % pp -P -o packed.pl source.pl      # makes packed.pl
-    # Now, deploy 'packed.pl' to target machine...
-    $ perl packed.pl                    # run it, perl + core modules required
-
-=item Building a packed .pl file, including core modules
+To make a packed .pl file including core modules, suitable
+for running on a machine that has a perl interpreter, but where
+you want to be sure of the versions of the core modules that
+your program uses:
 
     % pp -B -P -o packed.pl source.pl   # makes packed.pl
     # Now, deploy 'packed.pl' to target machine...
-    $ perl packed.pl                    # run it, only perl required
+    $ perl packed.pl                    # run it
+
+=item Perl with core modules installed:
+
+To make a packed .pl file without core modules, relying on the target
+machine's perl interpreter and its core libraries.  This produces
+a significantly smaller file than the previous version:
+
+    % pp -P -o packed.pl source.pl      # makes packed.pl
+    # Now, deploy 'packed.pl' to target machine...
+    $ perl packed.pl                    # run it
 
 =item Perl with PAR.pm and its dependencies installed:
+
+Make a separate archive and executable that uses the archive. This
+relies upon the perl interpreter and libraries on the target machine.
 
     % pp -p source.pl                   # makes source.par
     % echo "use PAR 'source.par';" > packed.pl;
@@ -441,7 +457,9 @@ different expected settings:
 
 Note that even if your perl was built with a shared library, the
 'Stand-alone executable' above will I<not> need a separate F<perl5x.dll>
-or F<libperl.so> to function correctly.  Use C<--dependent> if you
+or F<libperl.so> to function correctly.  But even in this case, the
+underlying system libraries such as I<libc> must be compatible between
+the host and target machines.  Use C<--dependent> if you
 are willing to ship the shared library with the application, which
 can significantly reduce the executable size.
 
