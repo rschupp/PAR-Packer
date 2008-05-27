@@ -411,23 +411,23 @@ different expected settings:
 
 =over 4
 
-=item Stand-alone setup
+=item Building a stand-alone executable
 
     % pp -o packed.exe source.pl        # makes packed.exe
     # Now, deploy 'packed.exe' to target machine...
-    $ packed.exe                        # run it
+    $ packed.exe                        # run it, no perl required
 
-=item Perl interpreter only, without core modules:
+=item Building a packed .pl file 
 
     % pp -P -o packed.pl source.pl      # makes packed.pl
-    # Now, deploy 'packed.exe' to target machine...
-    $ perl packed.pl                    # run it
+    # Now, deploy 'packed.pl' to target machine...
+    $ perl packed.pl                    # run it, perl + core modules required
 
-=item Perl with core module installed:
+=item Building a packed .pl file, including core modules
 
     % pp -B -P -o packed.pl source.pl   # makes packed.pl
     # Now, deploy 'packed.pl' to target machine...
-    $ perl packed.pl                    # run it
+    $ perl packed.pl                    # run it, only perl required
 
 =item Perl with PAR.pm and its dependencies installed:
 
@@ -435,12 +435,12 @@ different expected settings:
     % echo "use PAR 'source.par';" > packed.pl;
     % cat source.pl >> packed.pl;       # makes packed.pl
     # Now, deploy 'source.par' and 'packed.pl' to target machine...
-    $ perl packed.pl                    # run it
+    $ perl packed.pl                    # run it, perl + core modules required
 
 =back
 
 Note that even if your perl was built with a shared library, the
-'Stand-alone setup' above will I<not> need a separate F<perl5x.dll>
+'Stand-alone executable' above will I<not> need a separate F<perl5x.dll>
 or F<libperl.so> to function correctly.  Use C<--dependent> if you
 are willing to ship the shared library with the application, which
 can significantly reduce the executable size.
