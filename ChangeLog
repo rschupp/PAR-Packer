@@ -1,4 +1,18 @@
 [Changes for 0.982]
+* Bug fixes, etc.
+    - Fixed incorrect error handling code in test for directory existence when
+      creating a private temporary directory. (Scott Stanton)
+    - On Windows, attempt to use the system temp directory before trying the
+      temp_dirs locations. (Scott Stanton)
+    - Don't remove the top level par-<user> directory for PAR_CLEAN=1 because
+      doing so introduces a race condition with other applications trying to
+      create the directory on startup. (Scott Stanton)
+    - When creating the temporary directory for PAR_CLEAN=1, ensure that
+      the directory does not already exist to avoid picking up stale files
+      from a prior invocation of a different par application.  This eliminates
+      the need to rename the temp directory before removing it, which was
+      causing race conditions in multi-threaded apps.  (Scott Stanton)
+
 * Documentation
     - Clarified examples in the pp documentation, thanks to Dave Howorth.
 

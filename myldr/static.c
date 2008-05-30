@@ -61,7 +61,7 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     stmpdir = (char *)par_getenv("PAR_TEMP");
     if ( stmpdir != NULL ) {
         i = my_mkdir(stmpdir, 0755);
-        if ( (i != 0) && (i != EEXIST) && (i != -1) ) {
+        if ( i == -1 && errno != EEXIST) {
             fprintf(stderr, "%s: creation of private temporary subdirectory %s failed - aborting with %i.\n", argv[0], stmpdir, errno);
             return 2;
         }

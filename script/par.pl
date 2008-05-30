@@ -166,13 +166,16 @@ END { if ($ENV{PAR_CLEAN}) {
     outs(qq{Removing files in "$par_temp"});
     File::Find::finddepth(sub { ( -d ) ? rmdir : unlink }, $par_temp);
     rmdir $par_temp;
-    rmdir $topdir;
+    # Don't remove topdir because this causes a race with other apps
+    # that are trying to start.
 
-    if (-d $par_temp) {
+    if (-d $par_temp && $^O ne 'MSWin32') {
         # Something went wrong unlinking the temporary directory.  This
         # typically happens on platforms that disallow unlinking shared
         # libraries and executables that are in use. Unlink with a background
         # shell command so the files are no longer in use by this process.
+        # Don't do anything on Windows because our parent process will
+        # take care of cleaning things up.
 
         my $tmp = new File::Temp(
             TEMPLATE => 'tmpXXXXX',
@@ -181,54 +184,23 @@ END { if ($ENV{PAR_CLEAN}) {
             UNLINK => 0,
         );
 
-        # Because the par_temp directory is going to be deleted in a
-        # background process, the parent process id may be reused before the
-        # background process completes.  To ensure that the temporary
-        # directory does not get reused while it is being deleted, try to
-        # rename it to a name that is related to the temporary script file.
-
-# FIXME: This breaks threaded applications. A fix is in the works, but may
-#        still take a while. The fix would be to make sure that this is only
-#        run in the LAST REMAINING thread.
-        
-#        my $tmpname = (File::Spec->splitpath($tmp->filename))[2]; # filename
-#        $tmpname =~ s/\.[^.]*$/.dir/;
-#        my $newDir = File::Spec->catpath(
-#            (File::Spec->splitpath($par_temp))[0..1], $tmpname);
-#        if (rename $par_temp, $newDir) {
-#            outs("Renamed $par_temp to $newDir");
-#            $par_temp = $newDir;
-#        }
-
-        if ($^O =~ m/win32/i) {
-            print $tmp "
-:loop
-rmdir /q /s \"$par_temp\"
-if exist \"$par_temp\" goto loop
-rmdir \"$topdir\"
-rm \"" . $tmp->filename . "\"
-";
-            close $tmp;
-            my $proc;
-            Win32::Process::Create(
-                $proc, $ENV{COMSPEC},
-                "$ENV{COMSPEC} /c \"" . $tmp->filename . "\" >nul 2>nul ",
-                1, NORMAL_PRIORITY_CLASS, "."
-            );
-        } else {
-            print $tmp "#!/bin/sh
-while [ -d '$par_temp' ]; do
+        print $tmp "#!/bin/sh
+x=1; while [ \$x -lt 10 ]; do
    rm -rf '$par_temp'
+   if [ \! -d '$par_temp' ]; then
+       break
+   fi
+   sleep 1
+   x=`expr \$x + 1`
 done
-rmdir '$topdir'
 rm '" . $tmp->filename . "'
 ";
             chmod 0700,$tmp->filename;
-            my $cmd = $tmp->filename . ' >/dev/null 2>&1 &';
-            close $tmp;
-            system($cmd);
-        }
-        outs(qq(Spawned background process to perform cleanup));
+        my $cmd = $tmp->filename . ' >/dev/null 2>&1 &';
+        close $tmp;
+        system($cmd);
+        outs(qq(Spawned background process to perform cleanup: )
+             . $tmp->filename);
     }
 } }
 
@@ -765,7 +737,6 @@ sub require_modules {
     require PAR::Filter::PodStrip;
     eval { require Cwd };
     eval { require Win32 };
-    eval { require Win32::Process };
     eval { require Scalar::Util };
     eval { require Archive::Unzip::Burst };
 }

@@ -11,6 +11,17 @@
 #ifndef P_tmpdir
 #define P_tmpdir "/tmp"
 #endif
+static int isWritableDir(const char* val)
+{
+#ifndef PL_statbuf
+struct stat PL_statbuf;
+#endif
+
+    return ( par_lstat(val, &PL_statbuf) == 0 &&
+             ( S_ISDIR(PL_statbuf.st_mode) ||
+               S_ISLNK(PL_statbuf.st_mode) ) &&
+            access(val, W_OK) == 0 );
+}
 
 void par_setup_libpath( const char * stmpdir )
 {
@@ -61,10 +72,6 @@ char *par_mktmpdir ( char **argv ) {
     unsigned char buf[32768];
     unsigned char sha_data[20];
 
-#ifndef PL_statbuf
-struct stat PL_statbuf;
-#endif
-
     if ( (val = (char *)par_getenv(PAR_TEMP)) && strlen(val) ) {
         par_setup_libpath(val);
         return strdup(val);
@@ -103,21 +110,30 @@ struct stat PL_statbuf;
         }
     }
 
+    /* Try temp environment variables */
     for ( i = 0 ; tmpdir == NULL && strlen(key = temp_keys[i]) > 0 ; i++ ) {
         if ( (val = (char *)par_getenv(key)) &&
-             par_lstat(val, &PL_statbuf) == 0 &&
-             ( S_ISDIR(PL_statbuf.st_mode) ||
-               S_ISLNK(PL_statbuf.st_mode) ) &&
-             access(val, W_OK) == 0 ) {
+                isWritableDir(val) ) {
             tmpdir = strdup(val);
         }
     }
 
+#ifdef WIN32
+    /* Try the windows temp directory */
+    if ( tmpdir == NULL && (val = (char*)par_getenv("WinDir")) ) {
+        char* buf = (char*)(malloc(strlen(val) + 6));
+        sprintf(buf, "%s\\temp", val);
+        if (isWritableDir(buf)) {
+            tmpdir = buf;
+        } else {
+            free(buf);
+        }
+    }
+#endif
+
+    /* Try default locations */
     for ( i = 0 ; tmpdir == NULL && strlen(val = temp_dirs[i]) > 0 ; i++ ) {
-        if ( par_lstat(val, &PL_statbuf) == 0 &&
-             ( S_ISDIR(PL_statbuf.st_mode) ||
-               S_ISLNK(PL_statbuf.st_mode) ) &&
-             access(val, W_OK) == 0 ) {
+        if ( isWritableDir(val) ) {
             tmpdir = strdup(val);
         }
     }
@@ -178,6 +194,9 @@ struct stat PL_statbuf;
         }
     }
     else {
+        int i = 0;
+        size_t len = strlen(stmpdir);
+
         /* "$TEMP/par-$USER/temp-$PID" */
 
         par_setenv("PAR_CLEAN", "1");
@@ -186,6 +205,21 @@ struct stat PL_statbuf;
             "%s%stemp-%u%s",
             stmpdir, dir_sep, getpid(), subdirbuf_suffix
         );
+
+        /* Ensure we pick an unused directory each time.  If the directory
+           already exists when we try to create it, bump a counter and try
+           "$TEMP/par-$USER/temp-$PID-$i". This will guard against cases where
+           a prior invocation crashed leaving garbage in a temp directory that
+           might interfere. */
+
+        while (my_mkdir(stmpdir, 0755) == -1 && errno == EEXIST) {
+            stmpdir[len] = 0;
+            sprintf(
+                stmpdir,
+                "%s%stemp-%u-%u%s",
+                stmpdir, dir_sep, getpid(), ++i, subdirbuf_suffix
+                );
+        }
     }
 
     /* set dynamic loading path */
@@ -198,7 +232,7 @@ struct stat PL_statbuf;
 
 
 #ifdef WIN32
-void par_rmtmpdir ( char *stmpdir, int recurse ) {
+static void par_rmtmpdir ( char *stmpdir ) {
     struct _finddata_t cur_file;
     int subsub_len;
     char *subsubdir;
@@ -217,27 +251,7 @@ void par_rmtmpdir ( char *stmpdir, int recurse ) {
     hFile = _findfirst( subsubdir, &cur_file );
     if ( hFile == -1 ) return;
 
-    if (!strstr(cur_file.name, "\\")) {
-        sprintf(subsubdir, "%s\\%s", stmpdir, cur_file.name);
-    }
-    else {
-        sprintf(subsubdir, "%s", cur_file.name);
-    }
-
-    if (!(slashdot = strstr(subsubdir, "\\.")) || (strcmp(slashdot,"\\.") && strcmp(slashdot,"\\.."))) {
-        if ((cur_file.attrib & _A_SUBDIR) && recurse) {
-            par_rmtmpdir( subsubdir, 1 );
-        }
-        /* if (!(cur_file.attrib & _A_SUBDIR)) fprintf(stderr, "unlinking %s\n", subsubdir); */
-        else {
-            dll = GetModuleHandle(cur_file.name);
-            tries = 0;
-            while ( _unlink(subsubdir) && ( tries++ < 10 ) ) {
-                if ( dll ) FreeLibrary(dll);
-            };
-        }
-    }
-    while ( _findnext( hFile, &cur_file ) == 0 ) {
+    do {
         if (!strstr(cur_file.name, "\\")) {
             sprintf(subsubdir, "%s\\%s", stmpdir, cur_file.name);
         }
@@ -246,10 +260,9 @@ void par_rmtmpdir ( char *stmpdir, int recurse ) {
         }
 
         if (!(slashdot = strstr(subsubdir, "\\.")) || (strcmp(slashdot,"\\.") && strcmp(slashdot,"\\.."))) {
-            if ((cur_file.attrib & _A_SUBDIR) && recurse) {
-                par_rmtmpdir( subsubdir, 1 );
+            if ((cur_file.attrib & _A_SUBDIR)) {
+                par_rmtmpdir( subsubdir );
             }
-            /* if (!(cur_file.attrib & _A_SUBDIR)) fprintf(stderr, "unlinking %s\n", subsubdir); */
             else {
                 dll = GetModuleHandle(cur_file.name);
                 tries = 0;
@@ -258,14 +271,14 @@ void par_rmtmpdir ( char *stmpdir, int recurse ) {
                 };
             }
         }
-    }
+    } while ( _findnext( hFile, &cur_file ) == 0 );
 
     _findclose(hFile);
     _rmdir(stmpdir);
 }
 
 #else
-void par_rmtmpdir ( char *stmpdir, int recurse ) {
+static void par_rmtmpdir ( char *stmpdir ) {
     DIR *partmp_dirp;
     Direntry_t *dp;
     char *subsubdir = NULL;
@@ -273,19 +286,20 @@ void par_rmtmpdir ( char *stmpdir, int recurse ) {
     struct stat stbuf;
 
     /* remove temporary PAR directory */
+    if (!stmpdir || !*stmpdir) return;
+
     partmp_dirp = opendir(stmpdir);
 
     if ( partmp_dirp == NULL ) return;
 
-    /* fprintf(stderr, "%s: removing private temporary subdirectory %s.\n", argv[0], stmpdir); */
     while ( ( dp = readdir(partmp_dirp) ) != NULL ) {
         if ( strcmp (dp->d_name, ".") != 0 && strcmp (dp->d_name, "..") != 0 )
         {
             subsub_len = strlen(stmpdir) + strlen(dp->d_name) + 2;
             subsubdir = malloc( subsub_len);
             sprintf(subsubdir, "%s/%s", stmpdir, dp->d_name);
-            if (stat(subsubdir, &stbuf) != -1 && S_ISDIR(stbuf.st_mode) && recurse) {
-                par_rmtmpdir(subsubdir, 1);
+            if (stat(subsubdir, &stbuf) != -1 && S_ISDIR(stbuf.st_mode)) {
+                par_rmtmpdir(subsubdir);
             }
             else {
                 unlink(subsubdir);
@@ -296,7 +310,7 @@ void par_rmtmpdir ( char *stmpdir, int recurse ) {
     }
 
     closedir(partmp_dirp);
-    if (stmpdir) rmdir(stmpdir);
+    rmdir(stmpdir);
 }
 #endif
 
@@ -305,8 +319,9 @@ void par_cleanup (char *stmpdir) {
     char *basename = par_basename(dirname);
     if ( par_env_clean() && stmpdir != NULL && strlen(stmpdir)) {
         if ( strstr(basename, "par-") == basename ) {
-            par_rmtmpdir(stmpdir, 1);
-            par_rmtmpdir(dirname, 0);
+            par_rmtmpdir(stmpdir);
+            /* Don't try to remove dirname because this will introduce a race
+               with other applications that are trying to start. */
         }
     }
 }
