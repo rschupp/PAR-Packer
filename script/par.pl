@@ -679,8 +679,9 @@ if ($out) {
             if (-f $dest_name && -s _ == $member->uncompressedSize()) {
                 outs(qq(Skipping "$member_name" since it already exists at "$dest_name"));
             } else {
-                $member->extractToFileNamed($dest_name);
                 outs(qq(Extracting "$member_name" to "$dest_name"));
+                $member->extractToFileNamed($dest_name);
+                chmod(0555, $dest_name) if $^O eq "hpux";
             }
         }
     }

@@ -1,5 +1,7 @@
 [Changes for 0.982]
 * Bug fixes, etc.
+    - Ensure extracted files are marked executable on HP-UX so they can be
+      used by the dynamic linker. (Scott Stanton)
     - Fixed incorrect error handling code in test for directory existence when
       creating a private temporary directory. (Scott Stanton)
     - On Windows, attempt to use the system temp directory before trying the
