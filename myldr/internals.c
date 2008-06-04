@@ -1,5 +1,5 @@
 static void par_redo_stack (pTHX_ void *data) {
-#if PERLVERSION > 10
+#if PERL_VERSION > 10
     PUSHEVAL((&cxstack[0]) , "");
 #else
     PUSHEVAL((&cxstack[0]) , "", Nullgv);
