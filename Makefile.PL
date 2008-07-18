@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-
+use 5.006001;
 use strict;
 use inc::Module::Install;
 
