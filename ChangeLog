@@ -1,4 +1,4 @@
-[Changes for 0.982 - Jul 18, 2008]
+[Changes for 0.982 - Jul 29, 2008]
 * Bug fixes, etc.
     - Fix bleadperl compilation.
     - Ensure extracted files are marked executable on HP-UX so they can be
