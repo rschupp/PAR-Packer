@@ -29,13 +29,13 @@ sub apply {
     $data = $1 if $$ref =~ s/((?:^__DATA__\r?\n).*)//ms;
 
     my $line = 1;
-    if ($$ref =~ /^=(?:head\d|pod|begin|item|over|for|back|end|cut|encoding)\b/) {
+    if ($$ref =~ /^=(?:head\d|pod|begin|item|over|for|back|end|cut)\b/) {
         $$ref = "\n$$ref";
         $line--;
     }
     $$ref =~ s{(
 	(.*?\n)
-	(?:=(?:head\d|pod|begin|item|over|for|back|end|encoding)\b
+	(?:=(?:head\d|pod|begin|item|over|for|back|end)\b
     .*?\n)
 	(?:=cut[\t ]*[\r\n]*?|\Z)
 	(\r?\n)?
@@ -45,6 +45,8 @@ sub apply {
 	    $line += ( () = ( $1 =~ /\n/g ) )
 	) . $post;
     }gsex;
+
+    $$ref =~ s{^=encoding\s+\S+\s*$}{\n}mg;
 
     $$ref = '#line 1 "' . ($filename) . "\"\n" . $$ref
         if length $filename;

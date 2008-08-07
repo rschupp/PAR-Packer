@@ -1,3 +1,6 @@
+* Bug fixes, etc.
+    - Fix the stripping of =encoding POD lines in PAR::Filter::PodStrip
+
 [Changes for 0.982 - Jul 29, 2008]
 * Bug fixes, etc.
     - Fix bleadperl compilation.
