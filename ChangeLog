@@ -1,6 +1,9 @@
 * Bug fixes, etc.
     - Fix the stripping of =encoding POD lines in PAR::Filter::PodStrip
 
+* Documentation
+    - RT #12104.  Improved documentation in pp on -T/--tempcache.
+
 [Changes for 0.982 - Jul 29, 2008]
 * Bug fixes, etc.
     - Fix bleadperl compilation.
