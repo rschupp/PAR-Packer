@@ -705,7 +705,8 @@ sub pack_manifest_hash {
     # Apply %Preload to the -M'd modules and add them to the list of
     # files to scan
     foreach my $module (@modules) {
-        my $file = &$inc_find($module);
+        my $file = &$inc_find($module)
+          or $self->_die("Cannot find module $module (specified with -M)\n");
         push @files, $file;
         
         my $preload = Module::ScanDeps::_get_preload($module) or next;
