@@ -36,7 +36,7 @@ print  $fh "#endif\n";
 print $fh <<'EOF';
 
 #if defined(U64TYPE) && (defined(USE_64_BIT_INT) || ((BYTEORDER != 0x1234) && (BYTEORDER != 0x4321)))
-typedef U64TYPE ULONG;
+typedef U64TYPE PAR_ULONG;
 # if BYTEORDER == 0x1234
 #   undef BYTEORDER
 #   define BYTEORDER 0x12345678
@@ -46,7 +46,7 @@ typedef U64TYPE ULONG;
 # endif
 #else
 # if (!defined(__GNUC__) || !defined(_WINNT_H))
-typedef unsigned long ULONG;     /* 32-or-more-bit quantity */
+typedef unsigned long PAR_ULONG;     /* 32-or-more-bit quantity */
 # endif
 #endif
 
@@ -54,8 +54,8 @@ typedef unsigned long ULONG;     /* 32-or-more-bit quantity */
 #define SHA_DIGESTSIZE		20
 
 typedef struct {
-    ULONG digest[5];		/* message digest */
-    ULONG count_lo, count_hi;	/* 64-bit bit count */
+    PAR_ULONG digest[5];		/* message digest */
+    PAR_ULONG count_lo, count_hi;	/* 64-bit bit count */
     U8 data[SHA_BLOCKSIZE];	/* SHA data buffer */
     int local;			/* unprocessed amount in data */
 } SHA_INFO;
@@ -116,7 +116,7 @@ static void sha_transform(SHA_INFO *sha_info)
 {
     int i;
     U8 *dp;
-    ULONG T, A, B, C, D, E, W[80], *WP;
+    PAR_ULONG T, A, B, C, D, E, W[80], *WP;
 
     dp = sha_info->data;
 
@@ -130,9 +130,9 @@ nether regions of the anatomy...
 
 #if BYTEORDER == 0x1234
 #define SWAP_DONE
-    /* assert(sizeof(ULONG) == 4); */
+    /* assert(sizeof(PAR_ULONG) == 4); */
     for (i = 0; i < 16; ++i) {
-	T = *((ULONG *) dp);
+	T = *((PAR_ULONG *) dp);
 	dp += 4;
 	W[i] =  ((T << 24) & 0xff000000) | ((T <<  8) & 0x00ff0000) |
 		((T >>  8) & 0x0000ff00) | ((T >> 24) & 0x000000ff);
@@ -141,9 +141,9 @@ nether regions of the anatomy...
 
 #if BYTEORDER == 0x4321
 #define SWAP_DONE
-    /* assert(sizeof(ULONG) == 4); */
+    /* assert(sizeof(PAR_ULONG) == 4); */
     for (i = 0; i < 16; ++i) {
-	T = *((ULONG *) dp);
+	T = *((PAR_ULONG *) dp);
 	dp += 4;
 	W[i] = T32(T);
     }
@@ -151,9 +151,9 @@ nether regions of the anatomy...
 
 #if BYTEORDER == 0x12345678
 #define SWAP_DONE
-    /* assert(sizeof(ULONG) == 8); */
+    /* assert(sizeof(PAR_ULONG) == 8); */
     for (i = 0; i < 16; i += 2) {
-	T = *((ULONG *) dp);
+	T = *((PAR_ULONG *) dp);
 	dp += 8;
 	W[i] =  ((T << 24) & 0xff000000) | ((T <<  8) & 0x00ff0000) |
 		((T >>  8) & 0x0000ff00) | ((T >> 24) & 0x000000ff);
@@ -165,9 +165,9 @@ nether regions of the anatomy...
 
 #if BYTEORDER == 0x87654321
 #define SWAP_DONE
-    /* assert(sizeof(ULONG) == 8); */
+    /* assert(sizeof(PAR_ULONG) == 8); */
     for (i = 0; i < 16; i += 2) {
-	T = *((ULONG *) dp);
+	T = *((PAR_ULONG *) dp);
 	dp += 8;
 	W[i] = T32(T >> 32);
 	W[i+1] = T32(T);
@@ -247,14 +247,14 @@ static void sha_init(SHA_INFO *sha_info)
 static void sha_update(SHA_INFO *sha_info, U8 *buffer, int count)
 {
     int i;
-    ULONG clo;
+    PAR_ULONG clo;
 
-    clo = T32(sha_info->count_lo + ((ULONG) count << 3));
+    clo = T32(sha_info->count_lo + ((PAR_ULONG) count << 3));
     if (clo < sha_info->count_lo) {
 	++sha_info->count_hi;
     }
     sha_info->count_lo = clo;
-    sha_info->count_hi += (ULONG) count >> 29;
+    sha_info->count_hi += (PAR_ULONG) count >> 29;
     if (sha_info->local) {
 	i = SHA_BLOCKSIZE - sha_info->local;
 	if (i > count) {
@@ -310,7 +310,7 @@ static void sha_transform_and_copy(unsigned char digest[20], SHA_INFO *sha_info)
 static void sha_final(unsigned char digest[20], SHA_INFO *sha_info)
 {
     int count;
-    ULONG lo_bit_count, hi_bit_count;
+    PAR_ULONG lo_bit_count, hi_bit_count;
 
     lo_bit_count = sha_info->count_lo;
     hi_bit_count = sha_info->count_hi;
