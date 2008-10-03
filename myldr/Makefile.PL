@@ -94,7 +94,7 @@ if( $cc =~ m/^cl\b/i ) {
     $ccdebug = $debug ? '-Zi -Zm1000 ' : '-Zm1000 ';
     $lddebug = $debug ? '-debug ' : '-release ';
     $warn = $debug ? '-W3' : '';
-    $res = 'win32.obj';
+    $res = $Config{ivsize} == 4 ? 'win32.obj' : '';
     $long_literal = 0;
     # Embed the manifest file for VC 2005 (aka VC8) or higher, but not for the
     # 64-bit Platform SDK compiler
