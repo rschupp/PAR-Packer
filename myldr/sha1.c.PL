@@ -45,7 +45,7 @@ typedef U64TYPE PAR_ULONG;
 #   define BYTEORDER 0x87654321   
 # endif
 #else
-# if (!defined(__GNUC__) || !defined(_WINNT_H))
+# if (!defined(__GNUC__) || !defined(_WINNT_H) || defined(__MINGW32__))
 typedef unsigned long PAR_ULONG;     /* 32-or-more-bit quantity */
 # endif
 #endif
