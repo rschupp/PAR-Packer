@@ -2,6 +2,7 @@
     - Fix the stripping of =encoding POD lines in PAR::Filter::PodStrip
     - Throw a proper error if a module specified via -M cannot be found
       (Roderich Schupp, Gabor Szabo)
+    - Don't update exe's with icons twice on Win32.
 
 * Documentation
     - RT #12104.  Improved documentation in pp on -T/--tempcache.

@@ -1255,11 +1255,6 @@ sub _par_to_exe {
         $self->_append_parl();
         $self->_generate_output();
 
-        Win32::Exe->new($output)->update(
-            icon => $opt->{i},
-            info => $opt->{N},
-        );
-
         $self->_fix_console();
         unlink($self->{parl});
         unlink($self->{orig_parl});
