@@ -1,4 +1,5 @@
 * Bug fixes, etc.
+    - Add Errno and Tie::Hash::NamedCapture (if available) to required_modules
     - Fix the stripping of =encoding POD lines in PAR::Filter::PodStrip
     - Throw a proper error if a module specified via -M cannot be found
       (Roderich Schupp, Gabor Szabo)

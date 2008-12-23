@@ -721,6 +721,7 @@ sub require_modules {
     require vars;
     require Carp;
     require Carp::Heavy;
+    require Errno;
     require Exporter::Heavy;
     require Exporter;
     require Fcntl;
@@ -740,6 +741,7 @@ sub require_modules {
     eval { require Win32 };
     eval { require Scalar::Util };
     eval { require Archive::Unzip::Burst };
+    eval { require Tie::Hash::NamedCapture };
 }
 
 # The C version of this code appears in myldr/mktmpdir.c
