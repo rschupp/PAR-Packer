@@ -87,14 +87,6 @@ sub new {
     # exit gracefully and clean up after ourselves.
     # note.. in constructor because of conflict.
 
-    # Up to PAR 0.957, we set the following ENV variable, but
-    # it is never, ever used anywhere in the rest of the
-    # PAR or M::SD sources, so in order to remove clutter, we
-    # comment it out. This notice and the following commented
-    # out line should be removed in a future version if no
-    # breakage occurred.
-
-    # $ENV{PAR_RUN} = 1;
     my $self = bless {}, $class;
 
     $self->set_args($args)      if ($args);
@@ -164,6 +156,7 @@ sub set_front {
     $self->{frontend} = $frontend || $opt->{frontend};
 }
 
+# check one or more files for read permissions
 sub _check_read {
     my ($self, @files) = @_;
 
@@ -185,6 +178,7 @@ sub _check_read {
     }
 }
 
+# check one or more files for write permissions
 sub _check_write {
     my ($self, @files) = @_;
 
@@ -201,6 +195,7 @@ sub _check_write {
     }
 }
 
+# check whether a given file might contain perl code (including .par's)
 sub _check_perl {
     my ($self, $file) = @_;
     return if ($self->_check_par($file));
@@ -360,6 +355,7 @@ sub _create_valid_hash {
     }
 }
 
+# prints a dump of the OPTIONS hash
 sub _show_usage {
     my ($self) = @_;
 
