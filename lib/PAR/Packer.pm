@@ -304,6 +304,7 @@ sub _parse_opts {
 
     if ($opt->{E}) {
         $opt->{e} = "use $];\n#line 1\n$opt->{E}";
+        # XXX This is how we should also include additional default modules in the future instead of in require_modules in par.pl!
         push @{$opt->{M}||=[]}, 'feature' if $] >= 5.009;
     }
 
