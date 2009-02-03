@@ -449,7 +449,6 @@ if ($out) {
         require Archive::Zip;
     }
 
-
     my $par = shift(@ARGV);
     my $zip;
 
@@ -516,6 +515,7 @@ if ($out) {
         require PAR::Heavy;
         PAR::Heavy::_init_dynaloader();
         init_inc();
+
         require_modules();
 
         my @inc = sort {
@@ -530,8 +530,13 @@ if ($out) {
 
         if ($Config{_delim} eq '\\') { s{\\}{/}g for @inc }
 
+        # File exists test added to fix RT #41790:
+        # Funny, non-existing entry in _<....auto/Compress/Raw/Zlib/autosplit.ix.
+        # This is a band-aid fix with no deeper grasp of the issue.
+        # Somebody please go through the pain of understanding what's happening,
+        # I failed. -- Steffen
         my %files;
-        /^_<(.+)$/ and $files{$1}++ for keys %::;
+        /^_<(.+)$/ and -e $1 and $files{$1}++ for keys %::;
         $files{$_}++ for values %INC;
 
         my $lib_ext = $Config::Config{lib_ext};
