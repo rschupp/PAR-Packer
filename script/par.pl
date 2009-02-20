@@ -752,7 +752,7 @@ sub require_modules {
 # The C version of this code appears in myldr/mktmpdir.c
 # This code also lives in PAR::SetupTemp as set_par_temp_env!
 sub _set_par_temp {
-    if ($ENV{PAR_TEMP} and $ENV{PAR_TEMP} =~ /(.+)/) {
+    if (defined $ENV{PAR_TEMP} and $ENV{PAR_TEMP} =~ /(.+)/) {
         $par_temp = $1;
         return;
     }
@@ -761,7 +761,7 @@ sub _set_par_temp {
         (map $ENV{$_}, qw( PAR_TMPDIR TMPDIR TEMPDIR TEMP TMP )),
         qw( C:\\TEMP /tmp . )
     ) {
-        next unless $path and -d $path and -w $path;
+        next unless defined $path and -d $path and -w $path;
         my $username;
         my $pwuid;
         # does not work everywhere:
@@ -846,7 +846,7 @@ sub _tempfile {
 
 # same code lives in PAR::SetupProgname::set_progname
 sub _set_progname {
-    if ($ENV{PAR_PROGNAME} and $ENV{PAR_PROGNAME} =~ /(.+)/) {
+    if (defined $ENV{PAR_PROGNAME} and $ENV{PAR_PROGNAME} =~ /(.+)/) {
         $progname = $1;
     }
 
