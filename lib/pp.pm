@@ -84,7 +84,7 @@ pp - PAR Packager
 
 =head1 SYNOPSIS
 
-B<pp> S<[ B<-BILMTSVXdeghilmoprsvz> ]> S<[ I<parfile> | I<scriptfile> ]>...
+B<pp> S<[ B<-ABCEFILMPTSVXacdefghilmnoprsvxz> ]> S<[ I<parfile> | I<scriptfile> ]>...
 
 =head1 EXAMPLES
 
