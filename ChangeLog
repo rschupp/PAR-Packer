@@ -11,6 +11,7 @@
     - Don't update exe's with icons twice on Win32.
     - Band-aid fix for RT #41790 in par.pl
     - Some very slightly more careful handling of environment variables in par.pl
+    - Fix SEGV crash during startup if $PATH is not defined (Johannes Lode)
 
 * Documentation
     - RT #12104.  Improved documentation in pp on -T/--tempcache.
