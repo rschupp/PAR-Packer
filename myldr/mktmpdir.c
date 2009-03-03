@@ -155,8 +155,10 @@ char *par_mktmpdir ( char **argv ) {
 
     /* Doesn't really work - XXX */
     val = (char *)par_getenv( "PATH" );
-    progname = par_findprog(argv[0], strdup(val));
-    if (progname == NULL) progname = argv[0];
+    if (val != NULL)
+        progname = par_findprog(argv[0], strdup(val));
+    if (progname == NULL)
+        progname = argv[0];
 
     if ( !par_env_clean() && (f = open( progname, O_RDONLY | OPEN_O_BINARY ))) {
         lseek(f, -18, 2);
@@ -238,7 +240,7 @@ static void par_rmtmpdir ( char *stmpdir ) {
     char *subsubdir;
     char *slashdot;
     long hFile;
-	int tries = 0;
+    int tries = 0;
     HMODULE dll;
 
     if ((stmpdir == NULL) || !strlen(stmpdir)) return;
