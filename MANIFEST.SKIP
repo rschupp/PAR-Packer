@@ -8,6 +8,7 @@
 ^myldr/perlxsi.c$
 ^myldr/par(?:\.\w+)?$
 ^myldr/sha1.[co]$
+^myldr/usernamefrompwuid.h$
 ^myldr/.*\.pdb$
 ^myldr/usernamefrompwuid\.h$
 ^package/parl-.*$

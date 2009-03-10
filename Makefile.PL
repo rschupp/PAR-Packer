@@ -56,7 +56,8 @@ WARNING
 }
 
 par_prehook();
-WriteAll sign => 1;
+#WriteAll sign => 1;
+WriteAll sign => 0;
 par_posthook();
 
 my %no_parl  = ();
