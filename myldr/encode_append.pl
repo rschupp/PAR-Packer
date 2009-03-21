@@ -5,7 +5,7 @@ use warnings;
 # specified as $ARGV[1] as __DATA__ section. Any previous _DATA_ is replaced.
 # section.
 #
-# 2006, Steffen Mueller
+# copyright 2006-2009, Steffen Mueller
 
 $/ = undef;
 

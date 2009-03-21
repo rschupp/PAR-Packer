@@ -49,7 +49,7 @@ Audrey Tang E<lt>cpan@audreyt.orgE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2006 by Steffen Mueller E<lt>smueller@cpan.orgE<gt>.
+Copyright 2006-2009 by Steffen Mueller E<lt>smueller@cpan.orgE<gt>.
 
 This program is free software; you can redistribute it and/or 
 modify it under the same terms as Perl itself.

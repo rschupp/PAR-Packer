@@ -74,7 +74,7 @@ Please submit bug reports to E<lt>bug-par@rt.cpan.orgE<gt>.
 
 =head1 COPYRIGHT
 
-Copyright 2003-2008 Audrey Tang E<lt>cpan@audreyt.orgE<gt>,
+Copyright 2003-2009 Audrey Tang E<lt>cpan@audreyt.orgE<gt>,
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

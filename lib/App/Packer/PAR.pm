@@ -200,7 +200,7 @@ Based on the work of Mattia Barbon E<lt>mbarbon@dsi.unive.itE<gt>.
 
 =head1 COPYRIGHT
 
-Copyright 2004, 2005, 2006 by Edward S. Peschko, Audrey Tang and Mattia Barbon.
+Copyright 2004-2009 by Edward S. Peschko, Audrey Tang and Mattia Barbon.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
