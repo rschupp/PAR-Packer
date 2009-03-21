@@ -17,8 +17,7 @@ or "perldoc par.pl".
 
 An extensive "Cross-Platform Packaging and Deployment with PAR" tutorial
 is available as "perldoc PAR::Tutorial" from the PAR distribution which is
-a prerequisite for this distribution.  A slightly outdated version is
-also available online at <http://www.autrijus.org/par-tutorial/>.
+a prerequisite for this distribution.
 
 * Installation
 
