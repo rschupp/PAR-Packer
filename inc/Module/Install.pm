@@ -30,7 +30,7 @@ BEGIN {
 	# This is not enforced yet, but will be some time in the next few
 	# releases once we can make sure it won't clash with custom
 	# Module::Install extensions.
-	$VERSION = '0.79';
+	$VERSION = '0.80';
 
 	*inc::Module::Install::VERSION = *VERSION;
 	@inc::Module::Install::ISA     = __PACKAGE__;
@@ -360,7 +360,7 @@ sub _CLASS ($) {
 		and
 		! ref $_[0]
 		and
-		$_[0] =~ m/^[^\W\d]\w*(?:::\w+)*$/s
+		$_[0] =~ m/^[^\W\d]\w*(?:::\w+)*\z/s
 	) ? $_[0] : undef;
 }
 

@@ -7,7 +7,7 @@ use ExtUtils::MakeMaker ();
 
 use vars qw{$VERSION $ISCORE @ISA};
 BEGIN {
-	$VERSION = '0.79';
+	$VERSION = '0.80';
 	$ISCORE  = 1;
 	@ISA     = qw{Module::Install::Base};
 }

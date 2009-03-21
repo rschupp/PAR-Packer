@@ -6,7 +6,7 @@ use Module::Install::Base;
 
 use vars qw{$VERSION $ISCORE @ISA};
 BEGIN {
-	$VERSION = '0.79';
+	$VERSION = '0.80';
 	$ISCORE  = 1;
 	@ISA     = qw{Module::Install::Base};
 }
@@ -508,6 +508,11 @@ sub write_mymeta {
 	# If there's no existing META.yml there is nothing we can do
 	return unless -f 'META.yml';
 
+	# We need YAML::Tiny to write the MYMETA.yml file
+	unless ( eval { require YAML::Tiny; 1; } ) {
+		return 1;
+	}
+
 	# Merge the perl version into the dependencies
 	my $val  = $self->Meta->{values};
 	my $perl = delete $val->{perl_version};
@@ -523,7 +528,6 @@ sub write_mymeta {
 	}
 
 	# Load the advisory META.yml file
-	require YAML::Tiny;
 	my @yaml = YAML::Tiny::LoadFile('META.yml');
 	my $meta = $yaml[0];
 
