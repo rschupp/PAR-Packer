@@ -1,3 +1,6 @@
+* Bug fixes, etc.
+    - Accept other extensions than .par in -p mode.
+
 [Changes for 0.991 - Mar 21, 2009]
 * New features
     - Add Roderich's reeally useful debugging tool "extract_embedded.pl" to

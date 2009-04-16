@@ -290,8 +290,8 @@ sub _parse_opts {
     $opt->{z} = Archive::Zip::COMPRESSION_LEVEL_DEFAULT if $opt->{z} < 0;
     $opt->{z} = 9 if $opt->{z} > 9;
 
-    $self->{output}      = $opt->{o}            || $self->_a_out();
     $opt->{o}            = $opt->{o}            || $self->_a_out();
+    $self->{output}      = $opt->{o};
     $self->{script_name} = $self->{script_name} || $opt->{script_name} || $0;
 
     $self->{logfh} = $self->_open('>>', $opt->{L})
@@ -604,7 +604,7 @@ sub get_par_file {
         # We need to keep it.
 
         if ($opt->{e} or !@$input) {
-            $par_file = "a.par";
+            $par_file = (defined $output ? $output : "a.par");
         }
         else {
             $par_file = $input->[0];
@@ -614,8 +614,7 @@ sub get_par_file {
             $par_file .= ".par";
         }
 
-        $par_file = $output if $opt->{p} and $output =~ /\.par\z/i;
-        $output = $par_file if $opt->{p};
+        $par_file = $output if $opt->{p};
 
         $self->_check_write($par_file);
     }
