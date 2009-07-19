@@ -35,6 +35,7 @@ use File::Temp ();
 use Module::ScanDeps ();
 use PAR ();
 use PAR::Filter ();
+use Carp ();
 
 use constant OPTIONS => {
     'a|addfile:s@'   => 'Additional files to pack',
@@ -42,6 +43,7 @@ use constant OPTIONS => {
     'B|bundle'       => 'Bundle core modules',
     'C|clean',       => 'Clean up temporary files',
     'c|compile'      => 'Compile code to get dependencies',
+    'cd|cachedeps:s' => 'Cache detected dependencies in a file',
     'd|dependent'    => 'Do not include libperl',
     'e|eval:s'       => 'Packing one-liner',
     'E|evalfeature:s'=> 'Packing one-liner with new syntactic features',
@@ -659,6 +661,11 @@ sub pack_manifest_hash {
     $root = "$Config{archname}/" if ($opt->{m});
     $self->{pack_attrib}{root} = '';
 
+    my @mscandeps_cache;
+    if (defined $opt->{cachedeps}) {
+        @mscandeps_cache = (cache_file => $opt->{cachedeps});
+    }
+
     my $par_file = $self->{par_file};
     my (@modules, @data, @exclude);
 
@@ -727,12 +734,14 @@ sub pack_manifest_hash {
       ? $self->_obj_function($fe, 'scan_deps_runtime')
       : $self->_obj_function($fe, 'scan_deps');
 
+
     $scan_dispatch->(
         rv      => \%map,
         files   => \@files,
         execute => $opt->{x},
         compile => $opt->{c},
         skip    => \%skip,
+        @mscandeps_cache,
         ($opt->{n}) ? () : (
             recurse => 1,
             first   => 1,
@@ -874,7 +883,6 @@ sub pack_manifest_hash {
 
     $dep_manifest->{'MANIFEST'} = [ string => "<<placeholder>>" ];
     $dep_manifest->{'META.yml'} = [ string => "<<placeholder>>" ];
-
     return ($dep_manifest);
 }
 
@@ -1693,6 +1701,8 @@ sub DESTROY {
     unlink $par_file if ($par_file and !$opt->{S} and !$opt->{p});
     unlink $self->{parl} if $self->{parl_is_temporary};
 }
+
+
 
 1;
 
