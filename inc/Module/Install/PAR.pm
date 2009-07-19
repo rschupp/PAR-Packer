@@ -2,13 +2,13 @@
 package Module::Install::PAR;
 
 use strict;
-use Module::Install::Base;
+use Module::Install::Base ();
 
-use vars qw{$VERSION $ISCORE @ISA};
+use vars qw{$VERSION @ISA $ISCORE};
 BEGIN {
-	$VERSION = '0.80';
+	$VERSION = '0.91';
+	@ISA     = 'Module::Install::Base';
 	$ISCORE  = 1;
-	@ISA     = qw{Module::Install::Base};
 }
 
 #line 74
@@ -117,7 +117,7 @@ sub extract_par {
     else {
         die <<'HERE';
 Could not extract .par archive because neither Archive::Zip nor a
-working 'unzip' binary are availlable. Please consider installing
+working 'unzip' binary are available. Please consider installing
 Archive::Zip.
 HERE
     }
