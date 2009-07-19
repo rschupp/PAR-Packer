@@ -358,6 +358,18 @@ Create stand-alone perl script; do not package to a standalone binary.
 
 Run the resulting packaged script after packaging it.
 
+=item B<--reusable>
+
+B<EXPERIMENTAL>
+
+Make the packaged executable reusable for running arbitrary, external
+Perl scripts as if they were part of the package:
+
+  pp -o myapp --reusable someapp.pl
+  ./myapp --par-options --reuse otherapp.pl
+
+The second line will run F<otherapp.pl> instead of F<someapp.pl>.
+
 =item B<-S>, B<--save>
 
 Do not delete generated PAR file after packaging.
