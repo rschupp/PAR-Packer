@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-
 eval 'exec /usr/bin/perl  -S $0 ${1+"$@"}'
     if 0; # not running under some shell
 
@@ -378,8 +377,9 @@ my ($start_pos, $data_pos);
 my @par_args;
 my ($out, $bundle, $logfh, $cache_name);
 
-$quiet = 0 unless $ENV{PAR_DEBUG};
+delete $ENV{PAR_APP_REUSE}; # sanitize (REUSE may be a security problem)
 
+$quiet = 0 unless $ENV{PAR_DEBUG};
 # Don't swallow arguments for compiled executables without --par-options
 if (!$start_pos or ($ARGV[0] eq '--par-options' && shift)) {
     my %dist_cmd = qw(
@@ -390,51 +390,61 @@ if (!$start_pos or ($ARGV[0] eq '--par-options' && shift)) {
         v   verify_par
     );
 
-    my @add_to_inc;
-    while (@ARGV) {
-        $ARGV[0] =~ /^-([AIMOBLbqpiusTv])(.*)/ or last;
-
-        if ($1 eq 'I') {
-            push @add_to_inc, $2;
-        }
-        elsif ($1 eq 'M') {
-            eval "use $2";
-        }
-        elsif ($1 eq 'A') {
-            unshift @par_args, $2;
-        }
-        elsif ($1 eq 'O') {
-            $out = $2;
-        }
-        elsif ($1 eq 'b') {
-            $bundle = 'site';
-        }
-        elsif ($1 eq 'B') {
-            $bundle = 'all';
-        }
-        elsif ($1 eq 'q') {
-            $quiet = 1;
-        }
-        elsif ($1 eq 'L') {
-            open $logfh, ">>", $2 or die "XXX: Cannot open log: $!";
-        }
-        elsif ($1 eq 'T') {
-            $cache_name = $2;
-        }
-
-        shift(@ARGV);
-
-        if (my $cmd = $dist_cmd{$1}) {
-            delete $ENV{'PAR_TEMP'};
-            init_inc();
-            require PAR::Dist;
-            &{"PAR::Dist::$cmd"}() unless @ARGV;
-            &{"PAR::Dist::$cmd"}($_) for @ARGV;
-            exit;
-        }
+    # if the app is invoked as "appname --par-options --reuse PROGRAM @PROG_ARGV",
+    # use the app to run the given perl code instead of anything from the
+    # app itself (but still set up the normal app environment and @INC)
+    if (@ARGV and $ARGV[0] eq '--reuse') {
+        shift @ARGV;
+        $ENV{PAR_APP_REUSE} = shift @ARGV;
     }
+    else { # normal parl behaviour
 
-    unshift @INC, @add_to_inc;
+        my @add_to_inc;
+        while (@ARGV) {
+            $ARGV[0] =~ /^-([AIMOBLbqpiusTv])(.*)/ or last;
+
+            if ($1 eq 'I') {
+                push @add_to_inc, $2;
+            }
+            elsif ($1 eq 'M') {
+                eval "use $2";
+            }
+            elsif ($1 eq 'A') {
+                unshift @par_args, $2;
+            }
+            elsif ($1 eq 'O') {
+                $out = $2;
+            }
+            elsif ($1 eq 'b') {
+                $bundle = 'site';
+            }
+            elsif ($1 eq 'B') {
+                $bundle = 'all';
+            }
+            elsif ($1 eq 'q') {
+                $quiet = 1;
+            }
+            elsif ($1 eq 'L') {
+                open $logfh, ">>", $2 or die "XXX: Cannot open log: $!";
+            }
+            elsif ($1 eq 'T') {
+                $cache_name = $2;
+            }
+
+            shift(@ARGV);
+
+            if (my $cmd = $dist_cmd{$1}) {
+                delete $ENV{'PAR_TEMP'};
+                init_inc();
+                require PAR::Dist;
+                &{"PAR::Dist::$cmd"}() unless @ARGV;
+                &{"PAR::Dist::$cmd"}($_) for @ARGV;
+                exit;
+            }
+        }
+
+        unshift @INC, @add_to_inc;
+    }
 }
 
 # XXX -- add --par-debug support!
