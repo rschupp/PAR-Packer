@@ -5,7 +5,7 @@ use warnings;
 use PAR::Packer ();
 
 # This line is here so CPAN.pm can parse a $VERSION from us...
-our $VERSION = '0.977';
+our $VERSION = '0.992';
 
 # ...but we read our $VERSION again from PAR::Packer in case we forgot to update
 # the $VERSION above during release engineering.
