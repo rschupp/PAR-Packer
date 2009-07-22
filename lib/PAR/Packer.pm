@@ -35,7 +35,6 @@ use File::Temp ();
 use Module::ScanDeps ();
 use PAR ();
 use PAR::Filter ();
-use Carp ();
 
 use constant OPTIONS => {
     'a|addfile:s@'   => 'Additional files to pack',
