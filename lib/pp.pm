@@ -220,6 +220,11 @@ allows the program to start up faster next time.
 
 Run C<perl -c inputfile> to determine additonal run-time dependencies.
 
+=item B<-cd>, B<--cachedeps>=I<FILE>
+
+Use I<FILE> to cache detected dependencies. Creates I<FILE> unless
+present. This will speed up the scanning process on subsequent runs.
+
 =item B<-d>, B<--dependent>
 
 Reduce the executable size by not including a copy of perl interpreter.
