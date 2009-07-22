@@ -108,7 +108,7 @@ sub par_prehook {
 
     # Do not run 10parl-generation tests in case of a pre built .par (doesn't work)
     my $pgentest = (!$par and $cc) ? ' t/10-parl-generation.t ' : '';
-    my $tests = qq(t/00-pod.t$pgentest t/20-pp.t t/30-current_exec.t);
+    my $tests = qq(t/00-pod.t$pgentest t/20-pp.t t/30-current_exec.t t/40-packer_cd_option.t);
 
     makemaker_args(
         MAN1PODS		=> {
