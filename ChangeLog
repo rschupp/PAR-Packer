@@ -1,4 +1,11 @@
 
+[Changes for 0.992_02 - Jul 23, 2009]
+* New features
+    - Add the cachedeps option to pp:
+      PAR::Packer can now use the new Module::ScanDeps
+      feature of caching the module dependencies for a significant
+      packaging speed-up.
+
 [Changes for 0.992_01 - Jul 19, 2009]
 * New features
     - Reusable pp packaged applications (see pp's --reusable option)

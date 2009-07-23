@@ -10,9 +10,9 @@ all_from    'lib/PAR/Packer.pm';
 requires    'File::Temp'        => 0.05;
 requires    'Compress::Zlib'    => ($^O eq 'MSWin32') ? 1.16 : 1.30;
 requires    'Archive::Zip'      => 1.00;
-requires    'Module::ScanDeps'  => 0.78;
+requires    'Module::ScanDeps'  => 0.93;
 requires    'PAR::Dist'         => 0.22;
-requires    'PAR'               => '0.993';
+requires    'PAR'               => '0.994';
 requires    'Getopt::ArgvFile'  => 1.07;
 
 if ($^O eq 'MSWin32') {
