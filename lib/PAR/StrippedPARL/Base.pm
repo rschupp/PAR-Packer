@@ -71,7 +71,7 @@ sub write_parl {
     my @libs = ();
     for my $ilib ( @INC ) {
         $ilib =~ s/\\$/\\\\/;
-        push(@libs, qq(-I\"$ilib\") );
+        push(@libs, qq(-I$ilib) );
     }
     my @args = (@libs, qw/-q -B/);
 

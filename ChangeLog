@@ -1,3 +1,5 @@
+* Bug fixes, etc.
+    - Fix "Can't locate IO/file.pm in @INC ..." bug (Markus Jansen)
 
 [Changes for 0.992_02 - Jul 23, 2009]
 * New features
