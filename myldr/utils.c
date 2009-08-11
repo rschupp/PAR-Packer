@@ -220,6 +220,12 @@ void par_init_env () {
     char par_clean[] = "__ENV_PAR_CLEAN__               \0";
     char *buf;
 
+    /* ignore PERL5LIB et al. as they make no sense for a self-contained executable */
+    par_unsetenv("PERL5LIB");
+    par_unsetenv("PERLLIB");
+    par_unsetenv("PERL5OPT");
+    par_unsetenv("PERLIO");
+
     par_unsetenv("PAR_INITIALIZED");
     par_unsetenv("PAR_SPAWNED");
     par_unsetenv("PAR_TEMP");
