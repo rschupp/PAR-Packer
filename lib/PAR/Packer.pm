@@ -319,6 +319,15 @@ sub _parse_opts {
     else {
         $self->{input} ||= [];
 
+        # Reject main.pl as input file to avoid beginner confusion
+        if ( grep /main\.pl$/,
+             ($opt->{r} ? ($args->[0]) : @$args) )
+        {
+          # -r means "run this" => extra args are execution parameters
+
+          $self->_die( "Cannot package 'main.pl' script. This file name "
+                      ."is used by PAR::Packer internally for bootstrapping.");
+        }
         push(@{ $self->{input} }, shift @$args) if (@$args);
 
         push(@{ $self->{input} }, @$args) if (@$args and !$opt->{r});
