@@ -6,6 +6,7 @@
 * Bug fixes, etc.
     - Fix RT #48614: ignore setting of PERL5OPT (and others) in a
       packed executable (Roderich)
+    - Fix RT #48027: Fix building with ActivePerl & MinGW
 
 [Changes for 0.992_03 - Jul 24, 2009]
 * Bug fixes, etc.

@@ -122,8 +122,14 @@ if( $cc =~ m/^cl\b/i ) {
 }
 
 
-my  $cflags = "$ccdebug$warn$pccflags";
-my $ldflags = "$lddebug$pldflags";
+my $perl58lib = "";
+if($ENV{ACTIVEPERL_MINGW} and $Config{cf_email}=~/ActiveState.com/i){
+    chomp $pldflags;
+    $perl58lib = "-l$Config{libperl}";
+    $perl58lib =~ s/\.lib$//;
+}
+my $cflags = "$ccdebug$warn$pccflags";
+my $ldflags = "$lddebug$pldflags $perl58lib";
 my $static_ldflags = $ldflags;
 
 $static_ldflags =~ s/\s+-lperl\s+/ /g;
