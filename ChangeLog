@@ -1,3 +1,4 @@
+[Changes for 0.992_04 - Sep 11, 2009]
 * New features
     - Reject "main.pl" as input scripts since this can override the
       bootstrapping code. For wizards who really want this, there
