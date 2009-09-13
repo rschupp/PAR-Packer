@@ -26,6 +26,7 @@ XS(XS_Internals_PAR_BOOT) {
         par_init_env();
     }
 
+    /* Remove the PAR/parl options from @ARGV */
     if ((tmpgv = gv_fetchpv("ARGV", TRUE, SVt_PVAV))) {/* @ARGV */
         tmpav = GvAV(tmpgv);
         for (i = 1; i < options_count; i++) {
