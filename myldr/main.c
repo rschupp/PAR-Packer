@@ -34,9 +34,8 @@ S_procself_val(pTHX_ SV *sv, char *arg0)
        many tests from working). readlink is not meant to add a NUL.
        Normal readlink works fine.
      */
-    if (len > 0 && buf[len-1] == '\0') {
+    if (len > 0 && buf[len-1] == '\0')
       len--;
-    }
 
     /* FreeBSD's implementation is acknowledged to be imperfect, sometimes
        returning the text "unknown" from the readlink rather than the path
@@ -44,12 +43,10 @@ S_procself_val(pTHX_ SV *sv, char *arg0)
        path has a '/' in it somewhere, so use that to validate the result.
        See http://www.freebsd.org/cgi/query-pr.cgi?pr=35703
     */
-    if (len > 0 && memchr(buf, '/', len)) {
-        sv_setpvn(sv,buf,len);
-    }
-    else {
+    if (len > 0 && memchr(buf, '/', len))
+        sv_setpvn(sv, buf, len);
+    else
         sv_setpv(sv,arg0);
-    }
 }
 #endif /* HAS_PROCSELFEXE */
 
@@ -65,7 +62,7 @@ int main ( int argc, char **argv, char **env )
     PERL_GPROF_MONCONTROL(0);
 #endif
 #ifdef PERL_SYS_INIT3
-    PERL_SYS_INIT3(&argc,&argv,&env);
+    PERL_SYS_INIT3(&argc, &argv, &env);
 #endif
 
 #if (defined(USE_5005THREADS) || defined(USE_ITHREADS)) && defined(HAS_PTHREAD_ATFORK)
@@ -115,22 +112,20 @@ int main ( int argc, char **argv, char **env )
 #endif /* ALLOW_PERL_OPTIONS */
     New(666, fakeargv, argc + EXTRA_OPTIONS + 1 + PROFILING_OPTION, char *);
 
-    fakeargv[0] = argv[0];
+    int argno = 0;
+    fakeargv[argno++] = argv[0];
 #ifdef PERL_PROFILING
-    fakeargv[1] = "-d:DProf";
-    fakeargv[2] = "-e";
-    fakeargv[3] = load_me_2;
-    options_count = 4;
-#else
-    fakeargv[1] = "-e";
-    fakeargv[2] = load_me_2;
-    options_count = 3;
+    fakeargv[argno++] = "-d:DProf";
 #endif
 
+    fakeargv[argno++] = "-e";
+    fakeargv[argno++] = load_me_2;
+
 #ifndef ALLOW_PERL_OPTIONS
-    fakeargv[options_count] = "--";
-    ++options_count;
+    fakeargv[argno++] = "--";
 #endif /* ALLOW_PERL_OPTIONS */
+
+    options_count = argno;
 
     for (i = 1; i < argc; i++)
         fakeargv[i + options_count - 1] = argv[i];
@@ -145,12 +140,10 @@ int main ( int argc, char **argv, char **env )
     perl_destruct( my_perl );
 
     if ( par_getenv("PAR_SPAWNED") == NULL ) {
-        if ( stmpdir == NULL ) {
+        if ( stmpdir == NULL )
             stmpdir = par_getenv("PAR_TEMP");
-        }
-        if ( stmpdir != NULL ) {
+        if ( stmpdir != NULL )
             par_cleanup(stmpdir);
-        }
     }
 
     perl_free( my_perl );
