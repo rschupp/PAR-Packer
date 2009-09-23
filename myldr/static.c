@@ -31,7 +31,7 @@ int my_mkfile (char* argv0, char* stmpdir, const char* name, unsigned long size)
         if ( (unsigned long)PL_statbuf.st_size == size ) return -2;
     }
 
-    i = open(my_file, O_CREAT | O_WRONLY | OPEN_O_BINARY);
+    i = open(my_file, O_CREAT | O_WRONLY | OPEN_O_BINARY, 0777);
 
     if (i == -1) {
         fprintf(stderr, "%s: creation of %s failed - aborting with %i.\n", argv0, my_file, errno);

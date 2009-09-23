@@ -129,6 +129,7 @@ if($ENV{ACTIVEPERL_MINGW} and $Config{cf_email}=~/ActiveState.com/i){
     $perl58lib =~ s/\.lib$//;
 }
 my $cflags = "$ccdebug$warn$pccflags";
+my $optimize = $Config{optimize};
 my $ldflags = "$lddebug$pldflags $perl58lib";
 my $static_ldflags = $ldflags;
 
@@ -212,6 +213,7 @@ PERL=$perl
 LD=$ld
 CC=$cc
 CFLAGS=$cflags
+OPTIMIZE=$optimize
 LDFLAGS=$Config{ldflags}
 PERL_LDFLAGS=$ldflags
 STATIC_LDFLAGS=$static_ldflags
@@ -220,7 +222,7 @@ NOOP=\$(PERL) -e1
 OBJECTS=main$o my_par_pl$o $res
 
 .c$o:
-	\$(CC) -c \$(CFLAGS) \$<
+	\$(CC) -c \$(CFLAGS) \$(OPTIMIZE) \$<
 
 all: $all
 
