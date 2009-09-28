@@ -176,6 +176,7 @@ char *par_mktmpdir ( char **argv ) {
         }
         else {
             /* "$TEMP/par-$USER/cache-$SHA1" */
+	    lseek(f, 0, 0);
             sha_init( &sha_info );
             while( ( j = read( f, buf, sizeof( buf ) ) ) > 0 )
             {
