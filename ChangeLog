@@ -1,3 +1,18 @@
+[Changes for 0.992_05 - Nov 13, 2009]
+* Bug fixes, etc.
+    - Apply patches from RT #49900: [PATCH] build problems
+      (Marcela Maslanova)
+    - When computing the SHA1 in par_mktmpdir (myldr/mktmpdir.c)
+      rewind file descriptor f first. Otherwise we checksum just
+      the last 12 bytes of file progname. (Roderich)
+    - RT #18472: "parl foo.par script.pl ..." uses a cache area that
+      doesn't depend on foo.par
+      Indeed, the (name of) the cache area used for "parl foo.par ..."
+      is derived from the SHA1 checksum of parl.exe, and _not_ foo.par.
+      This patch changes that for the common use case above. It is not
+      a complete fix though, as this would require to parse the parl
+      command line arguments on the C level. (Roderich)
+
 [Changes for 0.992_04 - Sep 11, 2009]
 * New features
     - Reject "main.pl" as input scripts since this can override the
