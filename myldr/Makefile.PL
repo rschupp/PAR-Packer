@@ -212,7 +212,7 @@ MV=$mv
 PERL=$perl
 LD=$ld
 CC=$cc
-CFLAGS=$cflags
+CFLAGS=$cflags -DPARL_EXE=\\"parl$exe\\"
 OPTIMIZE=$optimize
 LDFLAGS=$Config{ldflags}
 PERL_LDFLAGS=$ldflags

@@ -160,6 +160,29 @@ char *par_mktmpdir ( char **argv ) {
     if (progname == NULL)
         progname = argv[0];
 
+    /* If invoked as "/usr/bin/parl foo.par myscript.pl" then progname should
+     * be ".../parl", and we don't want to base our checksum on that, but
+     * rather on "foo.par".
+     */
+    {
+#ifdef WIN32
+#define STREQ(a,b) (strcasecmp(a,b) == 0)
+#else
+#define STREQ(a,b) (strcmp(a,b) == 0)
+#endif
+	int prog_len = strlen(progname);
+	int parl_len = strlen(PARL_EXE);
+
+	if (prog_len >= parl_len
+	    && STREQ(progname + prog_len - parl_len, PARL_EXE)
+	    && (prog_len == parl_len || progname[prog_len - parl_len - 1] == dir_sep[0])
+	    && argv[1]
+	    && strlen(argv[1]) >= 4
+	    && STREQ(argv[1] + strlen(argv[1]) - 4, ".par"))
+		progname = argv[1];
+#undef STREQ
+    }
+
     if ( !par_env_clean() && (f = open( progname, O_RDONLY | OPEN_O_BINARY ))) {
         lseek(f, -18, 2);
         read(f, buf, 6);
