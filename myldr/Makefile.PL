@@ -262,7 +262,7 @@ my_par_pl.c: $par_pl
 	\$(PERL) $f2c $par_pl \$@ load_me_2 $long_literal
 
 $parl_exe: $par
-	$par $lib_path -I../myldr/.. -I../blib/lib -q -B -O\$@
+	\$(PERL) run_with_inc.pl $par -I../myldr/.. -I../blib/lib -q -B -O\$@
 
 disttest:
 	-\$(NOOP)
@@ -283,7 +283,7 @@ EOT
     print OUT << "EOT" if $dynperl;
 
 $parldyn_exe: $par_exe
-	$par_exe -I../myldr/.. -I../blib/lib $lib_path -q -B -O\$@
+	\$(PERL) run_with_inc.pl $par_exe -I./myldr/.. -I../blib/lib -q -B -O\$@
 
 static$o: my_perl.c my_par.c mktmpdir.c
 
