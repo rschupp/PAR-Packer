@@ -1,3 +1,8 @@
+[Changes for 0.992_06 - Nov 20, 2009]
+* Bug fixes, etc.
+    - Attempt to fix build problems where PERL5LIB is used to include
+      temporary build directories (Roderich)
+
 [Changes for 0.992_05 - Nov 13, 2009]
 * Bug fixes, etc.
     - Apply patches from RT #49900: [PATCH] build problems
