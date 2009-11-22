@@ -3,7 +3,7 @@ use 5.006;
 use strict;
 use warnings;
 
-our $VERSION = '0.992_06';
+our $VERSION = '1.000';
 
 =head1 NAME
 
@@ -1729,6 +1729,8 @@ the work that eventually became this module.
 =head1 AUTHORS
 
 Audrey Tang E<lt>cpan@audreyt.orgE<gt>
+
+Steffen Mueller E<lt>smueller@cpan.orgE<gt>
 
 L<http://par.perl.org/> is the official PAR website.  You can write
 to the mailing list at E<lt>par@perl.orgE<gt>, or send an empty mail to
