@@ -320,7 +320,7 @@ sub _parse_opts {
         $self->{input} ||= [];
 
         # Reject main.pl as input file to avoid beginner confusion
-        if ( grep /main\.pl$/,
+        if ( grep /(?:^|[\/\\])main\.pl$/,
              ($opt->{r} ? ($args->[0]) : @$args) )
         {
           # -r means "run this" => extra args are execution parameters
