@@ -65,7 +65,7 @@ char *par_mktmpdir ( char **argv ) {
     const char *subdirbuf_suffix = "";
 
     char *progname = NULL, *username = NULL;
-    char *stmpdir = NULL;
+    char *stmpdir = NULL, *stmpdir2 = NULL;
     int f, j, k, stmp_len = 0;
     char sha1[41];
     SHA_INFO sha_info;
@@ -150,8 +150,9 @@ char *par_mktmpdir ( char **argv ) {
        need 2 buffers because snprintf() can't write to a buffer it's
        reading from. */
     stmpdir = malloc( stmp_len );
-    sprintf(stmpdir, "%s%s%s%s", tmpdir, dir_sep, subdirbuf_prefix, username);
-    my_mkdir(stmpdir, 0755);
+    stmpdir2 = malloc( stmp_len );
+    sprintf(stmpdir2, "%s%s%s%s", tmpdir, dir_sep, subdirbuf_prefix, username);
+    my_mkdir(stmpdir2, 0755);
 
     /* Doesn't really work - XXX */
     val = (char *)par_getenv( "PATH" );
@@ -194,7 +195,7 @@ char *par_mktmpdir ( char **argv ) {
             sprintf(
                 stmpdir,
                 "%s%scache-%s%s",
-                stmpdir, dir_sep, buf, subdirbuf_suffix
+                stmpdir2, dir_sep, buf, subdirbuf_suffix
             );
         }
         else {
@@ -215,13 +216,12 @@ char *par_mktmpdir ( char **argv ) {
             sprintf(
                 stmpdir,
                 "%s%scache-%s%s",
-                stmpdir, dir_sep, sha1, subdirbuf_suffix
+                stmpdir2, dir_sep, sha1, subdirbuf_suffix
             );
         }
     }
     else {
         int i = 0;
-        size_t len = strlen(stmpdir);
 
         /* "$TEMP/par-$USER/temp-$PID" */
 
@@ -229,7 +229,7 @@ char *par_mktmpdir ( char **argv ) {
         sprintf(
             stmpdir,
             "%s%stemp-%u%s",
-            stmpdir, dir_sep, getpid(), subdirbuf_suffix
+            stmpdir2, dir_sep, getpid(), subdirbuf_suffix
         );
 
         /* Ensure we pick an unused directory each time.  If the directory
@@ -239,14 +239,15 @@ char *par_mktmpdir ( char **argv ) {
            might interfere. */
 
         while (my_mkdir(stmpdir, 0755) == -1 && errno == EEXIST) {
-            stmpdir[len] = 0;
             sprintf(
                 stmpdir,
                 "%s%stemp-%u-%u%s",
-                stmpdir, dir_sep, getpid(), ++i, subdirbuf_suffix
+                stmpdir2, dir_sep, getpid(), ++i, subdirbuf_suffix
                 );
         }
     }
+
+    free(stmpdir2);
 
     /* set dynamic loading path */
     par_setenv(PAR_TEMP, stmpdir);
