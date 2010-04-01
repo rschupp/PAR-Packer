@@ -757,6 +757,7 @@ sub require_modules {
     eval { require Scalar::Util };
     eval { require Archive::Unzip::Burst };
     eval { require Tie::Hash::NamedCapture };
+    eval { require PerlIO; require PerlIO::scalar };
 }
 
 # The C version of this code appears in myldr/mktmpdir.c
