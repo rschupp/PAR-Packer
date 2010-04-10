@@ -1,3 +1,10 @@
+* Bug fixes, etc.
+    - RT #56171: add PerlIO and PerlIO::scalar to the list of always
+      required modules (Roderich)
+    - Fix t/30-current_exec.t failing when cwd contains regexp
+      metacharacters (Niko Tyni)
+    - Link to repository in meta information (chorny)
+
 [Changes for 1.002 - Dec 17, 2009]
 * Bug fixes, etc.
     - RT #52407: fix calls of sprintf in myldr/mktmpdir.c that rely on
