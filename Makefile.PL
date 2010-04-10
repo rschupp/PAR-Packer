@@ -12,7 +12,7 @@ requires    'Compress::Zlib'    => ($^O eq 'MSWin32') ? 1.16 : 1.30;
 requires    'Archive::Zip'      => 1.00;
 requires    'Module::ScanDeps'  => 0.96;
 requires    'PAR::Dist'         => 0.22;
-requires    'PAR'               => '0.994';
+requires    'PAR'               => '1.000';
 requires    'Getopt::ArgvFile'  => 1.07;
 
 if ($^O eq 'MSWin32') {
