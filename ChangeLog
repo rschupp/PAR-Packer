@@ -1,3 +1,4 @@
+[Changes for 1.003 - Apr 10, 2010]
 * Bug fixes, etc.
     - RT #56171: add PerlIO and PerlIO::scalar to the list of always
       required modules (Roderich)
