@@ -43,7 +43,7 @@ ok( (-f $EXEC), "Created \"$EXEC\"" )
 $ENV{PAR_GLOBAL_TMPDIR} = $TEMP;
 my $out_full = qx($EXEC);
 
-ok( ($out_full =~ /PAR_TEMP = $TEMP/), "Respected PAR_GLOBAL_TMPDIR" );
+ok( ($out_full =~ /PAR_TEMP = \Q$TEMP\E/), "Respected PAR_GLOBAL_TMPDIR" );
 
 my( $file, $path ) = fileparse( $EXEC );
 
