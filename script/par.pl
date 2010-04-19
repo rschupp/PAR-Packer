@@ -538,8 +538,6 @@ if ($out) {
              $_ ne $Config::Config{privlibexp});
         } @INC;
 
-        if ($Config{_delim} eq '\\') { s{\\}{/}g for @inc }
-
         # File exists test added to fix RT #41790:
         # Funny, non-existing entry in _<....auto/Compress/Raw/Zlib/autosplit.ix.
         # This is a band-aid fix with no deeper grasp of the issue.
