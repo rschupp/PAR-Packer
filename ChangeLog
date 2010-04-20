@@ -1,3 +1,8 @@
+[Changes for 1.004 - Apr 20, 2010]
+* Bug fixes, etc.
+    - RT #52794, #56654: script/par.pl: remove munging of @inc on Windows;
+      it causes problems with Strawberry Perl
+
 [Changes for 1.003 - Apr 10, 2010]
 * Bug fixes, etc.
     - RT #56171: add PerlIO and PerlIO::scalar to the list of always
