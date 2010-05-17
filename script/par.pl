@@ -750,6 +750,7 @@ sub require_modules {
     require PAR::Heavy;
     require PAR::Dist;
     require PAR::Filter::PodStrip;
+    require attributes;
     eval { require Cwd };
     eval { require Win32 };
     eval { require Scalar::Util };
