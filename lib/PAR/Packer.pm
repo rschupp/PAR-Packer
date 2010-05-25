@@ -821,6 +821,7 @@ sub pack_manifest_hash {
             and 0 # XXX - broken on larger icon files - XXX
         ) {
             my $tkdll = Win32::Exe->new($map{$pfile});
+            $tkdll = $tkdll->create_resource_section if !$tkdll->has_resource_section;
             my $ico = Win32::Exe::IconFile->new($opt->{i});
             $tkdll->set_icons(scalar $ico->icons);
 
@@ -1260,7 +1261,9 @@ sub _par_to_exe {
     }
     elsif (eval { require Win32::Exe; 1 }) {
         $self->_move_parl();
-        Win32::Exe->new($self->{parl})->update(
+        my $exe = Win32::Exe->new($self->{parl});
+        $exe = $exe->create_resource_section if !$exe->has_resource_section;
+        $exe->update(
             icon => $opt->{i},
             info => $opt->{N},
         );
