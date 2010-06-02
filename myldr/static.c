@@ -1,40 +1,25 @@
-#undef PL_statbuf
 #undef readdir
 
 #include "mktmpdir.c"
-#include "my_perl.c"
+#include "my_libperl.c"
 #include "my_par.c"
 
-/*
-extern char * name_load_me_0;
-extern char * name_load_me_1;
-extern unsigned long size_load_me_0;
-extern unsigned long size_load_me_1;
-extern char load_me_0[];
-extern char load_me_1[];
-*/
 
-char *my_file = NULL;
-int  my_size = 0;
-
-int my_mkfile (char* argv0, char* stmpdir, const char* name, unsigned long size) {
+int my_mkfile (char* argv0, char* stmpdir, const char* name, unsigned long expected_size, char** file_p) {
     int i;
-#ifndef PL_statbuf
-    struct stat PL_statbuf;
-#endif
+    struct stat statbuf;
 
-    my_size = strlen(stmpdir) + strlen(name) + 5;
-    my_file = (char *)malloc( my_size );
-    sprintf(my_file, "%s/%s", stmpdir, name);
+    *file_p = malloc(strlen(stmpdir) + 1 + strlen(name) + 1);
+    sprintf(*file_p, "%s/%s", stmpdir, name);
 
-    if ( par_lstat(my_file, &PL_statbuf) == 0 ) {
-        if ( (unsigned long)PL_statbuf.st_size == size ) return -2;
-    }
+    if ( par_lstat(*file_p, &statbuf) == 0 
+         && (unsigned long)statbuf.st_size == expected_size )
+	return -2;
 
-    i = open(my_file, O_CREAT | O_WRONLY | OPEN_O_BINARY, 0777);
+    i = open(*file_p, O_CREAT | O_WRONLY | OPEN_O_BINARY, 0777);
 
     if (i == -1) {
-        fprintf(stderr, "%s: creation of %s failed - aborting with %i.\n", argv0, my_file, errno);
+        fprintf(stderr, "%s: creation of %s failed - aborting with errno %i.\n", argv0, *file_p, errno);
         return 0;
     }
 
@@ -45,7 +30,9 @@ int main ( int argc, char **argv, char **env )
 {
     int i;
     char *stmpdir;
-    char *buf = (char *)malloc(MAXPATHLEN);
+    char *my_file;
+    char *my_perl;
+    char buf[20];	/* must be large enough to hold "PAR_ARGV_###" */
 #ifdef WIN32
 typedef BOOL (WINAPI *pALLOW)(DWORD);
     HINSTANCE hinstLib;
@@ -56,42 +43,43 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
 #endif
 
     par_init_env();
-    par_mktmpdir( argv );
 
-    stmpdir = (char *)par_getenv("PAR_TEMP");
-    if ( stmpdir != NULL ) {
-        i = my_mkdir(stmpdir, 0755);
-        if ( i == -1 && errno != EEXIST) {
-            fprintf(stderr, "%s: creation of private temporary subdirectory %s failed - aborting with %i.\n", argv[0], stmpdir, errno);
-            return 2;
-        }
+    stmpdir = par_mktmpdir( argv );	
+    i = my_mkdir(stmpdir, 0755);
+    if ( i == -1 && errno != EEXIST) {
+	fprintf(stderr, "%s: creation of private temporary subdirectory %s failed - aborting with errno %i.\n", argv[0], stmpdir, errno);
+	return 2;
     }
 
-    i = my_mkfile( argv[0], stmpdir, name_load_me_0, size_load_me_0 );
+    /* extract libperl DLL into stmpdir */
+    i = my_mkfile( argv[0], stmpdir, name_load_my_libperl, size_load_my_libperl, &my_file );
     if ( !i ) return 2;
     if ( i != -2 ) {
-        WRITE_load_me_0(i);
+        WRITE_load_my_libperl(i);
         close(i); chmod(my_file, 0755);
     }
 
-    my_file = par_basename(par_findprog(argv[0], strdup(par_getenv("PATH"))));
-
-    i = my_mkfile( argv[0], stmpdir, my_file, size_load_me_1 );
+    /* extract custom Perl interpreter into stmpdir 
+       (but under the same basename as argv[0]) */
+    i = my_mkfile( argv[0], 
+	           stmpdir, par_basename(par_findprog(argv[0], strdup(par_getenv("PATH")))),
+	           size_load_my_par, &my_perl );
     if ( !i ) return 2;
     if ( i != -2 ) {
-        WRITE_load_me_1(i);
-        close(i); chmod(my_file, 0755);
+        WRITE_load_my_par(i);
+        close(i); chmod(my_perl, 0755);
     }
 
+    /* save original argv[] into environment variables PAR_ARGV_# */
     sprintf(buf, "%i", argc);
     par_setenv("PAR_ARGC", buf);
     for (i = 0; i < argc; i++) {
-        buf = (char *)malloc(strlen(argv[i]) + 14);
         sprintf(buf, "PAR_ARGV_%i", i);
         par_unsetenv(buf);
         par_setenv(buf, argv[i]);
     }
 
+    /* finally spawn the custom Perl interpreter */
 #ifdef WIN32
     hinstLib = LoadLibrary("user32");
     if (hinstLib != NULL) {
@@ -103,9 +91,9 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     }
 
     par_setenv("PAR_SPAWNED", "1");
-    i = spawnvpe(P_WAIT, my_file, (const char* const*)argv, (const char* const*)environ);
+    i = spawnvpe(P_WAIT, my_perl, (const char* const*)argv, (const char* const*)environ);
 #else
-    execvp(my_file, argv);
+    execvp(my_perl, argv);
     return 2;
 #endif
 

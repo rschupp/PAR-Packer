@@ -13,14 +13,20 @@
 #endif
 static int isWritableDir(const char* val)
 {
+    /* NOTE: This code is #include'd both from a plain C program (static.c)
+     * and our custom Perl interpreter (main.c). In the latter case,
+     * lstat() or stat() may be #define'd as calls into PerlIO and
+     * expect &PL_statbuf as second parameter, rather than a pointer
+     * to a struct stat. Try to distinguish these cases by checking
+     * whether PL_statbuf is defined. */
 #ifndef PL_statbuf
-struct stat PL_statbuf;
+    struct stat PL_statbuf;
 #endif
 
-    return ( par_lstat(val, &PL_statbuf) == 0 &&
+    return par_lstat(val, &PL_statbuf) == 0 && 
              ( S_ISDIR(PL_statbuf.st_mode) ||
                S_ISLNK(PL_statbuf.st_mode) ) &&
-            access(val, W_OK) == 0 );
+             access(val, W_OK) == 0;
 }
 
 void par_setup_libpath( const char * stmpdir )
@@ -33,20 +39,15 @@ void par_setup_libpath( const char * stmpdir )
    };
    char *ld_path_env = NULL;
     for ( i = 0 ; strlen(key = ld_path_keys[i]) > 0 ; i++ ) {
-        if ( ((val = (char *)par_getenv(key)) == NULL) || (strlen(val) == 0) ) {
+        if ( ((val = par_getenv(key)) == NULL) || (strlen(val) == 0) ) {
             par_setenv(key, stmpdir);
         }
         else if(!strstr(val, stmpdir)) {
-            ld_path_env = (char *)malloc(
-                strlen(stmpdir) +
-                strlen(path_sep) +
-                strlen(val) + 2
-            );
+            ld_path_env = malloc( 
+		strlen(stmpdir) + strlen(path_sep) + strlen(val) + 1);
             sprintf(
-                ld_path_env,
-                "%s%s%s",
-                stmpdir, path_sep, val
-            );
+                ld_path_env, "%s%s%s",
+                stmpdir, path_sep, val);
             par_setenv(key, ld_path_env);
         }
     }
@@ -72,7 +73,7 @@ char *par_mktmpdir ( char **argv ) {
     unsigned char buf[32768];
     unsigned char sha_data[20];
 
-    if ( (val = (char *)par_getenv(PAR_TEMP)) && strlen(val) ) {
+    if ( (val = par_getenv(PAR_TEMP)) && strlen(val) ) {
         par_setup_libpath(val);
         return strdup(val);
     }
@@ -80,7 +81,7 @@ char *par_mktmpdir ( char **argv ) {
 #ifdef WIN32
     {
         DWORD buflen = MAXPATHLEN;
-        username = (char *)malloc(MAXPATHLEN);
+        username = malloc(MAXPATHLEN);
         GetUserName((LPTSTR)username, &buflen);
     }
 #endif
@@ -94,7 +95,7 @@ char *par_mktmpdir ( char **argv ) {
                 i++
             )
         {
-            if ( (val = (char *)par_getenv(key)) ) username = strdup(val);
+            if ( (val = par_getenv(key)) ) username = strdup(val);
         }
     }
 
@@ -112,7 +113,7 @@ char *par_mktmpdir ( char **argv ) {
 
     /* Try temp environment variables */
     for ( i = 0 ; tmpdir == NULL && strlen(key = temp_keys[i]) > 0 ; i++ ) {
-        if ( (val = (char *)par_getenv(key)) &&
+        if ( (val = par_getenv(key)) &&
                 isWritableDir(val) ) {
             tmpdir = strdup(val);
         }
@@ -120,8 +121,8 @@ char *par_mktmpdir ( char **argv ) {
 
 #ifdef WIN32
     /* Try the windows temp directory */
-    if ( tmpdir == NULL && (val = (char*)par_getenv("WinDir")) ) {
-        char* buf = (char*)(malloc(strlen(val) + 6));
+    if ( tmpdir == NULL && (val = par_getenv("WinDir")) ) {
+        char* buf = malloc(strlen(val) + 5 + 1);
         sprintf(buf, "%s\\temp", val);
         if (isWritableDir(buf)) {
             tmpdir = buf;
@@ -155,7 +156,7 @@ char *par_mktmpdir ( char **argv ) {
     my_mkdir(stmpdir2, 0755);
 
     /* Doesn't really work - XXX */
-    val = (char *)par_getenv( "PATH" );
+    val = par_getenv( "PATH" );
     if (val != NULL)
         progname = par_findprog(argv[0], strdup(val));
     if (progname == NULL)
@@ -254,7 +255,7 @@ char *par_mktmpdir ( char **argv ) {
 
     par_setup_libpath( stmpdir );
 
-    return(stmpdir);
+    return stmpdir;
 }
 
 
@@ -322,7 +323,7 @@ static void par_rmtmpdir ( char *stmpdir ) {
     while ( ( dp = readdir(partmp_dirp) ) != NULL ) {
         if ( strcmp (dp->d_name, ".") != 0 && strcmp (dp->d_name, "..") != 0 )
         {
-            subsub_len = strlen(stmpdir) + strlen(dp->d_name) + 2;
+            subsub_len = strlen(stmpdir) + 1 + strlen(dp->d_name) + 1;
             subsubdir = malloc( subsub_len);
             sprintf(subsubdir, "%s/%s", stmpdir, dp->d_name);
             if (stat(subsubdir, &stbuf) != -1 && S_ISDIR(stbuf.st_mode)) {

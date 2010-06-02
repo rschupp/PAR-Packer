@@ -167,11 +167,9 @@ if (not $dynperl) {
 }
 
 my $par = (($dynperl && $^O ne 'os2') ? $static_exe : $par_exe);
-my $all = (
-    $dynperl
-    ? "$parl_exe $parldyn_exe strippedparl strippedparldyn"
-    : "$parl_exe strippedparl"
-);
+
+my $all = "$parl_exe strippedparl";
+$all .= " $parldyn_exe strippedparldyn" if $dynperl;
 
 $perl = Win32::GetShortPathName($perl)
     if $perl =~ / / and defined &Win32::GetShortPathName;
@@ -259,10 +257,15 @@ $par_exe: sha1$o \$(OBJECTS) my_par_pl$o
 	$mt_cmd
 
 my_par_pl.c: $par_pl
-	\$(PERL) $f2c $par_pl \$@ load_me_2 $long_literal
+	\$(PERL) $f2c $par_pl \$@ load_my_par_pl $long_literal
 
 $parl_exe: $par
-	\$(PERL) run_with_inc.pl $par -I../myldr/.. -I../blib/lib -q -B -O\$@
+	\$(PERL) run_with_inc.pl $par -I../blib/lib -q -B -O\$@
+
+strippedparl: $par
+	\$(PERL) -e "chmod(oct('0600'), '$strippedparl_mod');"
+	\$(PERL) encode_append.pl $par $strippedparl_mod
+	\$(PERL) -e "chmod(oct('0444'), '$strippedparl_mod');"
 
 disttest:
 	-\$(NOOP)
@@ -283,25 +286,20 @@ EOT
     print OUT << "EOT" if $dynperl;
 
 $parldyn_exe: $par_exe
-	\$(PERL) run_with_inc.pl $par_exe -I./myldr/.. -I../blib/lib -q -B -O\$@
+	\$(PERL) run_with_inc.pl $par_exe -I../blib/lib -q -B -O\$@
 
-static$o: my_perl.c my_par.c mktmpdir.c
+static$o: my_libperl.c my_par.c mktmpdir.c
 
 $static_exe: sha1$o static$o
 	\$(LD) static$o \$(STATIC_LDFLAGS) $res $out$static_exe_link
 	$mt_cmd
 	\$(PERL) parlsig.pl $static_exe $par_exe $dynperl $chunk_size
 
-my_perl.c:
-	\$(PERL) $f2c $libperl \$@ load_me_0 $long_literal $chunk_size
+my_libperl.c:
+	\$(PERL) $f2c $libperl \$@ load_my_libperl $long_literal $chunk_size
 
 my_par.c: $par_exe
-	\$(PERL) $f2c $par_exe \$@ load_me_1 $long_literal $chunk_size
-
-strippedparl: $par
-	\$(PERL) -e "chmod(oct('0600'), '$strippedparl_mod');"
-	\$(PERL) encode_append.pl $par $strippedparl_mod
-	\$(PERL) -e "chmod(oct('0444'), '$strippedparl_mod');"
+	\$(PERL) $f2c $par_exe \$@ load_my_par $long_literal $chunk_size
 
 strippedparldyn: $par_exe
 	\$(PERL) -e "chmod(oct('0600'), '$strippedparldyn_mod');"

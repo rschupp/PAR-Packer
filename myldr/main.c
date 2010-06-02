@@ -10,9 +10,9 @@
 #define OP_MAPSTART OP_GREPSTART
 
 static PerlInterpreter *my_perl;
-extern char * name_load_me_2;
-extern unsigned long size_load_me_2;
-extern char load_me_2[];
+extern char * name_load_my_par_pl;
+extern unsigned long size_load_my_par_pl;
+extern char load_my_par_pl[];
 
 static char *stmpdir;
 static int options_count;
@@ -119,7 +119,7 @@ int main ( int argc, char **argv, char **env )
 #endif
 
     fakeargv[argno++] = "-e";
-    fakeargv[argno++] = load_me_2;
+    fakeargv[argno++] = load_my_par_pl;
 
 #ifndef ALLOW_PERL_OPTIONS
     fakeargv[argno++] = "--";
