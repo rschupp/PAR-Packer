@@ -6,6 +6,7 @@ use File::Spec;
 use File::Path;
 use File::Basename;
 use FindBin;
+use IPC::Run3;  # to run a command that may have blanks etc in its path and catch its output
 
 use Test::More ( tests => 4 );
 
@@ -41,13 +42,15 @@ ok( (-f $EXEC), "Created \"$EXEC\"" )
 
 ####
 $ENV{PAR_GLOBAL_TMPDIR} = $TEMP;
-my $out_full = qx($EXEC);
+my $out_full;
+run3 [ $EXEC ], undef, \$out_full;
 
 ok( ($out_full =~ /PAR_TEMP = \Q$TEMP\E/), "Respected PAR_GLOBAL_TMPDIR" );
 
 my( $file, $path ) = fileparse( $EXEC );
 
-my $out_path = do { local $ENV{PATH} = $path; qx($file); };
+my $out_path;
+{ local $ENV{PATH} = $path; run3 [ $file ], undef, \$out_path; }
 
 is( $out_path, $out_full, "Found the same file via PATH and full path" );
 
@@ -94,7 +97,6 @@ C
 unlink $EXEC;
 rmtree( [$TEMP] );
 #mkpath( [$TEMP], 0, 0700 );
-
 
 1;
 

@@ -7,6 +7,7 @@ name        'PAR-Packer';
 abstract    'PAR Packager';
 all_from    'lib/PAR/Packer.pm';
 
+perl_version '5.006001';
 requires    'File::Temp'        => 0.05;
 requires    'Compress::Zlib'    => ($^O eq 'MSWin32') ? 1.16 : 1.30;
 requires    'Archive::Zip'      => 1.00;
@@ -36,6 +37,7 @@ if (can_use('Crypt::OpenPGP') or can_run('gpg')) {
             'Module::Signature';
 }
 
+test_requires       'IPC::Run3';
 include_deps        'Test::More';
 no_index            directory => 'contrib';
 auto_provides;
