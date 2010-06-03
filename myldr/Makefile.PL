@@ -168,6 +168,30 @@ if (not $dynperl) {
 
 my $par = (($dynperl && $^O ne 'os2') ? $static_exe : $par_exe);
 
+
+# If on Windows and Perl was built with GCC 4.x, then libperl*.dll
+# may depend on some libgcc*.dll (Strawberry Perl 5.12 is an example).
+# This libgcc*.dll has to be included into with any packed executbale 
+# in the same way as libperl*.dll itself, otherwise a packed executable
+# won't run when libgcc*.dll isn't installed.
+my $libgcc;
+if ($dynperl and $^O eq 'MSWin32'
+    and defined $Config{gccversion}     # gcc version 4.x or above was used
+    and $Config{gccversion} =~ m{\A(\d+)}ms && $1 >= 4) {
+    # look for a libgcc_*.dll in the same directory
+    # as the perl executable itself
+    ($libgcc) = glob(File::Spec->catfile(File::Basename::dirname($^X),
+                                         "libgcc_*.$Config{so}"));
+}
+$libgcc ||= "";
+
+my $my_stuff = "my_par.c my_libperl.c";
+if ($libgcc) {
+    $cflags .= " -DLOAD_MY_LIBGCC";
+    $my_stuff .= " my_libgcc.c";
+}
+
+
 my $all = "$parl_exe strippedparl";
 $all .= " $parldyn_exe strippedparldyn" if $dynperl;
 
@@ -288,18 +312,21 @@ EOT
 $parldyn_exe: $par_exe
 	\$(PERL) run_with_inc.pl $par_exe -I../blib/lib -q -B -O\$@
 
-static$o: my_libperl.c my_par.c mktmpdir.c
+static$o: mktmpdir.c $my_stuff
 
 $static_exe: sha1$o static$o
 	\$(LD) static$o \$(STATIC_LDFLAGS) $res $out$static_exe_link
 	$mt_cmd
 	\$(PERL) parlsig.pl $static_exe $par_exe $dynperl $chunk_size
 
+my_par.c: $par_exe
+	\$(PERL) $f2c $par_exe \$@ load_my_par $long_literal $chunk_size
+
 my_libperl.c:
 	\$(PERL) $f2c $libperl \$@ load_my_libperl $long_literal $chunk_size
 
-my_par.c: $par_exe
-	\$(PERL) $f2c $par_exe \$@ load_my_par $long_literal $chunk_size
+my_libgcc.c:
+	\$(PERL) $f2c $libgcc \$@ load_my_libgcc $long_literal $chunk_size
 
 strippedparldyn: $par_exe
 	\$(PERL) -e "chmod(oct('0600'), '$strippedparldyn_mod');"

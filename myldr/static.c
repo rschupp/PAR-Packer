@@ -1,9 +1,11 @@
 #undef readdir
 
 #include "mktmpdir.c"
-#include "my_libperl.c"
 #include "my_par.c"
-
+#include "my_libperl.c"
+#ifdef LOAD_MY_LIBGCC
+#include "my_libgcc.c"
+#endif
 
 int my_mkfile (char* argv0, char* stmpdir, const char* name, unsigned long expected_size, char** file_p) {
     int i;
@@ -51,14 +53,6 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
 	return 2;
     }
 
-    /* extract libperl DLL into stmpdir */
-    i = my_mkfile( argv[0], stmpdir, name_load_my_libperl, size_load_my_libperl, &my_file );
-    if ( !i ) return 2;
-    if ( i != -2 ) {
-        WRITE_load_my_libperl(i);
-        close(i); chmod(my_file, 0755);
-    }
-
     /* extract custom Perl interpreter into stmpdir 
        (but under the same basename as argv[0]) */
     i = my_mkfile( argv[0], 
@@ -69,6 +63,25 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
         WRITE_load_my_par(i);
         close(i); chmod(my_perl, 0755);
     }
+
+    /* extract libperl DLL into stmpdir */
+    i = my_mkfile( argv[0], stmpdir, name_load_my_libperl, size_load_my_libperl, &my_file );
+    if ( !i ) return 2;
+    if ( i != -2 ) {
+        WRITE_load_my_libperl(i);
+        close(i); chmod(my_file, 0755);
+    }
+
+#ifdef LOAD_MY_LIBGCC
+    /* extract libgcc DLL into stmpdir */
+    i = my_mkfile( argv[0], stmpdir, name_load_my_libgcc, size_load_my_libgcc, &my_file );
+    if ( !i ) return 2;
+    if ( i != -2 ) {
+        WRITE_load_my_libgcc(i);
+        close(i); chmod(my_file, 0755);
+    }
+
+#endif
 
     /* save original argv[] into environment variables PAR_ARGV_# */
     sprintf(buf, "%i", argc);
