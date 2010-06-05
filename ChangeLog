@@ -1,3 +1,16 @@
+[Changes for 1.005 - Jun 05, 2010]
+* Bug fixes, etc.
+    - RT #57494: add attributes.pm to list of always required modules
+      (Roderich)
+    - RT #55994: fix "Can't call method "remove" on an undefined value 
+      at .../Win32/Exe.pm" (patch from DJIBEL)
+    - RT #57948: pp-generated executable and a missing dependency 
+      on libgcc_s_sjlj-1.dll (Roderich)
+    - RT #58095: test fails on OS X (when building in a directory 
+      with blanks in its pathname); NOTE: adds a test_requires
+      on IPC::Run3 (Roderich)
+    - spring cleaning in myldr directory (Roderich)
+
 [Changes for 1.004 - Apr 20, 2010]
 * Bug fixes, etc.
     - RT #52794, #56654: script/par.pl: remove munging of @inc on Windows;
