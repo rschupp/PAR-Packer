@@ -6,9 +6,11 @@ use File::Spec;
 use File::Path;
 use File::Basename;
 use FindBin;
-use IPC::Run3;  # to run a command that may have blanks etc in its path and catch its output
 
-use Test::More ( tests => 4 );
+use Test::More;
+plan skip_all => "Fails if run in a path that contains spaces" 
+    if $FindBin::Bin =~ / /;
+plan tests => 4;
 
 my $has_inline_c = eval "use Inline; 1;";
 # warn $@ if $@;
@@ -42,15 +44,13 @@ ok( (-f $EXEC), "Created \"$EXEC\"" )
 
 ####
 $ENV{PAR_GLOBAL_TMPDIR} = $TEMP;
-my $out_full;
-run3 [ $EXEC ], undef, \$out_full;
+my $out_full = qx($EXEC);
 
 ok( ($out_full =~ /PAR_TEMP = \Q$TEMP\E/), "Respected PAR_GLOBAL_TMPDIR" );
 
 my( $file, $path ) = fileparse( $EXEC );
 
-my $out_path;
-{ local $ENV{PATH} = $path; run3 [ $file ], undef, \$out_path; }
+my $out_path = do { local $ENV{PATH} = $path; qx($file); };
 
 is( $out_path, $out_full, "Found the same file via PATH and full path" );
 
@@ -97,6 +97,7 @@ C
 unlink $EXEC;
 rmtree( [$TEMP] );
 #mkpath( [$TEMP], 0, 0700 );
+
 
 1;
 
