@@ -242,24 +242,19 @@ STATIC_LDFLAGS=$static_ldflags
 NOOP=\$(PERL) -e1
 
 OBJECTS=main$o my_par_pl$o $res
+MKTMP_STUFF=mktmpdir.c mktmpdir.h utils.c sha1.c
 
 .c$o:
 	\$(CC) -c \$(CFLAGS) \$(OPTIMIZE) \$<
 
 all: $all
 
-main$o: main.c perlxsi.c mktmpdir.c internals.c mktmpdir.h utils.c sha1.c
-
-main.c: perlxsi.c mktmpdir.c internals.c
-
-mktmpdir.c: mktmpdir.h
-
-mktmpdir.h: utils.c sha1.c
+main$o: main.c perlxsi.c internals.c \$(MKTMP_STUFF)
 
 clean:
 	-\$(RM) my_*.c
 	-\$(RM) main$o my_par_pl$o static$o
-	-\$(RM) sha1$o sha1.c
+	-\$(RM) sha1.c
 	-\$(RM) *.opt *.pdb perlxsi.c
 	-\$(RM) usernamefrompwuid.h
 	\$(MV) Makefile Makefile.old
@@ -276,7 +271,7 @@ distclean: clean
 	-\$(RM) $static_exe
 	-\$(RM) Makefile Makefile.old
 
-$par_exe: sha1$o \$(OBJECTS) my_par_pl$o
+$par_exe: \$(OBJECTS) my_par_pl$o
 	\$(LD) \$(OBJECTS) \$(PERL_LDFLAGS) $out$par_exe_link
 	$mt_cmd
 
@@ -312,9 +307,9 @@ EOT
 $parldyn_exe: $par_exe
 	\$(PERL) run_with_inc.pl $par_exe -I../blib/lib -q -B -O\$@
 
-static$o: mktmpdir.c $my_stuff
+static$o: \$(MKTMP_STUFF) $my_stuff
 
-$static_exe: sha1$o static$o
+$static_exe: static$o
 	\$(LD) static$o \$(STATIC_LDFLAGS) $res $out$static_exe_link
 	$mt_cmd
 	\$(PERL) parlsig.pl $static_exe $par_exe $dynperl $chunk_size
