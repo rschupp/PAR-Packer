@@ -22,5 +22,7 @@
 ^blibdirs
 \B\.svn\b
 ^debian/
+^_Inline/
+^a\.out$
 ^nohup.out
 ^PAR-Packer-.*

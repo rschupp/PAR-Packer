@@ -57,6 +57,7 @@ int main ( int argc, char **argv, char **env )
 {
     int exitstatus;
     int i;
+    int argno = 0;
 
 #ifdef PERL_GPROF_MONCONTROL
     PERL_GPROF_MONCONTROL(0);
@@ -112,7 +113,6 @@ int main ( int argc, char **argv, char **env )
 #endif /* ALLOW_PERL_OPTIONS */
     New(666, fakeargv, argc + EXTRA_OPTIONS + 1 + PROFILING_OPTION, char *);
 
-    int argno = 0;
     fakeargv[argno++] = argv[0];
 #ifdef PERL_PROFILING
     fakeargv[argno++] = "-d:DProf";
