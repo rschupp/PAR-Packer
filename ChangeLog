@@ -1,3 +1,18 @@
+[Changes for 1.006 - Jun 26, 2010]
+* Bug fixes, etc.
+    - RT #58266: fix "install PAR::Packer failed for strawberry perl 5.12.0.1
+      (parldyn.exe not found)"
+      Apparently exec() on Windows spawns the new process, but then exits
+      immediately without wait()ing for the new process (observed at least
+      on ActiveState Perl 5.10.1 and Straberry Perl 5.12.0.1). That causes
+      myldr/run_with_inc.pl to return control to myldr/Makefile prematurely,
+      causing (depending on timing) the build to fail. Work around this by
+      using system() instead.
+    - While we're at it, clean up some dubious dependencies in
+      myldr/Makefile.PL.
+    - Drop test_requires IPC::Run3 introduced in 1.005, simply skip all tests
+      in t/30-current_exec.t when run in a path that contains spaces.
+
 [Changes for 1.005 - Jun 05, 2010]
 * Bug fixes, etc.
     - RT #57494: add attributes.pm to list of always required modules
