@@ -18,7 +18,7 @@ int my_mkfile (char* argv0, char* stmpdir, const char* name, unsigned long expec
          && (unsigned long)statbuf.st_size == expected_size )
 	return -2;
 
-    i = open(*file_p, O_CREAT | O_WRONLY | OPEN_O_BINARY, 0777);
+    i = open(*file_p, O_CREAT | O_WRONLY | OPEN_O_BINARY, 0755);
 
     if (i == -1) {
         fprintf(stderr, "%s: creation of %s failed - aborting with errno %i.\n", argv0, *file_p, errno);
