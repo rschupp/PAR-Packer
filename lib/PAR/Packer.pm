@@ -1684,17 +1684,22 @@ sub _main_pl_clean {
     my $clean_inc = '';
     if ($opt->{B}) { # bundle core modules
         # weed out all @INC entries
+        # use a canonicalized $ENV{PAR_TEMP}: this path was created by C code
+        # and may not be in canonical form (so that the match below will
+        # fail); case inpoint: some versions of FreeBSD have
+        #  #define P_tmpdir "/var/tmp/"
+        # in /usr/include/stdio.h (note the trailing slash)
         $clean_inc = <<'__CLEAN_INC__';
 # Remove everything but PAR hooks from @INC
 my %keep = (
     \&PAR::find_par => 1,
     \&PAR::find_par_last => 1,
 );
-my $par_temp_dir = quotemeta( $ENV{PAR_TEMP} );
+my $par_temp_dir = File::Spec->catdir( $ENV{PAR_TEMP} );
 @INC =
     grep {
         exists($keep{$_})
-        or $_ =~ /^$par_temp_dir/;
+        or $_ =~ /^\Q$par_temp_dir\E/;
     }
     @INC;
 __CLEAN_INC__
