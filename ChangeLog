@@ -1,3 +1,24 @@
+[Changes for 1.007 - Sep 9, 2010]
+* Bug fixes, etc.
+    - RT #56582: PAR-packer compilation on Windows XP32 box
+      applied patch from Jean-Michel Male to fix building with
+      Microsoft Visual Studio (Roderich)
+    - RT #50747: (no subject)
+      finally use permissions 0775 in my_mkfile() (Roderich)
+    - require modern Module::Install (chorny)
+      and update Module::Install et al. to version 1.00 (Roderich)
+    - RT #59710: Par-Packer not including all dependencies
+      When cleaning @INC at the end of bootstrapping (just before
+      we run the actual packed script) canonicalize $ENV{PAR_TEMP}
+      before we use it to match elements of @INC.
+      This works around non-canonicalized values (e.g. a trailing slash)
+      for $ENV{TMPDIR} or P_tmpdir (as #define'd in <stdio.h>) 
+      (the latter seen on FreeBSD and OSX) (Roderich)
+    - RT #56020: PAR::Packer and PDF::API2 Unicode::UCD: failed to find UnicodeData.txt
+      that's actually a bug in Module::ScanDeps);
+      bump requirement on Module::ScanDeps to a versionthat has the fix
+      (correct %Preload rule for Unicode::UCD)
+
 [Changes for 1.006 - Jun 26, 2010]
 * Bug fixes, etc.
     - RT #58266: fix "install PAR::Packer failed for strawberry perl 5.12.0.1
