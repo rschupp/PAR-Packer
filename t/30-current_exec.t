@@ -16,7 +16,7 @@ my $has_inline_c = eval "use Inline; 1;";
 # warn $@ if $@;
 
 ####
-my $EXEC = File::Spec->catfile( $FindBin::Bin, "test-10.exec" );
+my $EXEC = File::Spec->catfile( $FindBin::Bin, "test-10$Config{_exe}" );
 my $TEMP = join '-', $FindBin::Bin, "tmp";
 my $SCRIPT = File::Spec->catdir( $FindBin::Bin, File::Spec->updir, "blib", "script" );
 my $PP = File::Spec->catfile( $SCRIPT, 'pp' );
@@ -50,7 +50,7 @@ ok( ($out_full =~ /PAR_TEMP = \Q$TEMP\E/), "Respected PAR_GLOBAL_TMPDIR" );
 
 my( $file, $path ) = fileparse( $EXEC );
 
-my $out_path = do { local $ENV{PATH} = $path; qx($file); };
+my $out_path = do { local $ENV{PATH} = join($sep, $path, File::Spec->path()); qx($file); };
 
 is( $out_path, $out_full, "Found the same file via PATH and full path" );
 
