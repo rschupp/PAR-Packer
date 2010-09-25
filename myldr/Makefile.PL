@@ -103,7 +103,7 @@ if( $cc =~ m/^cl\b/i ) {
     } else {
         $mt_cmd = '-$(NOOP)';
     }
-} elsif ($cc =~ m/^gcc\b/i or ($cc =~ m/^cc\b/i and $gccversion)) {
+} elsif ($cc =~ m/\bgcc\b/i or ($cc =~ m/\bcc\b/i and $gccversion)) {
     $out = '-o ';
     $ccdebug = $debug ? '-g ' : '';
     $lddebug = ($debug or $^O eq 'darwin') ? '' : '-s ';
