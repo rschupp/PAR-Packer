@@ -28,6 +28,12 @@ int my_mkfile (char* argv0, char* stmpdir, const char* name, unsigned long expec
     return i;
 }
 
+
+/* turn off automatic globbing of process arguments when using MingW */
+#if defined(WIN32) && defined(__MINGW32__)
+int _CRT_glob = 0;
+#endif
+
 int main ( int argc, char **argv, char **env )
 {
     int i;
