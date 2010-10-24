@@ -28,6 +28,8 @@ sub go {
     help() if $opt{h};
     version() if $opt{V};
     
+    local $Module::ScanDeps::ScanFileRE = qr/./;
+
     App::Packer::PAR->new(
         frontend    => 'Module::ScanDeps',
         backend     => 'PAR::Packer',
