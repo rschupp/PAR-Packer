@@ -95,7 +95,7 @@ if( $cc =~ m/^cl\b/i ) {
     $lddebug = $debug ? '-debug ' : '-release ';
     $warn = $debug ? '-W3' : '';
     $res = $Config{ivsize} == 4 ? 'win32.obj' : '';
-    $long_literal = 0;
+    $long_literal = '';
     # Embed the manifest file for VC 2005 (aka VC8) or higher, but not for the
     # 64-bit Platform SDK compiler
     if( $Config{ivsize} == 4 and $Config{ccversion} =~ /^(\d+)/ and $1 >= 14 ) {
@@ -109,7 +109,7 @@ if( $cc =~ m/^cl\b/i ) {
     $lddebug = ($debug or $^O eq 'darwin') ? '' : '-s ';
     $warn = $debug ? '-Wall -Wno-comments ' : '';
     $res = ($^O =~ /^(?:MSWin|cygwin)/) ? 'win32.coff' : '';
-    $long_literal = 1;
+    $long_literal = '-l';
     $mt_cmd = '-$(NOOP)';
 } else {
     $out = '-o ';
@@ -117,7 +117,7 @@ if( $cc =~ m/^cl\b/i ) {
     $lddebug = '';
     $warn = '';
     $res = '';
-    $long_literal = 0; # better safe than sorry
+    $long_literal = ''; # better safe than sorry
     $mt_cmd = '-$(NOOP)';
 }
 
@@ -159,7 +159,36 @@ elsif ($dynperl) {
     undef $dynperl if !-e $libperl;
 }
 
-if (not $dynperl) {
+# In the $dynperl case, we've already found the $libperl DSO.
+# The only problem is: when the linker links $par_exe against $libperl
+# we don't know what name is used to refer to $libperl in the executable
+# (e.g. on an ELF based system the DT_NEEDED tag). This is the name
+# the dynamic loader is looking for when $par_exe is executed.
+#
+# So we better make sure that $libperl is extracted using this name
+# during bootstrap of a packed executable. If we use the wrong name for
+# extraction, $libperl won't be considered by the dynamic loader.
+# This may cause the bootstrap to fail. Or the dynamic loader 
+# might find a libperl DSO (e.g in /usr/lib using the built-in library
+# search path) from a Perl installation with the expected name.
+# However, this libperl may be ABI incompatible with $par_exe,
+# leading to hard to diagnose errors.
+#
+# Below we make a feeble attempt to determine this "link name" for some
+# well-known platforms. The fallback is always the basename of $libperl.
+# For ELF based systems the linker uses the DSO's DT_SONAME tag
+# as the link name if present. If the system uses the GNU binutils
+# toolchain we can use the objdump tool to find the DSO's soname.
+
+my $extract_libperl_as;
+if ($dynperl) {
+    $extract_libperl_as = basename($libperl);
+    if ($^O =~ /linux/i) 
+    {
+        my ($soname) = qx(objdump -ax $libperl) =~ /^\s*SONAME\s+(\S+)/m;
+        $extract_libperl_as = $soname if $? == 0 && defined $soname;
+    }
+} else {
     my $file = $Config{libperl};
     $file = 'libperl.a' if $file eq 'libper'; # same redhat bug? Just making sure...
     $libperl = find_file($file);
@@ -276,7 +305,7 @@ $par_exe: \$(OBJECTS) my_par_pl$o
 	$mt_cmd
 
 my_par_pl.c: $par_pl
-	\$(PERL) $f2c $par_pl \$@ load_my_par_pl $long_literal
+	\$(PERL) $f2c -s $par_pl $long_literal \$@ load_my_par_pl
 
 $parl_exe: $par
 	\$(PERL) run_with_inc.pl $par -I../blib/lib -q -B -O\$@
@@ -315,13 +344,13 @@ $static_exe: static$o
 	\$(PERL) parlsig.pl $static_exe $par_exe $dynperl $chunk_size
 
 my_par.c: $par_exe
-	\$(PERL) $f2c $par_exe \$@ load_my_par $long_literal $chunk_size
+	\$(PERL) $f2c $long_literal -c $chunk_size $par_exe \$@ load_my_par
 
 my_libperl.c:
-	\$(PERL) $f2c $libperl \$@ load_my_libperl $long_literal $chunk_size
+	\$(PERL) $f2c $long_literal -c $chunk_size -n $extract_libperl_as $libperl \$@ load_my_libperl
 
 my_libgcc.c:
-	\$(PERL) $f2c $libgcc \$@ load_my_libgcc $long_literal $chunk_size
+	\$(PERL) $f2c $long_literal -c $chunk_size $libgcc \$@ load_my_libgcc
 
 strippedparldyn: $par_exe
 	\$(PERL) -e "chmod(oct('0600'), '$strippedparldyn_mod');"

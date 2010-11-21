@@ -9,85 +9,80 @@ use strict;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use File::Basename;
+use Getopt::Long;
 use PAR::Filter::PodStrip;
 
-my $give_help = 0;
-my $pl_file = shift;
-my $c_file = shift;
-my $c_var = shift;
-my $long_literal = shift;
-my $chunk_size = shift;
+my $chunk_size = 0;
+my $long_literal;
+my $strip_pod;
+my $name;
 
-$give_help ||= ( !defined $pl_file or
-                !defined $c_file or
-                !defined $c_var );
-$pl_file ||= '';
-$c_file ||= '';
-$give_help ||= !-e $pl_file;
-if( $give_help ) {
-  print <<EOT;
-Usage: $0 file.pl file.c c_variable
-EOT
+GetOptions(
+    "c|chunk-size=i"    => \$chunk_size,
+    "l|long-literal"    => \$long_literal,
+    "s|strip_pod"       => \$strip_pod,
+    "n|name=s"          => \$name,
+) && @ARGV == 3
+    or die "Usage: $0 [-c chunk_size][-l][-n name][-s] file.pl file.c c_variable\n";
+my ($pl_file, $c_file, $c_var) = @ARGV;
+$name = basename($pl_file) unless defined $name;
 
-  exit 1;
-}
+my $pl_text = do        # NOTE: scalar ref
+{
+    open my $in, "<", $pl_file or die "open input file '$pl_file': $!";
+    binmode $in;
+    local $/ = undef;
+    my $slurp = <$in>;
+    close $in;
+    \$slurp;
+};
 
-open IN, "< $pl_file" or die "open '$pl_file': $!";
-open OUT, "> $c_file" or die "open '$c_file': $!";
-binmode IN; binmode OUT;
+PAR::Filter::PodStrip->new->apply($pl_text) if $strip_pod;
 
-# read perl file
-undef $/;
-my $pl_text = <IN>;
-close IN;
-
-PAR::Filter::PodStrip->new->apply(\$pl_text)
-    if -e $pl_file and $pl_file =~ /\.p[lm]/i;
+open my $out, ">", $c_file or die "open output file '$c_file': $!";
+binmode $out;
 
 #  make a c-array
 
-print OUT "const char * name_$c_var = \"" . basename($pl_file) . "\";\n";
+print $out "const char * name_$c_var = \"$name\";\n";
 
-if (!$chunk_size) {
-    print_chunk($pl_text, '');
-    print OUT "#define WRITE_$c_var(i) write(i, $c_var, (size_t)size_$c_var);\n";
+if ($chunk_size) {
+    my $len = length $$pl_text;
+    my $chunk_count = int(( $len + $chunk_size - 1 ) / $chunk_size);
+    print $out "unsigned long size_$c_var = $len;\n";
+
+    for (my $i = 0; $i < $chunk_count; $i++) {
+	print_chunk( substr($$pl_text, $i * $chunk_size, $chunk_size), "_$i" );
+    }
+
+    print $out "#define WRITE_$c_var(i)";
+    for (my $i = 0; $i < $chunk_count; $i++) {
+	print $out " write(i, ${c_var}_$i, (size_t)size_${c_var}_$i);";
+    }
+    print $out "\n";
 }
 else {
-    my $chunk_count = int(length($pl_text) / $chunk_size) + 1;
-    print OUT "unsigned long size_$c_var = " . length($pl_text) . ";\n";
-
-    for (1 .. $chunk_count) {
-	print_chunk( substr($pl_text, ($_ - 1) * $chunk_size, $chunk_size), "_$_" );
-    }
-
-    print OUT "#define WRITE_$c_var(i)";
-    for (1 .. $chunk_count) {
-	print OUT " write(i, ${c_var}_$_, (size_t)size_${c_var}_$_);";
-    }
-    print OUT "\n";
+    print_chunk( $$pl_text, '' );
+    print $out "#define WRITE_${c_var}(i) write(i, $c_var, (size_t)size_${c_var});\n";
 }
-close OUT;
+close $out;
 
 sub print_chunk {
-    my $text = reverse($_[0]);
+    my $chunk = reverse($_[0]);
     my $suffix = $_[1];
 
-    print OUT "unsigned long size_$c_var$suffix = " . length($text) . ";\n";
-    print OUT "const char $c_var$suffix\[" . (length($text) + 1) . "] = ";
-    print OUT $long_literal ? '"' : '{';
+    my $len = length $chunk;
+    print $out "unsigned long size_${c_var}${suffix} = $len;\n";
+    print $out "const char ${c_var}${suffix}[] = ";
+    print $out $long_literal ? "\"" : "{";
 
-    my $i;
-    for (1 .. length($text)) {
-	if ($long_literal) {
-	    print OUT sprintf '\%03o', ord(chop($text));
-	}
-	else {
-	    print OUT sprintf "'\\%03o',", ord(chop($text));
-	    print OUT "\n" unless $i++ % 16;
-	}
+    my $fmt = $long_literal ? "\\x%02x" : "0x%02x,";
+    while ($len--) {
+        printf $out $fmt, ord(chop($chunk));
+        print $out $long_literal ? "\"\n\"" :"\n" unless $len % 16;
     }
 
-    print OUT $long_literal ? "\";\n" : "0\n};\n";
+    print $out $long_literal ? "\";\n" : "\n};\n";
 }
 
 # local variables:
