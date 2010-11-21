@@ -1,3 +1,26 @@
+[Changes for 1.008 - Nov 21, 2010]
+* Bug fixes, etc.
+
+    - RT #61528: bug similar to RT 55994
+      (Windows) relax heuristic to check whether the configured C compiler
+      is actually gcc (Ed Zagar)
+    - RT #61874: Windows: Packed executable handles wildcards different from script
+      myldr/static.c: turn off automatic globbing of process arguments when 
+      building with MingW (Roderich)
+    - RT #62357: .cgi extension not taken as script
+      call into Module::ScanDeps with $Module::ScanDeps::ScanFileRE
+      set to qr/./ so that we don't discriminate against scripts that have
+      an extension other than .pl, .pm, .al or .t (or no extension at all)
+      (Roderich)
+    - RT #63083: pp: Undefined subroutine &DynaLoader::bootstrap called in pp-compiled bianry
+      fix the name where the shared perl DSO ($libperl in myldr/Makefile.PL)
+      is extracted to so that it matches the reference the linker wrote into 
+      $par_exe; heuristic currently only available for Linux (assuming
+      we have GNU binutils installed), but might work on other ELF-based
+      systems, too (Roderich)
+    - t/30-current_exec.t: fix a test failure on Cygwin
+      (cygwin.dll was not on PATH) (Roderich)
+
 [Changes for 1.007 - Sep 9, 2010]
 * Bug fixes, etc.
     - RT #56582: PAR-packer compilation on Windows XP32 box
