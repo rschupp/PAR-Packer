@@ -315,8 +315,11 @@ Log the output of packaging to a file rather than to stdout.
 =item B<-F>, B<--modfilter>=I<FILTER[=REGEX]>,
 
 Filter included perl module(s) with a L<PAR::Filter> subclass.
-You may specify multiple such filters. By default, the I<PodStrip> filter
-is applied.
+You may specify multiple such filters. 
+
+By default, the I<PodStrip> filter is applied.  In case
+that causes trouble, you can turn this off by setting the
+environment variable C<PAR_VERBATIM> to C<1>.
 
 Since PAR 0.958, you can use an optional regular expression (I<REGEX> above)
 to select the files in the archive which should be filtered. Example:
