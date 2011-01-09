@@ -37,12 +37,12 @@ accepts C<.ico> files.
 =head2 Add modules/files (--add)
 
 Add the specified items into the package, along with their dependencies.
-Multiple items should be seperated by a comma (C<,>) or semicolon (C<;>).
+Multiple items should be separated by a comma (C<,>) or semicolon (C<;>).
 
 =head2 Exclude modules (--exclude)
 
 Exclude the given module from the dependency search path and from
-the package.  Multiple modules should be seperated by a comma (C<,>) or
+the package.  Multiple modules should be separated by a comma (C<,>) or
 semicolon (C<;>).
 
 =head2 Scan dependencies (--compile, --execute, --noscan)
@@ -295,13 +295,13 @@ $frame2balloon->attach(
     $addmoduleentry,
     -balloonposition => "mouse",
     -balloonmsg      =>
-"Adds the specified module(s) into the package, along with its dependencies, seperate each module with a comma or semicolon"
+"Adds the specified module(s) into the package, along with its dependencies, separate each module with a comma or semicolon"
 );
 $frame2balloon->attach(
     $excludemoduleentry,
     -balloonposition => "mouse",
     -balloonmsg      =>
-"Excludes the given module(s) from the dependency search path and from the package, seperate each module with a comma or semicolon"
+"Excludes the given module(s) from the dependency search path and from the package, separate each module with a comma or semicolon"
 );
 
 # make the middle frame with the checkboxes
