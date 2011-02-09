@@ -594,9 +594,7 @@ if ($out) {
                 PAR::Filter::PodStrip->new->apply(\$content, $file)
                     if !$ENV{PAR_VERBATIM} and $name =~ /\.(?:pm|ix|al)$/i;
 
-                # Do not let XSLoader pick up auto/* from environment
-                $content =~ s/goto +retry +unless +.*/goto retry;/
-                    if lc($name) eq lc("XSLoader.pm");
+                PAR::Filter::PatchContent->new->apply(\$content, $file, $name);
             }
 
             outs(qq(Written as "$name"));
@@ -750,6 +748,7 @@ sub require_modules {
     require PAR::Heavy;
     require PAR::Dist;
     require PAR::Filter::PodStrip;
+    require PAR::Filter::PatchContent;
     require attributes;
     eval { require Cwd };
     eval { require Win32 };

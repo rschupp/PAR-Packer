@@ -22,6 +22,10 @@ by default.
 
 sub PATCH_CONTENT () { +{
     map { ref($_) ? $_ : lc($_) }
+    'AutoLoader.pm' => [
+        '$is_dosish = ' =>
+        '$is_dosish = $^O eq \'cygwin\' || ',
+    ],
     'Pod/Usage.pm' => [
         ' = $0' =>
         ' = $ENV{PAR_0} || $0',

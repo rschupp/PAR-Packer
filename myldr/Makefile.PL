@@ -308,7 +308,7 @@ my_par_pl.c: $par_pl
 	\$(PERL) $f2c -s $par_pl $long_literal \$@ load_my_par_pl
 
 $parl_exe: $par
-	\$(PERL) run_with_inc.pl $par -I../blib/lib -q -B -O\$@
+	\$(PERL) -Mblib run_with_inc.pl $par -q -B -O\$@
 
 strippedparl: $par
 	\$(PERL) -e "chmod(oct('0600'), '$strippedparl_mod');"
@@ -334,7 +334,7 @@ EOT
     print OUT << "EOT" if $dynperl;
 
 $parldyn_exe: $par_exe
-	\$(PERL) run_with_inc.pl $par_exe -I../blib/lib -q -B -O\$@
+	\$(PERL) -Mblib run_with_inc.pl $par_exe -q -B -O\$@
 
 static$o: \$(MKTMP_STUFF) $my_stuff
 
