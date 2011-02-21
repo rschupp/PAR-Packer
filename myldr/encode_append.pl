@@ -10,27 +10,33 @@ use warnings;
 $/ = undef;
 
 my $usage = <<HERE;
-Usage: $0 FILE-TO-ENCODE FILE-TO-APPEND-TO
+Usage: $0 IN-FILE FILE-TO-ENCODE OUT-FILE
 HERE
 
 my $infile = shift @ARGV;
 die $usage if not defined $infile or not -f $infile;
 
-my $outfile = shift @ARGV;
-die $usage if not defined $outfile or not -f $outfile;
+my $encfile = shift @ARGV;
+die $usage if not defined $encfile or not -f $encfile;
 
-open my $fh, '<', $outfile or die $!;
-binmode $fh;
-my $contents = <$fh>;
-close $fh;
+my $outfile = shift @ARGV;
+die $usage if not defined $outfile;
+
+open my $in, '<', $infile or die $!;
+binmode $in;
+my $contents = <$in>;
+close $in;
 $contents =~ s/^__DATA__\r?\n.*\z//ms;
 
-open my $ih, '<', $infile or die $!;
-binmode $ih;
-open $fh, '>', $outfile or die $!;
-binmode $fh;
-print $fh $contents;
-print $fh "\n__DATA__\n";
-print $fh pack 'u', <$ih>;
-close $ih;
-close $fh;
+open my $enc, '<', $encfile or die $!;
+binmode $enc;
+
+unlink $outfile;
+open my $out, '>', $outfile or die $!;
+binmode $out;
+print $out $contents;
+print $out "\n__DATA__\n";
+print $out pack 'u', <$enc>;
+close $out;
+
+close $enc;

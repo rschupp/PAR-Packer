@@ -17,17 +17,17 @@ use_ok('PAR::StrippedPARL::Dynamic');
 # define all the file locations
 my $builddir = File::Spec->catdir($FindBin::Bin, File::Spec->updir());
 my $myldr    = File::Spec->catdir($builddir, 'myldr');
-my $static   = File::Spec->catfile($myldr, 'static' . $Config{_exe});
+my $boot     = File::Spec->catfile($myldr, 'boot' . $Config{_exe});
 my $dynamic  = File::Spec->catfile($myldr, 'par' . $Config{_exe});
-my $parl     = File::Spec->catfile($builddir, 'script', 'parl' . $Config{_exe});
-my $parldyn  = File::Spec->catfile($builddir, 'script', 'parldyn' . $Config{_exe});
+my $parl     = File::Spec->catfile($myldr, 'parl' . $Config{_exe});
+my $parldyn  = File::Spec->catfile($myldr, 'parldyn' . $Config{_exe});
 
 # static(.exe), parl(.exe) must exist
-ok(-f $static, 'Found the static build of parl in myldr');
+ok(-f $boot, 'Found the static build of parl in myldr');
 
-if (not -f $static) {
+if (not -f $boot) {
     SKIP: {
-        skip "No static parl found. Test script cannot continue!", TEST_NO()-4;
+        skip "No boot found. Test script cannot continue!", TEST_NO()-4;
     }
     exit();
 }
@@ -35,7 +35,7 @@ if (not -f $static) {
 ok(-f $parl,   'Found parl in script');
 
 
-# check that get_raw() returns the same as myldr/static(.exe)
+# check that get_raw() returns the same as myldr/boot(.exe)
 my $static_bin;
 eval { $static_bin = PAR::StrippedPARL::Static->get_raw(); };
 ok(!$@, 'Running ...Static->get_raw didn\'t complain' . ($@?": $@":''));
@@ -46,23 +46,23 @@ my $static_length = length($static_bin);
 # compare file sizes
 is(
     $static_length,
-    -s $static,
-    'Static binary returned from ->get_raw has the same size as myldr/static(.exe)'
+    -s $boot,
+    'Binary returned from ->get_raw has the same size as myldr/boot(.exe)'
 );
 
 # compare data
 {
-    open my $fh, '<', $static or die $!;
+    open my $fh, '<', $boot or die $!;
     binmode $fh;
     local $/ = undef;
     ok(
         $static_bin eq <$fh>,
-        '...Static->get_raw returns exact myldr/static(.exe)'
+        '...Static->get_raw returns exact myldr/boot(.exe)'
     );
     close $fh;
 }
 
-# check that write_raw() writes the same as myldr/static(.exe)
+# check that write_raw() writes the same as myldr/boot(.exe)
 my $static_tmp_file;
 {
     my $tfh;
@@ -82,8 +82,8 @@ ok(-f $static_tmp_file, '...Static->write_raw created file');
 # compare file sizes
 is(
     -s $static_tmp_file,
-    -s $static,
-    'Static binary created by ->write_raw has the same size as myldr/static(.exe)'
+    -s $boot,
+    'Binary created by ->write_raw has the same size as myldr/boot(.exe)'
 );
 
 # compare data
@@ -195,7 +195,7 @@ SKIP: {
         close $fh;
     }
 
-    # check that write_parl() writes the same as script/parldyn(.exe)
+    # check that write_parl() writes the same as myldr/parldyn(.exe)
     {
         my $tfh;
         ($tfh, $parldyn_tmp_file) = File::Temp::tempfile(
