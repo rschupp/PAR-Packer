@@ -244,7 +244,9 @@ WriteMakefile(
     PL_FILES    => {},
     PM          => { map { $_ => File::Spec->catfile('$(INST_LIBDIR)', qw( PAR StrippedPARL ), $_) }
                      @strippedparl },
+    MAN3PODS    => {},
     EXE_FILES   => \@exe,
+    macro       => { FIXIN => '$(NOOP)' },
 );
 
 sub MY::postamble
@@ -301,6 +303,11 @@ Static.pm: Static.in $par
 	-\$(NOOP)
 
 .SUFFIXES: $o
+
+# dummy targets to satisfy ExtUtils::MakeMaker
+dynamic::
+static::
+test::
 EOT
 
     $make_frag .= <<"EOT" if $dynperl;
