@@ -31,13 +31,16 @@ static int isWritableDir(const char* val)
 
 void par_setup_libpath( const char * stmpdir )
 {
-   const char *key = NULL , *val = NULL;
-   int i;
-   const char *ld_path_keys[6] = {
-      "LD_LIBRARY_PATH", "LIBPATH", "LIBRARY_PATH",
-      "PATH", "DYLD_LIBRARY_PATH", ""
-   };
-   char *ld_path_env = NULL;
+    const char *key = NULL , *val = NULL;
+    int i;
+    char *ld_path_env = NULL;
+
+    /* NOTE: array is terminated by an empty string */
+    const char *ld_path_keys[] = {       
+        "LD_LIBRARY_PATH", "LIBPATH", "LIBRARY_PATH",
+        "PATH", "DYLD_LIBRARY_PATH", "SHLIB_PATH", ""
+    };
+
     for ( i = 0 ; strlen(key = ld_path_keys[i]) > 0 ; i++ ) {
         if ( ((val = par_getenv(key)) == NULL) || (strlen(val) == 0) ) {
             par_setenv(key, stmpdir);
@@ -58,14 +61,17 @@ char *par_mktmpdir ( char **argv ) {
     char *c;
     const char *tmpdir = NULL;
     const char *key = NULL , *val = NULL;
-    const char *temp_dirs[4] = { 
+
+    /* NOTE: all arrays below are terminated by an empty string */
+    const char *temp_dirs[] = { 
         P_tmpdir, 
 #ifdef WIN32
         "C:\\TEMP", 
 #endif
         ".", "" };
-    const char *temp_keys[6] = { "PAR_TMPDIR", "TMPDIR", "TEMPDIR", "TEMP", "TMP", "" };
-    const char *user_keys[3] = { "USER", "USERNAME", "" };
+    const char *temp_keys[] = { "PAR_TMPDIR", "TMPDIR", "TEMPDIR", 
+                                 "TEMP", "TMP", "" };
+    const char *user_keys[] = { "USER", "USERNAME", "" };
 
     const char *subdirbuf_prefix = "par-";
     const char *subdirbuf_suffix = "";

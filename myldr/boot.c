@@ -67,7 +67,16 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     if ( !i ) return 2;
     if ( i != -2 ) {
         WRITE_load_my_par(i);
-        close(i); chmod(my_perl, 0755);
+        close(i); 
+        chmod(my_perl, 0755);
+#ifdef __hpux
+        {
+            /* HPUX will only honour SHLIB_PATH if the executable is specially marked */
+            char *chatr_cmd = malloc(strlen(my_perl) + 200);
+            sprintf(chatr_cmd, "/usr/bin/chatr +s enable %s > /dev/null", my_perl);
+            system(chatr_cmd);
+        }
+#endif
     }
 
     /* extract libperl DLL into stmpdir */
@@ -75,7 +84,8 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     if ( !i ) return 2;
     if ( i != -2 ) {
         WRITE_load_my_libperl(i);
-        close(i); chmod(my_file, 0755);
+        close(i); 
+        chmod(my_file, 0755);
     }
 
 #ifdef LOAD_MY_LIBGCC
