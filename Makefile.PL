@@ -8,6 +8,7 @@ abstract    'PAR Packager';
 all_from    'lib/PAR/Packer.pm';
 
 perl_version '5.006001';
+configure_requires 'ExtUtils::Embed';
 requires    'File::Temp'        => 0.05;
 requires    'Compress::Zlib'    => ($^O eq 'MSWin32') ? 1.16 : 1.30;
 requires    'Archive::Zip'      => 1.00;
