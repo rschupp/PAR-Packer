@@ -1,3 +1,46 @@
+[Changes for 1.009 - Mar 26, 2011]
+* Bug fixes, etc.
+
+    - RT #53463: PAR::Packer 1.002 on HPUX 11.23 PA-RISC issue
+      (HPUX) patch from Lars-Gunnar Taube
+      - add SHLIB_PATH to ld_path_keys in myldr/mktmpdir.c
+      - call "chatr +s enable ..." on the extracted custom perl
+
+    - RT #65535: Unable to run perl script packaged with pp under cygwin 
+      on another Windows XP installation
+
+      - lib/PAR/Filter/PatchContent.pm: patch AutoLoader.pm to add "cygwin" 
+	to the list of "is_dosish" $^O identifiers; otherwise 
+	AutoLoader::find_filename() will mangle filenames that start with
+	a drive letter 
+      - script/par.pl: use PAR::Filter::PatchContent to patch any modules 
+	embedded in the packed excutable; this supersedes the ad hoc 
+	patching of XSLoader.pm and will now also patch AutoLoader.pm
+      - myldr/Makefile.PL: when generating $parl_exe or $parldy_exe make 
+	sure that we use the PAR::* modules (e.g PAR::Filter::PatchContent) 
+	from the build environment rather than a possibly 
+	installed older version
+
+    - "Fix" #64485: pp PodStrip module included
+      document how to inhibit pod stripping (copied from PAR.pm POD)
+
+    - bump required Module::ScanDeps to 1.01 (hopefully fixes failures
+      in t/90-rt59710.t with Perl 5.13.x)
+
+    - reworked the build system a bit to fix recurring problems with dmake
+      on Windows and parallel makes in general:
+
+      - copy myldr/{parl,parldyn} to blib/scripts from myldr/Makefile
+      - myldr/Makefile was completely handcrafted; try to generate it
+	using standard ExtUtils::MakeMaker tools as much as possible
+      - generate myldr/{Dynamic,Static}.pm from templates {Dynamic,Static}.in
+      - rename static.c to boot.c
+
+    - add "configure_requires" for ExtUtils::Embed
+
+    - pick up some POD spelling fixes from Debian 
+      (thanks, Jonathan Yu <jawnsy@cpan.org>)
+
 [Changes for 1.008 - Nov 21, 2010]
 * Bug fixes, etc.
 
