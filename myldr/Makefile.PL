@@ -203,10 +203,14 @@ my $libgcc;
 if ($dynperl and $^O eq 'MSWin32'
     and defined $Config{gccversion}     # gcc version 4.x or above was used
     and $Config{gccversion} =~ m{\A(\d+)}ms && $1 >= 4) {
-    # look for a libgcc_*.dll in the same directory
-    # as the perl executable itself
-    ($libgcc) = glob(File::Spec->catfile(File::Basename::dirname($^X),
-                                         "libgcc_*.$Config{so}"));
+    # look for a libgcc_*.dll 
+    # - in the same directory as the perl executable itself
+    # - in the same directory as gcc (only useful if it's an absolute path)
+    # - in PATH
+    ($libgcc) = map { glob(File::Spec->catfile($_, "libgcc_*.$Config{so}")) }
+                    File::Basename::dirname($^X),
+                    File::Basename::dirname($cc),
+                    File::Spec->path;
 }
 $libgcc ||= "";
 
@@ -320,7 +324,7 @@ $parldyn_exe: $par_exe
 boot$o: \$(MKTMP_STUFF) $my_stuff
 
 $boot_exe: boot$o
-	\$(LD) boot$o \$(STATIC_LDFLAGS) $res $out$boot_exe_link
+	\$(CC) boot$o \$(STATIC_LDFLAGS) $res $out$boot_exe_link
 	$mt_cmd
 	\$(PERLRUN) parlsig.pl $boot_exe $par_exe $dynperl $chunk_size
 
