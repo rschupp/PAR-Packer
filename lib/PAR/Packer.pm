@@ -191,9 +191,6 @@ sub _check_write {
         if (-e _) {
             $self->_die("Cannot write on $file: $!\n") unless -w _;
         }
-        unless (-w Cwd::cwd()) {
-            $self->_die("Cannot write in this directory: $!\n");
-        }
     }
 }
 
@@ -309,8 +306,8 @@ sub _parse_opts {
         $self->_warn("Using -e 'code' as input file, ignoring @$args\n")
           if (@$args and !$opt->{r});
 
-        my ($fh, $fake_input) =
-          File::Temp::tempfile("ppXXXXX", SUFFIX => ".pl", UNLINK => 1);
+        my ($fh, $fake_input) = File::Temp::tempfile(
+	    "ppXXXXX", SUFFIX => ".pl", TMPDIR => 1, UNLINK => 1);
 
         print $fh $opt->{e};
         close $fh;
@@ -633,7 +630,8 @@ sub get_par_file {
         # Don't need to keep it, be safe with a tempfile.
 
         $self->{pack_attrib}{lose} = 1;
-        ($cfh, $par_file) = File::Temp::tempfile("ppXXXXX", SUFFIX => ".par");
+        ($cfh, $par_file) = File::Temp::tempfile(
+	    "ppXXXXX", SUFFIX => ".par", TMPDIR => 1, UNLINK => 1);
         close $cfh;    # See comment just below
     }
     $self->{par_file} = $par_file;
@@ -1299,9 +1297,8 @@ sub _extract_parl {
 
     $self->_vprint(0, "Generating a fresh 'parl'.");
     my ($fh, $filename) = File::Temp::tempfile(
-        "parlXXXXXXX",
-        SUFFIX => $Config{_exe},
-    );
+        "parlXXXXXXX", SUFFIX => $Config{_exe}, TMPDIR => 1, UNLINK => 1);
+    close $fh;
     
     my $success = $class->write_parl($filename);
     if (not $success) {
@@ -1349,10 +1346,7 @@ sub _move_parl {
     my $cfh;
     my $fh = $self->_open($self->{parl});
     ($cfh, $self->{parl}) = File::Temp::tempfile(
-        "parlXXXX",
-        SUFFIX => ".exe",
-        UNLINK => 1,
-    );
+        "parlXXXX", SUFFIX => ".exe", TMPDIR => 1, UNLINK => 1);
     binmode($cfh);
 
     local $/;

@@ -53,10 +53,7 @@ sub write_parl {
 
     # write out to a temporary file first
     my ($fh, $tfile) = File::Temp::tempfile(
-        "parlXXXX",
-        SUFFIX => $Config::Config{_exe}||'',
-        DIR => File::Spec->tmpdir(),
-    );
+        "parlXXXX", SUFFIX => $Config::Config{_exe}||'', TMPDIR => 1);
     close $fh;
     # File::Temp, you suck!
 
