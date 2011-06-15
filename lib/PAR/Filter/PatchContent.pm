@@ -79,7 +79,9 @@ sub PATCH_CONTENT () { +{
     ],
     'XSLoader.pm'     => [
         'goto retry unless $module and defined &dl_load_file;' =>
-        'goto retry;',
+            'goto retry;',                              # Perl < 5.12.3
+        'goto \&XSLoader::bootstrap_inherit unless $module and defined &dl_load_file;' =>
+            'goto \&XSLoader::bootstrap_inherit;',     # Perl >= 5.12.3
     ],
     'diagnostics.pm'        => [
         'CONFIG: ' => 'CONFIG: if (0) ',
