@@ -83,7 +83,7 @@ my $parldyn_exe = "parldyn$exe";
 
 my $lib_path = join(' ', map qq(-I"$_"), @INC); # FIXME run_with_inc.pl
 
-my( $out, $ccdebug, $lddebug, $warn, $rm, $mv, $res, $long_literal, $mt_cmd );
+my( $out, $ccdebug, $lddebug, $warn, $rm, $mv, $res, $mt_cmd );
 
 if( $cc =~ m/^cl\b/i ) {
     $out = '-out:';
@@ -91,7 +91,6 @@ if( $cc =~ m/^cl\b/i ) {
     $lddebug = $debug ? '-debug ' : '-release ';
     $warn = $debug ? '-W3' : '';
     $res = $Config{ivsize} == 4 ? 'win32.obj' : '';
-    $long_literal = '';
     # Embed the manifest file for VC 2005 (aka VC8) or higher, but not for the
     # 64-bit Platform SDK compiler
     if( $Config{ivsize} == 4 and $Config{ccversion} =~ /^(\d+)/ and $1 >= 14 ) {
@@ -105,7 +104,6 @@ if( $cc =~ m/^cl\b/i ) {
     $lddebug = ($debug or $^O eq 'darwin') ? '' : '-s ';
     $warn = $debug ? '-Wall -Wno-comments ' : '';
     $res = ($^O =~ /^(?:MSWin|cygwin)/) ? 'win32.coff' : '';
-    $long_literal = '-l';
     $mt_cmd = '-$(NOOP)';
 } else {
     $out = '-o ';
@@ -113,7 +111,6 @@ if( $cc =~ m/^cl\b/i ) {
     $lddebug = '';
     $warn = '';
     $res = '';
-    $long_literal = ''; # better safe than sorry
     $mt_cmd = '-$(NOOP)';
 }
 
@@ -264,7 +261,7 @@ LDFLAGS=$Config{ldflags}
 PERL_LDFLAGS=$ldflags
 STATIC_LDFLAGS=$static_ldflags
 
-OBJECTS=main$o my_par_pl$o $res
+OBJECTS=main$o $res
 MKTMP_STUFF=mktmpdir.c mktmpdir.h utils.c sha1.c
 
 .c$o:
@@ -272,14 +269,14 @@ MKTMP_STUFF=mktmpdir.c mktmpdir.h utils.c sha1.c
 
 pure_all:: $parl_exe Static.pm
 
-main$o: main.c perlxsi.c internals.c \$(MKTMP_STUFF)
+main$o: main.c my_par_pl.c perlxsi.c internals.c \$(MKTMP_STUFF)
 
 sha1.c:
 	\$(PERLRUN) sha1.c.PL
 
 clean::
 	-\$(RM_F) my_*.c
-	-\$(RM_F) main$o my_par_pl$o boot$o
+	-\$(RM_F) main$o boot$o
 	-\$(RM_F) sha1.c
 	-\$(RM_F) *.opt *.pdb perlxsi.c
 	-\$(RM_F) usernamefrompwuid.h
@@ -289,12 +286,12 @@ realclean distclean::
 	-\$(RM_F) $parl_exe
 	-\$(RM_F) $boot_exe
 
-$par_exe: \$(OBJECTS) my_par_pl$o
+$par_exe: \$(OBJECTS)
 	\$(LD) \$(OBJECTS) \$(PERL_LDFLAGS) $out$par_exe_link
 	$mt_cmd
 
 my_par_pl.c: $par_pl
-	\$(PERLRUN) $f2c -s $par_pl $long_literal \$@ load_my_par_pl
+	\$(PERLRUN) $f2c -s $par_pl \$@ load_my_par_pl
 
 $parl_exe: $par
 	\$(PERLRUN) -Mblib run_with_inc.pl $par -q -B -O\$@
@@ -326,16 +323,15 @@ boot$o: \$(MKTMP_STUFF) $my_stuff
 $boot_exe: boot$o
 	\$(CC) boot$o \$(STATIC_LDFLAGS) $res $out$boot_exe_link
 	$mt_cmd
-	\$(PERLRUN) parlsig.pl $boot_exe $par_exe $dynperl $chunk_size
 
 my_par.c: $par_exe
-	\$(PERLRUN) $f2c $long_literal -c $chunk_size $par_exe \$@ load_my_par
+	\$(PERLRUN) $f2c -c $chunk_size $par_exe \$@ load_my_par
 
 my_libperl.c:
-	\$(PERLRUN) $f2c $long_literal -c $chunk_size -n $extract_libperl_as $libperl \$@ load_my_libperl
+	\$(PERLRUN) $f2c -c $chunk_size -n $extract_libperl_as $libperl \$@ load_my_libperl
 
 my_libgcc.c:
-	\$(PERLRUN) $f2c $long_literal -c $chunk_size $libgcc \$@ load_my_libgcc
+	\$(PERLRUN) $f2c -c $chunk_size $libgcc \$@ load_my_libgcc
 
 Dynamic.pm: Dynamic.in $par_exe
 	\$(PERLRUN) encode_append.pl Dynamic.in $par_exe Dynamic.pm

@@ -1,5 +1,23 @@
 #undef readdir
 
+#include <unistd.h>
+
+typedef struct my_chunk
+{
+    int len;
+    unsigned char *buf;
+} my_chunk;
+
+/* returns 0 if OK, -1 if error */
+int write_chunks(my_chunk *chunks, int fd) {
+    while (chunks->len) {
+	if ( write(fd, chunks->buf, chunks->len) != chunks->len )
+	    return -1;
+	chunks++;
+    }
+    return 0;
+}
+
 #include "mktmpdir.c"
 #include "my_par.c"
 #include "my_libperl.c"
@@ -7,7 +25,7 @@
 #include "my_libgcc.c"
 #endif
 
-int my_mkfile (char* argv0, char* stmpdir, const char* name, unsigned long expected_size, char** file_p) {
+int my_mkfile (char* argv0, char* stmpdir, const char* name, off_t expected_size, char** file_p) {
     int i;
     struct stat statbuf;
 
@@ -15,7 +33,7 @@ int my_mkfile (char* argv0, char* stmpdir, const char* name, unsigned long expec
     sprintf(*file_p, "%s/%s", stmpdir, name);
 
     if ( par_lstat(*file_p, &statbuf) == 0 
-         && (unsigned long)statbuf.st_size == expected_size )
+         && statbuf.st_size == expected_size )
 	return -2;
 
     i = open(*file_p, O_CREAT | O_WRONLY | OPEN_O_BINARY, 0755);
@@ -66,7 +84,8 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
 	           size_load_my_par, &my_perl );
     if ( !i ) return 2;
     if ( i != -2 ) {
-        WRITE_load_my_par(i);
+        if (write_chunks(chunks_load_my_par, i) || close(i))
+	    return 2;
         close(i); 
         chmod(my_perl, 0755);
 #ifdef __hpux
@@ -83,8 +102,8 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     i = my_mkfile( argv[0], stmpdir, name_load_my_libperl, size_load_my_libperl, &my_file );
     if ( !i ) return 2;
     if ( i != -2 ) {
-        WRITE_load_my_libperl(i);
-        close(i); 
+        if (write_chunks(chunks_load_my_libperl, i) || close(i))
+	    return 2;
         chmod(my_file, 0755);
     }
 
@@ -93,8 +112,9 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     i = my_mkfile( argv[0], stmpdir, name_load_my_libgcc, size_load_my_libgcc, &my_file );
     if ( !i ) return 2;
     if ( i != -2 ) {
-        WRITE_load_my_libgcc(i);
-        close(i); chmod(my_file, 0755);
+        if (write_chunks(chunks_load_my_libgcc, i) || close(i))
+	    return 2;
+        chmod(my_file, 0755);
     }
 
 #endif

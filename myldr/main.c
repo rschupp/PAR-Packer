@@ -3,6 +3,8 @@
 #include "XSUB.h"
 #include "perlxsi.c"
 
+#include "my_par_pl.c"
+
 /* Workaround for mapstart: the only op which needs a different ppaddr */
 #undef Perl_pp_mapstart
 #define Perl_pp_mapstart Perl_pp_grepstart
@@ -10,9 +12,6 @@
 #define OP_MAPSTART OP_GREPSTART
 
 static PerlInterpreter *my_perl;
-extern char * name_load_my_par_pl;
-extern unsigned long size_load_my_par_pl;
-extern char load_my_par_pl[];
 
 static char *stmpdir;
 static int options_count;
@@ -119,7 +118,7 @@ int main ( int argc, char **argv, char **env )
 #endif
 
     fakeargv[argno++] = "-e";
-    fakeargv[argno++] = load_my_par_pl;
+    fakeargv[argno++] = chunk_load_my_par_pl;
 
 #ifndef ALLOW_PERL_OPTIONS
     fakeargv[argno++] = "--";
