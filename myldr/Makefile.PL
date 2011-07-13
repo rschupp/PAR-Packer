@@ -90,7 +90,7 @@ if( $cc =~ m/^cl\b/i ) {
     $ccdebug = $debug ? '-Zi -Zm1000 ' : '-Zm1000 ';
     $lddebug = $debug ? '-debug ' : '-release ';
     $warn = $debug ? '-W3' : '';
-    $res = $Config{ivsize} == 4 ? 'win32.obj' : '';
+    $res = $Config{ptrsize} == 4 ? 'win32.obj' : '';
     # Embed the manifest file for VC 2005 (aka VC8) or higher, but not for the
     # 64-bit Platform SDK compiler
     if( $Config{ivsize} == 4 and $Config{ccversion} =~ /^(\d+)/ and $1 >= 14 ) {
@@ -103,7 +103,7 @@ if( $cc =~ m/^cl\b/i ) {
     $ccdebug = $debug ? '-g ' : '';
     $lddebug = ($debug or $^O eq 'darwin') ? '' : '-s ';
     $warn = $debug ? '-Wall -Wno-comments ' : '';
-    $res = ($^O =~ /^(?:MSWin|cygwin)/) ? 'win32.coff' : '';
+    $res = ($^O =~ /^(?:MSWin|cygwin)/ && $Config{ptrsize} == 4) ? 'win32.coff' : '';
     $mt_cmd = '-$(NOOP)';
 } else {
     $out = '-o ';
