@@ -86,7 +86,6 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     if ( i != -2 ) {
         if (write_chunks(chunks_load_my_par, i) || close(i))
 	    return 2;
-        close(i); 
         chmod(my_perl, 0755);
 #ifdef __hpux
         {
