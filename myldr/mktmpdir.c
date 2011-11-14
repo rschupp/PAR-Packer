@@ -159,7 +159,38 @@ char *par_mktmpdir ( char **argv ) {
        it is also reading from. */
     top_tmpdir = malloc( stmp_len );
     sprintf(top_tmpdir, "%s%s%s%s", tmpdir, dir_sep, subdirbuf_prefix, username);
-    my_mkdir(top_tmpdir, 0755);
+#ifdef WIN32
+    _mkdir(top_tmpdir);         /* FIXME bail if error (other than EEXIST) */
+#else
+    {
+        struct stat st;
+
+        if (mkdir(top_tmpdir, 0700) == -1 && errno != EEXIST) {
+            fprintf(stderr, "%s: creation of private subdirectory %s failed (errno=%i)\n", 
+                    argv[0], top_tmpdir, errno);
+            return NULL;
+        }
+
+        /* now check that:
+         * - top_tmpdir is a directory (and not a symlink)
+         * - top_tmpdir is owned by the user
+         * - top_tmpdir has mode 0700
+         */
+        if (lstat(top_tmpdir, &st) == -1) {
+            fprintf(stderr, "%s: stat of private subdirectory %s failed (errno=%i)\n",
+                    argv[0], top_tmpdir, errno);
+            return NULL;
+        }
+
+        if (!S_ISDIR(st.st_mode)
+            || st.st_uid != getuid()
+            || (st.st_mode & 0777) != 0700 ) {
+            fprintf(stderr, "%s: private subdirectory %s is unsafe\n",
+                    argv[0], top_tmpdir);
+            return NULL;
+        }
+    }
+#endif
 
     stmpdir = malloc( stmp_len );
 
@@ -247,7 +278,7 @@ char *par_mktmpdir ( char **argv ) {
            a prior invocation crashed leaving garbage in a temp directory that
            might interfere. */
 
-        while (my_mkdir(stmpdir, 0755) == -1 && errno == EEXIST) {
+        while (my_mkdir(stmpdir, 0700) == -1 && errno == EEXIST) {
             sprintf(
                 stmpdir,
                 "%s%stemp-%u-%u%s",
