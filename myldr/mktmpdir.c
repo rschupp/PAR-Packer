@@ -62,22 +62,22 @@ char *par_mktmpdir ( char **argv ) {
     const char *tmpdir = NULL;
     const char *key = NULL , *val = NULL;
 
-    /* NOTE: all arrays below are terminated by an empty string */
+    /* NOTE: all arrays below are NULL terminated */
     const char *temp_dirs[] = { 
         P_tmpdir, 
 #ifdef WIN32
         "C:\\TEMP", 
 #endif
-        ".", "" };
+        ".", NULL };
     const char *temp_keys[] = { "PAR_TMPDIR", "TMPDIR", "TEMPDIR", 
-                                 "TEMP", "TMP", "" };
-    const char *user_keys[] = { "USER", "USERNAME", "" };
+                                 "TEMP", "TMP", NULL };
+    const char *user_keys[] = { "USER", "USERNAME", NULL };
 
     const char *subdirbuf_prefix = "par-";
     const char *subdirbuf_suffix = "";
 
     char *progname = NULL, *username = NULL;
-    char *stmpdir = NULL, *stmpdir2 = NULL;
+    char *stmpdir = NULL, *top_tmpdir = NULL;
     int f, j, k, stmp_len = 0;
     char sha1[41];
     SHA_INFO sha_info;
@@ -99,14 +99,10 @@ char *par_mktmpdir ( char **argv ) {
 
     /* Determine username */
     username = get_username_from_getpwuid();
-    if ( username == NULL ) { /* fall back to env vars */
-        for (
-                i = 0 ;
-                username == NULL && strlen(key = user_keys[i]) > 0 ;
-                i++
-            )
-        {
-            if ( (val = par_getenv(key)) ) username = strdup(val);
+    if ( !username ) { /* fall back to env vars */
+        for ( i = 0 ; username == NULL && (key = user_keys[i]); i++) {
+            if ( (val = par_getenv(key)) && strlen(val) ) 
+                username = strdup(val);
         }
     }
 
@@ -123,16 +119,16 @@ char *par_mktmpdir ( char **argv ) {
     }
 
     /* Try temp environment variables */
-    for ( i = 0 ; tmpdir == NULL && strlen(key = temp_keys[i]) > 0 ; i++ ) {
-        if ( (val = par_getenv(key)) &&
-                isWritableDir(val) ) {
+    for ( i = 0 ; tmpdir == NULL && (key = temp_keys[i]); i++ ) {
+        if ( (val = par_getenv(key)) && strlen(val) && isWritableDir(val) ) {
             tmpdir = strdup(val);
+            break;
         }
     }
 
 #ifdef WIN32
     /* Try the windows temp directory */
-    if ( tmpdir == NULL && (val = par_getenv("WinDir")) ) {
+    if ( tmpdir == NULL && (val = par_getenv("WinDir")) && strlen(val) ) {
         char* buf = malloc(strlen(val) + 5 + 1);
         sprintf(buf, "%s\\temp", val);
         if (isWritableDir(buf)) {
@@ -144,7 +140,7 @@ char *par_mktmpdir ( char **argv ) {
 #endif
 
     /* Try default locations */
-    for ( i = 0 ; tmpdir == NULL && strlen(val = temp_dirs[i]) > 0 ; i++ ) {
+    for ( i = 0 ; tmpdir == NULL && (val = temp_dirs[i]) && strlen(val) ; i++ ) {
         if ( isWritableDir(val) ) {
             tmpdir = strdup(val);
         }
@@ -157,14 +153,15 @@ char *par_mktmpdir ( char **argv ) {
         strlen(username) +
         strlen(subdirbuf_suffix) + 1024;
 
-    /* stmpdir is what we are going to return 
-       stmpdir2 is the top $TEMP/par-$USER, needed to build stmpdir.  We
-       need 2 buffers because snprintf() can't write to a buffer it's
-       reading from. */
+    /* stmpdir is what we are going to return; 
+       top_tmpdir is the top $TEMP/par-$USER, needed to build stmpdir.  
+       NOTE: We need 2 buffers because snprintf() can't write to a buffer
+       it is also reading from. */
+    top_tmpdir = malloc( stmp_len );
+    sprintf(top_tmpdir, "%s%s%s%s", tmpdir, dir_sep, subdirbuf_prefix, username);
+    my_mkdir(top_tmpdir, 0755);
+
     stmpdir = malloc( stmp_len );
-    stmpdir2 = malloc( stmp_len );
-    sprintf(stmpdir2, "%s%s%s%s", tmpdir, dir_sep, subdirbuf_prefix, username);
-    my_mkdir(stmpdir2, 0755);
 
     /* Doesn't really work - XXX */
     val = par_getenv( "PATH" );
@@ -207,7 +204,7 @@ char *par_mktmpdir ( char **argv ) {
             sprintf(
                 stmpdir,
                 "%s%scache-%s%s",
-                stmpdir2, dir_sep, buf, subdirbuf_suffix
+                top_tmpdir, dir_sep, buf, subdirbuf_suffix
             );
         }
         else {
@@ -228,7 +225,7 @@ char *par_mktmpdir ( char **argv ) {
             sprintf(
                 stmpdir,
                 "%s%scache-%s%s",
-                stmpdir2, dir_sep, sha1, subdirbuf_suffix
+                top_tmpdir, dir_sep, sha1, subdirbuf_suffix
             );
         }
     }
@@ -241,7 +238,7 @@ char *par_mktmpdir ( char **argv ) {
         sprintf(
             stmpdir,
             "%s%stemp-%u%s",
-            stmpdir2, dir_sep, getpid(), subdirbuf_suffix
+            top_tmpdir, dir_sep, getpid(), subdirbuf_suffix
         );
 
         /* Ensure we pick an unused directory each time.  If the directory
@@ -254,12 +251,12 @@ char *par_mktmpdir ( char **argv ) {
             sprintf(
                 stmpdir,
                 "%s%stemp-%u-%u%s",
-                stmpdir2, dir_sep, getpid(), ++i, subdirbuf_suffix
+                top_tmpdir, dir_sep, getpid(), ++i, subdirbuf_suffix
                 );
         }
     }
 
-    free(stmpdir2);
+    free(top_tmpdir);
 
     /* set dynamic loading path */
     par_setenv(PAR_TEMP, stmpdir);

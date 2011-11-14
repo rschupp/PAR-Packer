@@ -220,8 +220,8 @@ if ($libgcc) {
 
 my @strippedparl = qw( Static.pm );
 push @strippedparl, qw( Dynamic.pm ) if $dynperl;
-my @exe = $parl_exe;
-push @exe, $parldyn_exe if $dynperl;
+my @parl_exes = $parl_exe;
+push @parl_exes, $parldyn_exe if $dynperl;
 
 
 # Determine whether we can find a config.h. If yes, include it in
@@ -246,7 +246,7 @@ WriteMakefile(
     PM          => { map { $_ => File::Spec->catfile('$(INST_LIBDIR)', qw( PAR StrippedPARL ), $_) }
                      @strippedparl },
     MAN3PODS    => {},
-    EXE_FILES   => \@exe,
+    EXE_FILES   => \@parl_exes,
     macro       => { FIXIN => '$(NOOP)' },
 );
 
@@ -280,11 +280,7 @@ clean::
 	-\$(RM_F) sha1.c
 	-\$(RM_F) *.opt *.pdb perlxsi.c
 	-\$(RM_F) usernamefrompwuid.h
-
-realclean distclean:: 
-	-\$(RM_F) $par_exe
-	-\$(RM_F) $parl_exe
-	-\$(RM_F) $boot_exe
+	-\$(RM_F) $par_exe $boot_exe @parl_exes
 
 $par_exe: \$(OBJECTS)
 	\$(LD) \$(OBJECTS) \$(PERL_LDFLAGS) $out$par_exe_link

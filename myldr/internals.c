@@ -103,18 +103,21 @@ XS(XS_Internals_PAR_BOOT) {
 
     /* create temporary PAR directory */
     stmpdir = par_getenv("PAR_TEMP");
-    if ( stmpdir == NULL ) {
+    if ( !stmpdir ) {
         stmpdir = par_mktmpdir( fakeargv );
+        if ( !stmpdir ) 
+            croak("Unable to create cache directory");
 #ifndef WIN32
         i = execvp(SvPV_nolen(GvSV(tmpgv)), fakeargv);
-        croak("%s: execution of %s failed - aborting with %i.\n", fakeargv[0], 
-        				SvPV_nolen(GvSV(tmpgv)), i);
+        croak("%s: execution of %s failed (errno=%i)\n", 
+              fakeargv[0], SvPV_nolen(GvSV(tmpgv)), i);
         return;
 #endif
     }
-    i = PerlDir_mkdir(stmpdir, 0755);
+    i = PerlDir_mkdir(stmpdir, 0700);
     if ( (i != 0) && (i != EEXIST) && (i != -1) ) {
-        croak("%s: creation of private temporary subdirectory %s failed - aborting with %i.\n", fakeargv[0], stmpdir, i);
+        croak("%s: creation of private cache subdirectory %s failed (errno=%i)\n", 
+              fakeargv[0], stmpdir, i);
         return;
     }
 }

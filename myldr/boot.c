@@ -49,7 +49,7 @@ int my_mkfile (char* argv0, char* stmpdir, const char* name, off_t expected_size
          && statbuf.st_size == expected_size )
 	return MKFILE_ALREADY_EXISTS;
 
-    fprintf(stderr, "%s: creation of %s failed - aborting with errno %i.\n", argv0, *file_p, errno);
+    fprintf(stderr, "%s: creation of %s failed (errno=%i)\n", argv0, *file_p, errno);
     return MKFILE_ERROR;
 }
 
@@ -80,10 +80,12 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     par_init_env();
 
     stmpdir = par_mktmpdir( argv );	
-    i = my_mkdir(stmpdir, 0755);
+    if ( !stmpdir ) DIE;        /* error message has already been printed */
+
+    i = my_mkdir(stmpdir, 0700);
     if ( i == -1 && errno != EEXIST) {
-	fprintf(stderr, "%s: creation of private temporary subdirectory %s failed - aborting with errno %i.\n", argv[0], stmpdir, errno);
-	DIE;
+	fprintf(stderr, "%s: creation of private cache subdirectory %s failed (errno= %i)\n", argv[0], stmpdir, errno);
+ 	DIE;
     }
 
     /* extract custom Perl interpreter into stmpdir 
