@@ -81,8 +81,6 @@ my $parl_exe = "parl$exe";
 my $parldyn_exe = "parldyn$exe";
 
 
-my $lib_path = join(' ', map qq(-I"$_"), @INC); # FIXME run_with_inc.pl
-
 my( $out, $ccdebug, $lddebug, $warn, $rm, $mv, $res, $mt_cmd );
 
 if( $cc =~ m/^cl\b/i ) {
