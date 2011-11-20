@@ -67,6 +67,7 @@ sub write_parl {
     # Use this to generate a real parl
     my @libs = ();
     for my $ilib ( @INC ) {
+        next if ref $ilib;
         $ilib =~ s/\\$/\\\\/;
         push(@libs, qq(-I$ilib) );
     }
