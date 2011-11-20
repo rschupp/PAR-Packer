@@ -35,17 +35,18 @@ void par_setup_libpath( const char * stmpdir )
     int i;
     char *ld_path_env = NULL;
 
-    /* NOTE: array is terminated by an empty string */
+    /* NOTE: array is NULL terminated */
     const char *ld_path_keys[] = {       
         "LD_LIBRARY_PATH", "LIBPATH", "LIBRARY_PATH",
-        "PATH", "DYLD_LIBRARY_PATH", "SHLIB_PATH", ""
+        "PATH", "DYLD_LIBRARY_PATH", "SHLIB_PATH", NULL
     };
 
-    for ( i = 0 ; strlen(key = ld_path_keys[i]) > 0 ; i++ ) {
-        if ( ((val = par_getenv(key)) == NULL) || (strlen(val) == 0) ) {
+    for ( i = 0 ; key = ld_path_keys[i]; i++ ) {
+        if ( (val = par_getenv(key)) == NULL || strlen(val) == 0 ) {
             par_setenv(key, stmpdir);
         }
-        else if(!strstr(val, stmpdir)) {
+        else if ( !strstr(val, stmpdir) ) {
+            /* prepend stmpdir to (value of) environment variable */
             ld_path_env = malloc( 
 		strlen(stmpdir) + strlen(path_sep) + strlen(val) + 1);
             sprintf(
