@@ -278,7 +278,7 @@ clean::
 	-\$(RM_F) sha1.c
 	-\$(RM_F) *.opt *.pdb perlxsi.c
 	-\$(RM_F) usernamefrompwuid.h
-	-\$(RM_F) $par_exe $boot_exe @parl_exes
+	-\$(RM_F) $par_exe $boot_exe @parl_exes Dynamic.pm Static.pm
 
 $par_exe: \$(OBJECTS)
 	\$(LD) \$(OBJECTS) \$(PERL_LDFLAGS) $out$par_exe_link

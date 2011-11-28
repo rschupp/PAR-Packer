@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-use 5.006001;
+use 5.008001;
 use strict;
 use inc::Module::Install 0.92;
 
@@ -7,7 +7,7 @@ name        'PAR-Packer';
 abstract    'PAR Packager';
 all_from    'lib/PAR/Packer.pm';
 
-perl_version '5.006001';
+perl_version '5.008001';
 configure_requires 'ExtUtils::Embed';
 requires    'File::Temp'        => 0.05;
 requires    'Compress::Zlib'    => ($^O eq 'MSWin32') ? 1.16 : 1.30;
