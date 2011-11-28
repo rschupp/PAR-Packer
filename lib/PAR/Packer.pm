@@ -27,7 +27,6 @@ have a C compiler.
 use Config;
 use Archive::Zip ();
 use Cwd ();
-use ExtUtils::MakeMaker ();
 use File::Basename ();
 use File::Find ();
 use File::Spec ();
