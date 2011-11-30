@@ -11,22 +11,39 @@
 #ifndef P_tmpdir
 #define P_tmpdir "/tmp"
 #endif
+
+/* NOTE: The code below is #include'd both from a plain C program (boot.c)
+ * and our custom Perl interpreter (main.c). In the latter case,
+ * lstat() or stat() may be #define'd as calls into PerlIO and
+ * expect &PL_statbuf as second parameter, rather than a pointer
+ * to a struct stat. Try to distinguish these cases by checking
+ * whether PL_statbuf is defined. */
 static int isWritableDir(const char* val)
 {
-    /* NOTE: This code is #include'd both from a plain C program (static.c)
-     * and our custom Perl interpreter (main.c). In the latter case,
-     * lstat() or stat() may be #define'd as calls into PerlIO and
-     * expect &PL_statbuf as second parameter, rather than a pointer
-     * to a struct stat. Try to distinguish these cases by checking
-     * whether PL_statbuf is defined. */
 #ifndef PL_statbuf
     struct stat PL_statbuf;
 #endif
 
     return par_lstat(val, &PL_statbuf) == 0 && 
-             ( S_ISDIR(PL_statbuf.st_mode) ||
-               S_ISLNK(PL_statbuf.st_mode) ) &&
-             access(val, W_OK) == 0;
+           ( S_ISDIR(PL_statbuf.st_mode) || S_ISLNK(PL_statbuf.st_mode) ) &&
+           access(val, W_OK) == 0;
+}
+
+/* check that:
+ * - val is a directory (and not a symlink)
+ * - val is owned by the user
+ * - val has mode 0700
+ */
+static int isSafeDir(const char* val)
+{
+#ifndef PL_statbuf
+    struct stat PL_statbuf;
+#endif
+
+    return par_lstat(val, &PL_statbuf) == 0 && 
+           S_ISDIR(PL_statbuf.st_mode) &&
+           PL_statbuf.st_uid == getuid() &&
+           (PL_statbuf.st_mode & 0777) == 0700;
 }
 
 void par_setup_libpath( const char * stmpdir )
@@ -164,29 +181,14 @@ char *par_mktmpdir ( char **argv ) {
     _mkdir(top_tmpdir);         /* FIXME bail if error (other than EEXIST) */
 #else
     {
-        struct stat st;
-
         if (mkdir(top_tmpdir, 0700) == -1 && errno != EEXIST) {
             fprintf(stderr, "%s: creation of private subdirectory %s failed (errno=%i)\n", 
                     argv[0], top_tmpdir, errno);
             return NULL;
         }
 
-        /* now check that:
-         * - top_tmpdir is a directory (and not a symlink)
-         * - top_tmpdir is owned by the user
-         * - top_tmpdir has mode 0700
-         */
-        if (lstat(top_tmpdir, &st) == -1) {
-            fprintf(stderr, "%s: stat of private subdirectory %s failed (errno=%i)\n",
-                    argv[0], top_tmpdir, errno);
-            return NULL;
-        }
-
-        if (!S_ISDIR(st.st_mode)
-            || st.st_uid != getuid()
-            || (st.st_mode & 0777) != 0700 ) {
-            fprintf(stderr, "%s: private subdirectory %s is unsafe\n",
+        if (!isSafeDir(top_tmpdir)) {
+            fprintf(stderr, "%s: private subdirectory %s is unsafe (please remove it and retry your operation)\n",
                     argv[0], top_tmpdir);
             return NULL;
         }
