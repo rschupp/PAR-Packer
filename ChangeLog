@@ -1,3 +1,20 @@
+[Changes for 1.011 - Dec 1, 2011]
+* Bug fixes, etc.
+
+  -  RT #69560/CVE-2011-4114: PAR packed files are extracted to unsafe
+     and predictable temporary directories
+     - create parent of cache directory (i.e. /tmp/par-USER) with mode 0700
+     - if it already exists, make sure that (and bail out if not)
+       - it's not a symlink
+       - it's mode 0700
+       - it's owned by USER
+
+  - depend on PAR 1.004 (which contains the other half of the 
+    fix for CVE-2011-4114)
+
+  - bump Perl version requirement to 5.8.1 (Schwern: The End Of 5.6 Is Nigh!)
+  - explicitly mark Perl 5.10.0 as an unsupported version
+
 [Changes for 1.010 - Jul 13, 2011]
 * Bug fixes, etc.
 

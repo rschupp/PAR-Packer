@@ -21,72 +21,31 @@ a prerequisite for this distribution.
 
 * Installation
 
-PAR-Packer uses the standard perl module install process:
+If you have cpanm, you only need one line:
 
-    cpansign -v         # optional; see SIGNATURE for details
-    perl Makefile.PL
-    make                # or 'nmake' on Win32
-    make test
-    make install
+  cpanm PAR::Packer
 
-If your system has a C compiler, or if somebody has built a PAR-Packer
-package for your architecture, the 'pp' tool and a stand-alone binary
-version of par.pl will be installed, so you can generate self-executable
-binaries like this:
+Alternatively, if your CPAN shell is set up, you should just be able to do:
 
-    pp -o foo.exe /home/test.pl
+  cpan PAR:Packer
 
-* Binary installation with pre-built PAR-Packer files
+As a last resort, you can manually install it. Download the tarball, untar it,
+then build it:
+  
+  perl Makefile.PL
+  make                # or 'dmake' on Win32
+  make test
+  make install
 
-This distribution uses the Module::Install framework to offer
-pre-compiled, architecture-dependent PAR-Packer packages to save your
-compilation time.  This process is completely automatic -- no
-actions are required on your part.
-
-However, if nobody has generated such a package for your architecture,
-you will see a short messages like this:
-
-    Fetching 'PAR-Packer0.97-i386-freebsd-5.8.0.par' from www.cpan.org...
-    *** No installation package available for your architecture.
-    However, you may wish to generate one with 'make par' and send
-    it to <SMUELLER@cpan.org>, so other people on the same platform
-    can benefit from it.
-    *** Proceeding with normal installation...
-
-If you are on a platform where normal users do not have a C compiler
-installed (MSWin32, darwin, etc.), please follow the instruction above
-and mail the generated PAR-Packer package (or more preferably, a URL
-to download that package) to me.  Thanks!
+Note that all of the above require that you have a C compiler installed.
 
 * Notes for Windows users
 
-If you are using Microsoft Windows, you will probably need the 'nmake'
-utility before installation. It's available at:
+If your Perl distribution is Strawberry Perl, you already have the
+MinGW C compiler installed. If you are using ActiveState Perl, 
+you may want to install the MinGW C compiler with:
 
-    http://download.microsoft.com/download/vc15/Patch/1.52/W95/EN-US/nmake15.exe
-
-If you are connected to the internet, "perl Makefile.PL" is capable
-of automatically fetch it, and install into your Perl/bin directory.
-You will see a message like this:
-
-    The required 'nmake' executable not found, fetching it...
-
-However, if you are not yet online, or wish to install 'nmake' into
-another directory, then please download the file manually, save it to
-a directory in %PATH (e.g. C:\WINDOWS\COMMAND), then launch the MS-DOS
-command line shell, "cd" to that directory, and run "nmake15.exe" from
-there; that will create the 'nmake.exe' file.
-
-You may then resume the installation process above, but replace 'make'
-with 'nmake' in the last three lines.
-
-Also, if you do not have the compiler used to compile your version or
-Perl (e.g. MinGW, GCC on Cygwin, or Microsoft Visual C++ for ActivePerl),
-and nobody has generated a Windows-specific PAR-Packer yet, you will not
-be able to generate binary executables using 'pp'.
-
-Microsoft Visual C++ users: Do not forget to run "vcvars32.bat" (or equivalent)
-before "perl Makefile.PL"!
+  ppm install MinGW
 
 * Typical Usage
 
