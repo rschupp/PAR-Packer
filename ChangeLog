@@ -1,3 +1,10 @@
+[Changes for 1.012 - Dec 2, 2011]
+* Bug fixes, etc.
+  - run all tests using a nonce PAR_TMPDIR (otherwise CPAN Testers
+    goes crazy as top level /tmp/par-USER directories (or similar)
+    from previous tests may now be considered "unsafe")
+  - bump dependency on PAR to 1.005 which has the same behaviour
+
 [Changes for 1.011 - Dec 1, 2011]
 * Bug fixes, etc.
 
