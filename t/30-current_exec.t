@@ -5,12 +5,15 @@ use Config;
 use File::Spec;
 use File::Path;
 use File::Basename;
+use File::Temp ();
 use FindBin;
 
 use Test::More;
 plan skip_all => "Fails if run in a path that contains spaces" 
     if $FindBin::Bin =~ / /;
 plan tests => 4;
+
+$ENV{PAR_TMPDIR} = File::Temp::tempdir(TMPDIR => 1, CLEANUP => 1);
 
 my $has_inline_c = eval "use Inline; 1;";
 # warn $@ if $@;

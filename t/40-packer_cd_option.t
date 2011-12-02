@@ -4,6 +4,8 @@
 use strict;
 use warnings;
 
+use File::Temp ();
+
 # Fake a frontend to see if caching options are correctly passed through
 package TestFE;
 
@@ -26,6 +28,8 @@ sub check{
 package main;
 use Test::More (tests => 2);
 use PAR::Packer;
+
+$ENV{PAR_TMPDIR} = File::Temp::tempdir(TMPDIR => 1, CLEANUP => 1);
 
 for my $opt (qw/cd cachedeps/){
     TestFE::init();

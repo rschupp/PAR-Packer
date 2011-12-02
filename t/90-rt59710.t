@@ -3,12 +3,15 @@
 use strict;
 use Config;
 use File::Spec;
+use File::Temp ();
 use FindBin;
 
 use Test::More;
 plan skip_all => "Unicode::UCD appeared first in perl 5.8.0"
     unless $] >= 5.008;
 plan tests => 3; # FIXME
+
+$ENV{PAR_TMPDIR} = File::Temp::tempdir(TMPDIR => 1, CLEANUP => 1);
 
 my $EXE = File::Spec->catfile( File::Spec->tmpdir,"rt59710$Config{_exe}");
 my $PP = File::Spec->catdir( $FindBin::Bin, File::Spec->updir, qw( blib script pp ));

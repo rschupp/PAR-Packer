@@ -9,6 +9,8 @@ use FindBin ();
 use Config qw/%Config/;
 use vars qw/@INC %INC/;
 
+$ENV{PAR_TMPDIR} = File::Temp::tempdir(TMPDIR => 1, CLEANUP => 1);
+
 unshift @INC, ($FindBin::Bin);
 use_ok('PAR');
 use_ok('PAR::StrippedPARL::Static');

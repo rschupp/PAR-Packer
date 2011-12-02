@@ -5,7 +5,10 @@ use Cwd;
 use Config;
 use FindBin;
 use File::Spec;
+use File::Temp ();
 use ExtUtils::MakeMaker;
+
+$ENV{PAR_TMPDIR} = File::Temp::tempdir(TMPDIR => 1, CLEANUP => 1);
 
 sub samefiles {
     my ($f1, $f2) = @_;
