@@ -24,6 +24,13 @@ if ($^O eq 'MSWin32') {
     requires  'Win32::Process';
 }
 
+# for tkpp only
+recommends  'Tk'                => 0;
+recommends  'Tk::ColoredButton' => 0;
+recommends  'Tk::EntryCheck'    => 0;
+recommends  'Tk::Getopt'        => 0;
+
+
 if (can_use('Crypt::OpenPGP') or can_run('gpg')) {
     my $has_sha1 = (
         can_use('Digest::SHA1') or
