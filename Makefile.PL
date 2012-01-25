@@ -20,7 +20,7 @@ requires    'Getopt::ArgvFile'  => 1.07;
 
 if ($^O eq 'MSWin32') {
     requires  'Parse::Binary'     => 0.04;
-    requires  'Win32::Exe'        => 0.14;
+    requires  'Win32::Exe'        => 0.17;
     requires  'Win32::Process';
 }
 

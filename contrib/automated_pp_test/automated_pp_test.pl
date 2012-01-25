@@ -8441,7 +8441,7 @@ $error =
         $no_win32_exe,
      );
 
-after_test($test_number, $error, $message, $verbose);
+after_test($test_number++, $error, $message, $verbose);
 ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 

@@ -1,7 +1,11 @@
 #undef readdir
 
+#ifdef _MSC_VER
+#include <io.h>
+#else
 #include <sys/types.h>
 #include <unistd.h>
+#endif
 
 typedef struct my_chunk
 {

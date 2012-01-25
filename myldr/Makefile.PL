@@ -81,17 +81,28 @@ my $parl_exe = "parl$exe";
 my $parldyn_exe = "parldyn$exe";
 
 
-my( $out, $ccdebug, $lddebug, $warn, $rm, $mv, $res, $mt_cmd );
+my( $out, $ccdebug, $lddebug, $warn, $rm, $mv, $res, $mt_cmd, $res_cmd, $res_section, $rt_cmd, $pre_res );
+
+$res = '';
+$pre_res = '';
+$res_cmd = '-$(NOOP)';
+$rt_cmd = '-$(NOOP)';
+$res_section = 'noresource.o'; # is never built
 
 if( $cc =~ m/^cl\b/i ) {
     $out = '-out:';
     $ccdebug = $debug ? '-Zi -Zm1000 ' : '-Zm1000 ';
     $lddebug = $debug ? '-debug ' : '-release ';
     $warn = $debug ? '-W3' : '';
-    $res = $Config{ptrsize} == 4 ? 'win32.obj' : '';
+    my $machinearch = ( $Config{ptrsize} == 8 ) ? 'AMD64' : 'X86';
+   $pre_res = qq(winres\\pp.res);
+   $rt_cmd = qq(rc winres\\pp.rc);
+    $res_cmd = qq(cvtres /NOLOGO /MACHINE:$machinearch /OUT:ppresource.obj $pre_res);
+    $res = 'ppresource.obj';
+   $res_section = $res;
     # Embed the manifest file for VC 2005 (aka VC8) or higher, but not for the
-    # 64-bit Platform SDK compiler
-    if( $Config{ivsize} == 4 and $Config{ccversion} =~ /^(\d+)/ and $1 >= 14 ) {
+    # 64-bit Platform SDK compiler.
+    if( $Config{ptrsize} == 4 and $Config{ccversion} =~ /^(\d+)/ and $1 >= 14 ) {
         $mt_cmd = 'mt -nologo -manifest $@.manifest -outputresource:$@;1';
     } else {
         $mt_cmd = '-$(NOOP)';
@@ -101,14 +112,19 @@ if( $cc =~ m/^cl\b/i ) {
     $ccdebug = $debug ? '-g ' : '';
     $lddebug = ($debug or $^O eq 'darwin') ? '' : '-s ';
     $warn = $debug ? '-Wall -Wno-comments ' : '';
-    $res = ($^O =~ /^(?:MSWin|cygwin)/ && $Config{ptrsize} == 4) ? 'win32.coff' : '';
+    if( $^O =~ /^(?:MSWin|cygwin)/ ){
+   $res = 'ppresource.coff';
+   $pre_res = qq(winres\\pp.res);
+   $rt_cmd = qq(windres -F pei-i386 -i winres\\pp.rc -o $pre_res);
+   $res_cmd = qq(windres -o ppresource.coff $pre_res);
+   $res_section = $res;
+    }
     $mt_cmd = '-$(NOOP)';
 } else {
     $out = '-o ';
     $ccdebug = '';
     $lddebug = '';
     $warn = '';
-    $res = '';
     $mt_cmd = '-$(NOOP)';
 }
 
@@ -272,9 +288,13 @@ main$o: main.c my_par_pl.c perlxsi.c internals.c \$(MKTMP_STUFF)
 sha1.c:
 	\$(PERLRUN) sha1.c.PL
 
+$res_section:
+	$rt_cmd
+	$res_cmd
+
 clean::
 	-\$(RM_F) my_*.c
-	-\$(RM_F) main$o boot$o
+	-\$(RM_F) main$o boot$o $res $pre_res
 	-\$(RM_F) sha1.c
 	-\$(RM_F) *.opt *.pdb perlxsi.c
 	-\$(RM_F) usernamefrompwuid.h
@@ -315,7 +335,7 @@ $parldyn_exe: $par_exe
 boot$o: \$(MKTMP_STUFF) $my_stuff
 
 $boot_exe: boot$o
-	\$(CC) boot$o \$(STATIC_LDFLAGS) $res $out$boot_exe_link
+	\$(LD) boot$o \$(STATIC_LDFLAGS) $res $out$boot_exe_link
 	$mt_cmd
 
 my_par.c: $par_exe
