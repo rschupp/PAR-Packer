@@ -29,6 +29,7 @@ static int isWritableDir(const char* val)
            access(val, W_OK) == 0;
 }
 
+#ifndef WIN32
 /* check that:
  * - val is a directory (and not a symlink)
  * - val is owned by the user
@@ -45,6 +46,7 @@ static int isSafeDir(const char* val)
            PL_statbuf.st_uid == getuid() &&
            (PL_statbuf.st_mode & 0777) == 0700;
 }
+#endif
 
 void par_setup_libpath( const char * stmpdir )
 {
