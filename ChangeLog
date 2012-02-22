@@ -1,3 +1,37 @@
+[Changes for 1.013 - Feb 22, 2012]
+
+* New version of Tkpp (Version 1.2) (cf. RT #69517)
+
+  - incorporate new script/tkpp from Djibril Ousmanou (DJIBEL), many thanks!
+  - add "recommends" to Makefile.PL for Tk and additional Tk modules needed
+
+* Bug fixes, etc.
+
+    - RT #74302: Win32 executable additional information (--info) not updated
+      - finally apply patches from Mark Dootson (MDOOTSON) - thanks, Mark:
+        rework resource handling for Win32 executables
+      - BIG FAT WARNING: 
+        --info still doesn't work, so I disabled this option for now;
+        at least on some platforms, "pp --info ..." results in a corrupted 
+	executable that Windows refuses to execute
+	
+    - fix a problem with "pp --gui": the copy of par.exe extracted 
+      to the cache area (but with the same name as the packed executable) 
+      still used a console window though packed with "pp --gui ..."
+      (bug reported in private communication)
+
+    - RT #73491: cache directory naming problem
+      Now the top level cache directory (typically $TEMPIR/par-$USER)
+      will have $USER "encoded" as hex bytes. This avoids problems
+      between the charset used for $USER and the charset allowed by
+      the OS for filenames.
+
+    - RT #75193 [PATCH] Fix build on Win32/VC++
+
+    - bump dependency on PAR to 1.005 
+    - require latest version of Win32::Exe
+    - run run_with_inc.pl using a nonce PAR_TMPDIR, too
+
 [Changes for 1.012 - Dec 2, 2011]
 * Bug fixes, etc.
   - run all tests using a nonce PAR_TMPDIR (otherwise CPAN Testers
@@ -1446,4 +1480,3 @@ This release comes with several significant improvements:
       didn't work properly when bundling perl modules for self-
       contained executables, rendering 'pp' useless on machines
       without core perl.
-
