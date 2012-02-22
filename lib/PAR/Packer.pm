@@ -1257,6 +1257,12 @@ sub _par_to_exe {
         $self->_fix_console() if $opt->{g};
     }
     elsif (eval { require Win32::Exe; 1 }) {
+        # FIXME --info results in a corrupted executable
+        if ($opt->{N}) {
+            $self->_warn("--info is currently broken, disabling it");
+            delete $opt->{N};
+        }
+
         $self->_move_parl();
         my $exe = Win32::Exe->new($self->{parl});
         $exe = $exe->create_resource_section if !$exe->has_resource_section;
