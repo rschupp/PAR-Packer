@@ -61,8 +61,9 @@ my $exe = $Config{_exe};
 my $link_exe = (($^O eq 'os2' and $Config{ldflags} =~ /-Zexe/) ? '' : $exe);
 my $o = $Config{obj_ext};
 my $gccversion = $Config{gccversion};
-my $pccflags = ccopts();
-my $pldflags = ldopts();
+# NOTE: on some platforms, ccopts or ldopts may contain newlines
+chomp( my $pccflags = ccopts() );
+chomp( my $pldflags = ldopts() );
 my $dynperl = $Config{useshrplib} && ($Config{useshrplib} ne 'false');
 
 $dynperl = 1 if $pldflags =~ /\B-lperl\b/; # Gentoo lies to us!
@@ -81,13 +82,14 @@ my $parl_exe = "parl$exe";
 my $parldyn_exe = "parldyn$exe";
 
 
-my( $out, $ccdebug, $lddebug, $warn, $rm, $mv, $res, $mt_cmd, $res_cmd, $res_section, $rt_cmd, $pre_res );
+my( $out, $ccdebug, $lddebug, $warn, $rm, $mv, $mt_cmd );
 
-$res = '';
-$pre_res = '';
-$res_cmd = '-$(NOOP)';
-$rt_cmd = '-$(NOOP)';
-$res_section = 'noresource.o'; # is never built
+my $res = '';
+my $pre_res = '';
+my $res_cmd = '-$(NOOP)';
+my $rt_cmd = '-$(NOOP)';
+my $res_section = 'noresource.o'; # is never built
+my $boot_ldflags = '';
 
 if( $cc =~ m/^cl\b/i ) {
     $out = '-out:';
@@ -99,7 +101,7 @@ if( $cc =~ m/^cl\b/i ) {
    $rt_cmd = qq(rc winres\\pp.rc);
     $res_cmd = qq(cvtres /NOLOGO /MACHINE:$machinearch /OUT:ppresource.obj $pre_res);
     $res = 'ppresource.obj';
-   $res_section = $res;
+    $res_section = $res;
     # Embed the manifest file for VC 2005 (aka VC8) or higher, but not for the
     # 64-bit Platform SDK compiler.
     if( $Config{ptrsize} == 4 and $Config{ccversion} =~ /^(\d+)/ and $1 >= 14 ) {
@@ -112,14 +114,15 @@ if( $cc =~ m/^cl\b/i ) {
     $ccdebug = $debug ? '-g ' : '';
     $lddebug = ($debug or $^O eq 'darwin') ? '' : '-s ';
     $warn = $debug ? '-Wall -Wno-comments ' : '';
-    if( $^O =~ /^(?:MSWin|cygwin)/ ){
-   $res = 'ppresource.coff';
-   $pre_res = qq(winres\\pp.res);
-   $rt_cmd = qq(windres -F pei-i386 -i winres\\pp.rc -o $pre_res);
-   $res_cmd = qq(windres -o ppresource.coff $pre_res);
-   $res_section = $res;
+    if( $^O =~ /^(?:MSWin|cygwin)/ ) {
+        $res = 'ppresource.coff';
+        $pre_res = qq(winres\\pp.res);
+        $rt_cmd = qq(windres -F pei-i386 -i winres\\pp.rc -o $pre_res);
+        $res_cmd = qq(windres -o ppresource.coff $pre_res);
+        $res_section = $res;
     }
     $mt_cmd = '-$(NOOP)';
+    $boot_ldflags = '-static-libgcc ';
 } else {
     $out = '-o ';
     $ccdebug = '';
@@ -131,7 +134,6 @@ if( $cc =~ m/^cl\b/i ) {
 
 my $perl58lib = "";
 if($ENV{ACTIVEPERL_MINGW} and $Config{cf_email}=~/ActiveState.com/i){
-    chomp $pldflags;
     $perl58lib = "-l$Config{libperl}";
     $perl58lib =~ s/\.lib$//;
 }
@@ -141,6 +143,7 @@ my $ldflags = "$lddebug$pldflags $perl58lib";
 my $static_ldflags = $ldflags;
 
 $static_ldflags =~ s/\s+-lperl\s+/ /g;
+$boot_ldflags .= $static_ldflags;
 
 my $libperl;
 
@@ -335,7 +338,7 @@ $parldyn_exe: $par_exe
 boot$o: \$(MKTMP_STUFF) $my_stuff
 
 $boot_exe: boot$o
-	\$(LD) boot$o \$(STATIC_LDFLAGS) $res $out$boot_exe_link
+	\$(LD) boot$o $boot_ldflags $res $out$boot_exe_link
 	$mt_cmd
 
 my_par.c: $par_exe
