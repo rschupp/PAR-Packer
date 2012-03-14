@@ -26,7 +26,7 @@ sub apply {
     $$ref = unpack("b*", $$ref);
     $$ref =~ tr/01/ \t/;
     $$ref =~ s/(.{9})/$1\n/g;
-	$$ref = q($_=<<'';y;\r\n;;d;$_=pack'b*',$_;$_=eval;$@&&die$@;$_)."\n$$ref\n\n";
+	$$ref = q($_=<<'';y;\r\n;;d;y; \t;01;;$_=pack'b*',$_;$_=eval;$@&&die$@;$_)."\n$$ref\n\n";
 }
 
 1;
