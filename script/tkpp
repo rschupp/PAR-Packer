@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 #===============================================================================
 # $Author    : Djibril Ousmanou (DJIBEL) and Doug Gruber (DOUGTHUG)            $
-# $Copyright : 2011                                                            $
-# $Update    : 19/07/2011 17:04:18                                             $
+# $Copyright : 2012                                                            $
+# $Update    : 09/04/2012 21:16:00                                             $
 # $AIM       : GUI to use easily Tkpp                                          $
 #===============================================================================
 use Carp;
@@ -49,6 +49,7 @@ use File::Spec;
 use File::Basename;
 use File::Temp qw/ tempfile tempdir /;
 use Tk;
+use Tk::Adjuster;
 use Tk::Checkbutton;
 use Tk::Dialog;
 use Tk::LabFrame;
@@ -58,7 +59,7 @@ use Tk::TextUndo;
 use Time::HiRes qw ( sleep );
 
 use vars qw($VERSION);
-$VERSION = '1.2';
+$VERSION = '1.3';
 $OUTPUT_AUTOFLUSH++;
 
 # We need to work in read/write because on some Windows vista system,
@@ -636,16 +637,16 @@ sub load_pp_configuration {
 
   $add_files_rep_listbox->delete( '1.0', 'end' );
   if ( my $addfile = $ref_options_pp->{'addfile'} ) {
-    foreach ( split /;/, $addfile ) { $add_files_rep_listbox->insert( 'end', "$_\n" ); }
+    foreach ( split /;/, $addfile ) { $add_files_rep_listbox->insert( 'end', $_ ); }
   }
   if ( my $addlink = $ref_options_pp->{'link'} ) {
-    foreach ( split /;/, $addlink ) { $add_files_rep_listbox->insert( 'end', "$_\n" ); }
+    foreach ( split /;/, $addlink ) { $add_files_rep_listbox->insert( 'end', $_ ); }
   }
   if ( my $addlist = $ref_options_pp->{'addlist'} ) {
-    foreach ( split /;/, $addlist ) { $add_files_rep_listbox->insert( 'end', "$_\n" ); }
+    foreach ( split /;/, $addlist ) { $add_files_rep_listbox->insert( 'end', $_ ); }
   }
   if ( my $addlib = $ref_options_pp->{'lib'} ) {
-    foreach ( split /;/, $addlib ) { $add_files_rep_listbox->insert( 'end', "$_\n" ); }
+    foreach ( split /;/, $addlib ) { $add_files_rep_listbox->insert( 'end', $_ ); }
   }
 
   if ( not defined $default ) { print_ok('configuration file loaded'); }
@@ -932,8 +933,8 @@ sub display_size_notebook {
     -text    => 'Add Files',
     -tooltip => $options_pp{'--addfile'}{-commentfile},
     -command => sub {
-      foreach my $file ( get_file( $labframe_filereplib, undef, 1 ) ) {
-        $add_files_rep_listbox->insert( 'end', "f: $file\n" );
+      if ( my $file = select_addfile( $labframe_filereplib, 'file' ) ) { 
+        $add_files_rep_listbox->insert( 'end', "f: $file" ); 
       }
     },
   );
@@ -941,7 +942,9 @@ sub display_size_notebook {
     -text    => 'Add Directories',
     -tooltip => $options_pp{'--addfile'}{-commentdir},
     -command => sub {
-      if ( my $dir = get_dir($labframe_filereplib) ) { $add_files_rep_listbox->insert( 'end', "d: $dir\n" ); }
+      if ( my $dir = select_addfile($labframe_filereplib, 'dir') ) { 
+        $add_files_rep_listbox->insert( 'end', "d: $dir" ); 
+      }
     },
   );
   my $button_addlist = $labframe_filereplib->ColoredButton(
@@ -949,7 +952,7 @@ sub display_size_notebook {
     -tooltip => $options_pp{'--addlist'}{-comment},
     -command => sub {
       if ( my $dir = get_file($labframe_filereplib) ) {
-        $add_files_rep_listbox->insert( 'end', "s: $dir\n" );
+        $add_files_rep_listbox->insert( 'end', "s: $dir" );
       }
     },
   );
@@ -960,7 +963,7 @@ sub display_size_notebook {
       foreach
         my $lib_file ( get_file( $labframe_filereplib, [ 'Shared Library Files', [ '.so', '.dll' ] ], 1 ) )
       {
-        $add_files_rep_listbox->insert( 'end', "l: $lib_file\n" );
+        $add_files_rep_listbox->insert( 'end', "l: $lib_file" );
       }
     },
   );
@@ -969,7 +972,7 @@ sub display_size_notebook {
     -text    => 'Add Directories',
     -tooltip => $options_pp{'--lib'}{-comment},
     -command => sub {
-      if ( my $dir = get_dir($labframe_filereplib) ) { $add_files_rep_listbox->insert( 'end', "p: $dir\n" ); }
+      if ( my $dir = get_dir($labframe_filereplib) ) { $add_files_rep_listbox->insert( 'end', "p: $dir" ); }
     },
   );
 
@@ -1038,7 +1041,9 @@ sub display_output_notebook {
     -font       => '{Arial} 10',
     -background => 'white',
   );
-
+  
+  my $adjuster_output = $output_notebook->Adjuster();
+  
   my $label_output = $output_notebook->Label(
     -text   => 'Output : ',
     -anchor => 'w',
@@ -1062,6 +1067,7 @@ sub display_output_notebook {
 
   $label_commandline->pack(qw/ -fill x -expand 0 -side top /);
   $output_command_widget->pack(qw/ -fill x -expand 0 -side top /);
+  $adjuster_output->packAfter( $output_command_widget );
   $label_output->pack(qw/ -fill x -expand 0 -side top /);
   $output_stderr_widget->pack(qw/ -fill both -expand 1/);
 
@@ -1247,6 +1253,130 @@ sub display_general_notebook {
   $labframe_general->pack(qw/-fill none -expand 0 -side top -pady 2/);
 
   return;
+}
+
+sub select_addfile {
+  my ($widget, $type) = @_;
+
+  # Select file or directory
+  my $file_dir = ($type eq 'file') ? get_file($widget) : get_dir($widget);
+  my $addfile = $file_dir;
+  my $option  = "--addfile=\"$addfile\"";
+  
+  return if ( not defined $file_dir );
+  
+  # Construction of -addfile option
+  # Ask (maybe ;new_name_file_directory)
+  my $widget_addfile = $widget->Toplevel( -title => '--addfile option', );
+  my $ok;
+  $widget_addfile->protocol( 'WM_DELETE_WINDOW', sub { $ok = 1; } );
+  $widget_addfile->minsize(400, 300);
+  
+  my $explanation = <<'ADDFILE';
+By default, files are placed under / inside the package with their original 
+names. You may override this by appending the target filename after a ;, like this:
+
+    % pp -a "old_filename.txt;new_filename.txt"
+    % pp -a "old_dirname;new_dirname"
+ADDFILE
+
+  my $label_explanation = $widget_addfile->Label( 
+    -text => $explanation,
+    -font => '{Arial} 10',
+    -justify => 'left',
+ );
+  my $label_filedir = $widget_addfile->Label( 
+    -text => 'File/Dir :',
+    -font => '{Arial} 10',
+ );
+  my $label_newfiledir = $widget_addfile->Label( 
+    -text => 'New File/Dir :', 
+    -font => '{Arial} 10',
+);
+
+  my $entry_filedir = $widget_addfile->Entry(
+    -background => 'white',
+    -width      => 50,
+    -validate   => 'key',
+  );
+  $entry_filedir->insert('1.0', $file_dir);
+  
+  my $entry_newfiledir = $widget_addfile->Entry(
+    -background => 'white',
+    -width      => 50,
+    -validate   => 'key',
+  );
+
+  $entry_filedir->configure(
+    -validatecommand => sub {
+      my ($value, $char, $last_value, $type_insertion) = @_;
+      
+      my $newfiledir = $entry_newfiledir->get();
+      if ( $value =~ m/^\s*$/ ) {
+        $addfile = '';
+        $option  = '--addfile=""';      
+      }
+      elsif ( defined $newfiledir and $newfiledir !~ m/^\s*$/ ) {
+        $addfile = $value . ';' . $newfiledir;
+        $option  = '--addfile="' . $addfile . '"';      
+      }
+      else {
+        $addfile = $value; 
+        $option  = '--addfile="' . $addfile . '"';      
+      }      
+    }    
+  );
+  
+  $entry_newfiledir->configure(
+    -validatecommand => sub {
+      my ($value, $char, $last_value, $type_insertion) = @_;
+      
+      my $filedir = $entry_filedir->get();
+      if ( defined $filedir and $filedir !~ m/^\s*$/ and $value !~ m/^\s*$/ ) {
+        $addfile = $filedir . ';' . $value; 
+        $option = '-addfile="' . $filedir . ";$value" . '"';      
+      }
+      elsif ( $value =~ m/^\s*$/ ) {
+        $addfile = $filedir; 
+        $option = '-addfile="' . $filedir . '"';      
+      }
+      else {
+        $addfile = '';
+        $option = '-addfile=""';      
+      }      
+    }    
+  );
+  
+  # To see addfile configuration
+  my $label_addfile = $widget_addfile->Label( 
+    -textvariable => \$option,  
+    -font => '{Arial} 10',
+    -wraplength => 400,
+  );
+
+  # To see addfile configuration
+  my $valid_button = $widget_addfile->ColoredButton(
+    -text    => 'Validation',
+    -autofit => 1,
+    -font    => '{Arial} 12 bold',
+    -command => sub { $ok = 1; },
+  );
+  $label_explanation->grid( qw/ -row 0 -columnspan 2 -padx 5 -pady 5 /);
+  $label_filedir->grid( qw/ -row 1 -column 0 -sticky w -padx 10 -pady 2 /);
+  $entry_filedir->grid( qw/ -row 1 -column 1 -sticky we -padx 10 -pady 2 /);
+  $label_newfiledir->grid( qw/ -row 2 -column 0 -sticky w -padx 10 -pady 2 /);
+  $entry_newfiledir->grid( qw/ -row 2 -column 1 -sticky we -padx 10 -pady 2 /);
+  $label_addfile->grid( qw/ -row 3 -columnspan 2 -sticky nswe -padx 10 -pady 2 /);
+  $valid_button->grid( qw/ -row 4 -columnspan 2 -pady 10 /);
+  
+  center_widget($widget_addfile);
+  $widget_addfile->grab;
+  $widget_addfile->focusForce;
+  $widget_addfile->waitVariable(\$ok);
+  $widget_addfile->destroy;
+  
+  return if (not defined $addfile or $addfile =~ m/^\s*$/ );
+  return $addfile;
 }
 
 # get_dir($widget);
