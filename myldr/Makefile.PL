@@ -262,7 +262,7 @@ WriteMakefile(
     PL_FILES    => {},
     PM          => { map { $_ => File::Spec->catfile('$(INST_LIBDIR)', qw( PAR StrippedPARL ), $_) }
                      @strippedparl },
-    MAN3PODS    => {},
+    MAN1PODS    => {},
     EXE_FILES   => \@parl_exes,
     macro       => { FIXIN => '$(NOOP)' },
 );
