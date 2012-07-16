@@ -114,11 +114,12 @@ if( $cc =~ m/^cl\b/i ) {
     $ccdebug = $debug ? '-g ' : '';
     $lddebug = ($debug or $^O eq 'darwin') ? '' : '-s ';
     $warn = $debug ? '-Wall -Wno-comments ' : '';
-    if( $^O =~ /^(?:MSWin|cygwin)/ ) {
+    if ( $^O =~ /^(?:MSWin|cygwin)/ ) {
+        my $target = $Config{archname} =~ /x64/ ? 'pe-x86-64' : 'pe-i386';
         $res = 'ppresource.coff';
-        $pre_res = qq(winres\\pp.res);
-        $rt_cmd = qq(windres -F pei-i386 -i winres\\pp.rc -o $pre_res);
-        $res_cmd = qq(windres -o ppresource.coff $pre_res);
+        $pre_res = qq(winres\\pp.rc);
+        $rt_cmd = '-$(NOOP)';
+        $res_cmd = qq(windres -i winres\\pp.rc -o ppresource.coff --input-format=rc --output-format=coff --target=$target);
         $res_section = $res;
     }
     $mt_cmd = '-$(NOOP)';
