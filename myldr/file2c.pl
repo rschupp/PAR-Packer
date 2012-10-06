@@ -10,99 +10,89 @@ use FindBin;
 use lib "$FindBin::Bin/../lib";
 use File::Basename;
 use Getopt::Long;
-use PAR::Filter::PodStrip;
 use IO::Compress::Gzip qw(gzip $GzipError);
 
-my $chunk_size = 0;
-my $strip_pod = 0;
+my $chunk_size = 30000;
 my $compress = 0;
 my $name;
 
 GetOptions(
     "c|chunk-size=i"    => \$chunk_size,
-    "s|strip"           => \$strip_pod,
-    "z|compress"        => \$compress,
-    "n|name=s"          => \$name)
-    && @ARGV == 3
-        or die "Usage: $0 [-c CHUNK][-n NAME][-s][-z] file.pl file.c c_variable\n";
-my ($pl_file, $c_file, $c_var) = @ARGV;
-$name = basename($pl_file) unless defined $name;
+    "z|compress"        => \$compress)
+    && @ARGV > 0
+        or die "Usage: $0 [-c CHUNK][-z] bin_file... > file.c\n";
 
-my $pl_text = do           # a scalar reference
+binmode STDOUT;
+
+my $i = 0;
+my @embedded_files = map { process($i++, $_) } @ARGV;
+
+print "embedded_file_t embedded_files[] = {\n";
+print "  { \"$_->{name}\", $_->{size}, $_->{chunks} },\n" foreach @embedded_files;
+print "  { NULL, 0, NULL }\n};";
+           
+exit 0;
+
+
+sub process
 {
-    open my $in, "<", $pl_file or die "open input file '$pl_file': $!";
-    binmode $in;
-    local $/ = undef;
-    my $slurp = <$in>;
-    close $in;
-    \$slurp;
-};
+    my ($i, $path) = @_;
 
-PAR::Filter::PodStrip->new->apply($pl_text) if $strip_pod;
+    my $bin = do           # a scalar reference
+    {
+        open my $in, "<", $path or die "open input file '$path': $!";
+        binmode $in;
+        local $/ = undef;
+        my $slurp = <$in>;
+        close $in;
+        \$slurp;
+    };
 
-if ($compress)
-{
-    my $gzipped;
-    my $status = gzip($pl_text, \$gzipped)
-        or die "gzip failed: $GzipError\n";
-    $pl_text = \$gzipped;
-}
 
-open my $out, ">", $c_file or die "open output file '$c_file': $!";
-binmode $out;
+    if ($compress)
+    {
+        my $gzipped;
+        my $status = gzip($bin, \$gzipped)
+            or die "gzip failed: $GzipError\n";
+        $bin = \$gzipped;
+    }
 
-my $len = length $$pl_text;
-
-print $out <<"...";
-#define name_${c_var} "$name"
-#define is_compressed_${c_var} $compress
-...
-
-if ($chunk_size) 
-{
+    my $len = length $$bin;
     my $chunk_count = int(( $len + $chunk_size - 1 ) / $chunk_size);
 
-    for (my $i = 0; $i < $chunk_count; $i++) {
-	print_chunk( substr($$pl_text, $i * $chunk_size, $chunk_size), "_$i" );
-    }
+    my @chunks;
+    for (my $j = 0; $j < $chunk_count; $j++) {
+        push @chunks, { 
+               buf => "chunk_${i}_${j}",
+               len => print_chunk( substr($$bin, $j * $chunk_size, $chunk_size), "chunk_${i}_${j}" ),
+        };
+    } 
 
-    print $out <<"...";
-#define size_${c_var} $len
-static my_chunk chunks_${c_var}[] = {
-...
-    for (my $i = 0; $i < $chunk_count; $i++) {
-        print $out " { size_${c_var}_${i}, chunk_${c_var}_${i} },\n";
-    }
-    print $out " { 0, NULL }\n", "};\n";
+    print "static chunk_t chunks_${i}[] = {\n";
+    print "  { $_->{len}, $_->{buf} },\n" foreach @chunks;
+    print "  { 0, NULL } };\n\n";
+
+    return 
+    {
+        name    => basename($path),
+        size    => -s $path,
+        chunks  => "chunks_${i}",
+    };
 }
-else
-{
-    # add a NUL byte so that chunk_${c_var} may be used as C string
-    $$pl_text .= "\0";
-    print_chunk( $$pl_text, "" );    
-}
-
-close $out;
-
-exit 0;
 
 
 sub print_chunk 
 {
-    my ($chunk, $suffix) = @_;
+    my ($chunk, $name) = @_;
 
     my $len = length($chunk);
-    print $out <<"...";
-#define size_${c_var}${suffix} $len
-static unsigned char chunk_${c_var}${suffix}[] = {
-...
-
+    print "static unsigned char ${name}[] = {\n";
     for (my $i = 0; $i < $len; $i++) {
-        printf $out "0x%02x,", ord(substr($chunk, $i, 1));
-        print $out "\n" if $i % 16 == 15;
+        printf "0x%02x,", ord(substr($chunk, $i, 1));
+        print "\n" if $i % 16 == 15;
     }
-
-    print $out "};\n";
+    print "};\n";
+    return $len;
 }
 
 # local variables:

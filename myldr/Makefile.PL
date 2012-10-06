@@ -229,12 +229,9 @@ if ($dynperl and $^O eq 'MSWin32'
 }
 $libgcc ||= "";
 
-my $my_stuff = "my_par.c my_libperl.c";
-if ($libgcc) {
-    $cflags .= " -DLOAD_MY_LIBGCC";
-    $my_stuff .= " my_libgcc.c";
-}
-
+my @embedded_files = ($par_exe);       # must come first
+push @embedded_files, $libperl;
+push @embedded_files, $libgcc if $libgcc;
 
 my @strippedparl = qw( Static.pm );
 push @strippedparl, qw( Dynamic.pm ) if $dynperl;
@@ -297,7 +294,7 @@ $res_section:
 	$res_cmd
 
 clean::
-	-\$(RM_F) my_*.c
+	-\$(RM_F) boot_embedded_files.c my_par_pl.c
 	-\$(RM_F) main$o boot$o $res $pre_res
 	-\$(RM_F) sha1.c
 	-\$(RM_F) *.opt *.pdb perlxsi.c
@@ -309,7 +306,7 @@ $par_exe: \$(OBJECTS)
 	$mt_cmd
 
 my_par_pl.c: $par_pl
-	\$(PERLRUN) $f2c -s $par_pl \$@ load_my_par_pl
+	\$(PERLRUN) par_pl2c.pl my_par_pl < $par_pl > \$@ 
 
 $parl_exe: $par
 	\$(PERLRUN) -Mblib run_with_inc.pl $par -q -B -O\$@
@@ -336,20 +333,14 @@ pure_all:: $parldyn_exe Dynamic.pm
 $parldyn_exe: $par_exe
 	\$(PERLRUN) -Mblib run_with_inc.pl $par_exe -q -B -O\$@
 
-boot$o: \$(MKTMP_STUFF) $my_stuff
+boot$o: \$(MKTMP_STUFF) boot_embedded_files.c
 
 $boot_exe: boot$o
 	\$(LD) boot$o $boot_ldflags $res $out$boot_exe_link
 	$mt_cmd
 
-my_par.c: $par_exe
-	\$(PERLRUN) $f2c -c $chunk_size $par_exe \$@ load_my_par
-
-my_libperl.c:
-	\$(PERLRUN) $f2c -c $chunk_size -n $extract_libperl_as $libperl \$@ load_my_libperl
-
-my_libgcc.c:
-	\$(PERLRUN) $f2c -c $chunk_size $libgcc \$@ load_my_libgcc
+boot_embedded_files.c: $par_exe
+	\$(PERLRUN) $f2c -c $chunk_size @embedded_files > \$@
 
 Dynamic.pm: Dynamic.in $par_exe
 	\$(PERLRUN) encode_append.pl Dynamic.in $par_exe Dynamic.pm

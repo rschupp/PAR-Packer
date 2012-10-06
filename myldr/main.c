@@ -118,7 +118,7 @@ int main ( int argc, char **argv, char **env )
 #endif
 
     fakeargv[argno++] = "-e";
-    fakeargv[argno++] = chunk_load_my_par_pl;
+    fakeargv[argno++] = my_par_pl;
 
 #ifndef ALLOW_PERL_OPTIONS
     fakeargv[argno++] = "--";

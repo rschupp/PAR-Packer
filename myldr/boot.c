@@ -7,55 +7,55 @@
 #include <unistd.h>
 #endif
 
-typedef struct my_chunk
-{
-    int len;
-    unsigned char *buf;
-} my_chunk;
-
-/* returns 0 if OK, -1 if error */
-static 
-int write_chunks(int fd, my_chunk *chunks) {
-    while (chunks->len) {
-	if ( write(fd, chunks->buf, chunks->len) != chunks->len )
-	    return -1;
-	chunks++;
-    }
-    return 0;
-}
-
 #include "mktmpdir.c"
-#include "my_par.c"
-#include "my_libperl.c"
-#ifdef LOAD_MY_LIBGCC
-#include "my_libgcc.c"
-#endif
 
-/* Note: these two defines must be negative so as not to collide with 
- * any real file descriptor */
-#define MKFILE_ERROR          (-1)
-#define MKFILE_ALREADY_EXISTS (-2)
+typedef struct
+{
+    size_t len;
+    unsigned char *buf;
+} chunk_t;
+
+
+typedef struct
+{
+    const char *name;
+    size_t size;
+    chunk_t *chunks;
+} embedded_file_t;
+
+#include "boot_embedded_files.c"
+
 
 static 
-int my_mkfile (char* argv0, char* stmpdir, const char* name, off_t expected_size, char** file_p) {
-    int i;
-    struct stat statbuf;
+int extract_embedded_file(embedded_file_t *emb_file, const char* ext_name, const char* stmpdir, char** ext_path) {
+    int fd;
+    chunk_t *chunk;
 
-    *file_p = malloc(strlen(stmpdir) + 1 + strlen(name) + 1);
-    sprintf(*file_p, "%s/%s", stmpdir, name);
+    *ext_path = malloc(strlen(stmpdir) + 1 + strlen(ext_name) + 1);
+    sprintf(*ext_path, "%s/%s", stmpdir, ext_name);
 
+    fd = open(*ext_path, O_CREAT | O_EXCL | O_WRONLY | OPEN_O_BINARY, 0755);
+    if ( fd == -1 ) {
+        struct stat statbuf;
+        if ( errno == EEXIST 
+             && par_lstat(*ext_path, &statbuf) == 0 
+             && statbuf.st_size == emb_file->size )
+            return 1;           /* file already exists and has the expected size */
+        return 0;
+    }
 
-    i = open(*file_p, O_CREAT | O_EXCL | O_WRONLY | OPEN_O_BINARY, 0755);
-    if ( i != -1 ) 
-        return i;
+    chunk = emb_file->chunks;
+    while (chunk->len) {
+        if ( write(fd, chunk->buf, chunk->len) != chunk->len ) {
+            return 0;
+        }
+        chunk++;
+    }
+    if (close(fd) == -1)
+        return 0;
 
-    if ( errno == EEXIST 
-         && par_lstat(*file_p, &statbuf) == 0 
-         && statbuf.st_size == expected_size )
-	return MKFILE_ALREADY_EXISTS;
-
-    fprintf(stderr, "%s: creation of %s failed (errno=%i)\n", argv0, *file_p, errno);
-    return MKFILE_ERROR;
+    chmod(*ext_path, 0755);
+    return 1;
 }
 
 
@@ -102,6 +102,7 @@ int main ( int argc, char **argv, char **env )
 {
     int i;
     char *stmpdir;
+    embedded_file_t *emb_file;
     char *my_file;
     char *my_perl;
     char *my_prog;
@@ -124,19 +125,19 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
 
     i = my_mkdir(stmpdir, 0700);
     if ( i == -1 && errno != EEXIST) {
-	fprintf(stderr, "%s: creation of private cache subdirectory %s failed (errno= %i)\n", argv[0], stmpdir, errno);
+	fprintf(stderr, "%s: creation of private cache subdirectory %s failed (errno= %i)\n", 
+                        argv[0], stmpdir, errno);
  	DIE;
     }
 
-    /* extract custom Perl interpreter into stmpdir 
-       (but under the same basename as argv[0]) */
+    /* extract embedded_files[0] (i.e. the custom Perl interpreter) 
+     * into stmpdir (but under the same basename as argv[0]) */
     my_prog = par_findprog(argv[0], strdup(par_getenv("PATH")));
-    i = my_mkfile( argv[0], stmpdir, par_basename(my_prog), size_load_my_par, &my_perl );
-    if ( i != MKFILE_ALREADY_EXISTS ) {
-        if ( i == MKFILE_ERROR ) DIE;
-        if ( write_chunks(i, chunks_load_my_par) == -1 ) DIE;
-        if ( close(i) == -1 ) DIE;
-        chmod(my_perl, 0755);
+    if (!extract_embedded_file(embedded_files, par_basename(my_prog), stmpdir, &my_perl)) {
+        fprintf(stderr, "%s: extraction of %s (custom Perl interpreter) failed (errno=%i)\n", 
+                            argv[0], my_perl, errno);
+        DIE;
+    }
 
 #ifdef __hpux
         {
@@ -167,28 +168,17 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
             close(fd);                  // CHECK != -1
         }
 #endif
-    }
 
-    /* extract libperl DLL into stmpdir */
-    i = my_mkfile( argv[0], stmpdir, name_load_my_libperl, size_load_my_libperl, &my_file );
-    if ( i != MKFILE_ALREADY_EXISTS ) {
-        if ( i == MKFILE_ERROR ) DIE;
-        if ( write_chunks(i, chunks_load_my_libperl) == -1 ) DIE;
-        if ( close(i) == -1 ) DIE;
-        chmod(my_file, 0755);
+    /* extract the rest of embedded_files into stmpdir */
+    emb_file = embedded_files + 1;
+    while (emb_file->name) {
+        if (!extract_embedded_file(emb_file, emb_file->name, stmpdir, &my_file)) {
+            fprintf(stderr, "%s: extraction of %s failed (errno=%i)\n", 
+                                argv[0], my_file, errno);
+            DIE;
+        }
+        emb_file++;
     }
-
-#ifdef LOAD_MY_LIBGCC
-    /* extract libgcc DLL into stmpdir */
-    i = my_mkfile( argv[0], stmpdir, name_load_my_libgcc, size_load_my_libgcc, &my_file );
-    if ( i != MKFILE_ALREADY_EXISTS ) {
-        if ( i == MKFILE_ERROR ) DIE;
-        if ( write_chunks(i, chunks_load_my_libgcc) == -1 ) DIE;
-        if ( close(i) == -1 ) DIE;
-        chmod(my_file, 0755);
-    }
-
-#endif
 
     /* save original argv[] into environment variables PAR_ARGV_# */
     sprintf(buf, "%i", argc);
