@@ -295,7 +295,7 @@ $res_section:
 
 clean::
 	-\$(RM_F) boot_embedded_files.c my_par_pl.c
-	-\$(RM_F) main$o boot$o $res $pre_res
+	-\$(RM_F) main$o boot$o $res
 	-\$(RM_F) sha1.c
 	-\$(RM_F) *.opt *.pdb perlxsi.c
 	-\$(RM_F) usernamefrompwuid.h
