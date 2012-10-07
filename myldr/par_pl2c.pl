@@ -1,15 +1,12 @@
 use strict;
 use warnings;
 
+use blib;               # PAR::Filter::Podstrip might not be installed yet
 use PAR::Filter::PodStrip;
 
 my ($var) = @ARGV;
 
-my $slurp;
-{
-    local $/ = undef;
-    $slurp = <STDIN>;
-};
+my $slurp = do { local $/ = undef; <STDIN> };
 
 PAR::Filter::PodStrip->new->apply(\$slurp);
 
