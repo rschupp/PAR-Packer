@@ -787,7 +787,7 @@ sub _set_par_temp {
         }
         $username =~ s/\W/_/g;
 
-        my $stmpdir = "$path$Config{_delim}par-$username";
+        my $stmpdir = "$path$Config{_delim}par-".unpack("H*", $username);
         mkdir $stmpdir, 0755;
         if (!$ENV{PAR_CLEAN} and my $mtime = (stat($progname))[9]) {
             open (my $fh, "<". $progname);

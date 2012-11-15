@@ -283,7 +283,7 @@ sub find_par_temp_base {
             ? &Win32::LoginName()
             : $ENV{USERNAME} || $ENV{USER} || 'SYSTEM';
 
-        $stmpdir = File::Spec->catdir($path, "par-$username");
+        $stmpdir = File::Spec->catdir($path, "par-".unpack("H*", $username));
         last;
     }
     print ("fptb_msg062: stmpdir is $stmpdir\n") if $verbose;
