@@ -1110,9 +1110,8 @@ sub pp_minus_p_minus_o_out_dot_par_file {
   #  . system pp -p -o out.par file
   #  . pipe './par out.par' and collect the results.  It should
   #    be "hello".
-  #  . pipe './par out' and collect the results.  It should be "hello".
   #
-  # Success if "hello" was collected both times.  Failure otherwise
+  # Success if "hello" was collected.  Failure otherwise
   #--------------------------------------------------------------------
 
   my $error = EXIT_FAILURE;
@@ -1167,28 +1166,6 @@ sub pp_minus_p_minus_o_out_dot_par_file {
     return ($error);
   }
 
-  #.................................................................
-
-  $pipe_command_string = "$perl \"$par\" out";
-  $error = pipe_a_command
-                         (
-                           $test_number,
-                           $sub_test++,
-                           $test_name_string,
-                           $test_dir,
-                           $pipe_command_string,
-                           "", # Don't let sub try to chmod  +x anything.
-                           "hello",
-                           $os,
-                           $verbose,
-                           $message_ref,
-                           $print_cannot_locate_message,
-                        );
-
-  if ($error == EXIT_FAILURE) {
-    $$message_ref =
-      $$message_ref . "\nDid $cmd produce out.par?\n";
-  }
   return ($error);
   #.................................................................
 
@@ -1247,7 +1224,6 @@ sub pp_minus_B_with_small_minus_p_tests {
   #  . system pp -p -o out_par.par hello.pl
   #    This creates out.par
   #  . pipe  './par out_par.par', './par out_par_B.par'
-  #               './par out_par',     './par out_par_B'
   #
   # After all of the above, success if "hello" was collected each time.
   # Failure otherwise.
@@ -1320,30 +1296,6 @@ sub pp_minus_B_with_small_minus_p_tests {
     return ($error);
   }
   #.................................................................
-
-  $pipe_command_string = "$perl \"$par\" out_par";
-  $error = pipe_a_command
-                         (
-                           $test_number,
-                           $sub_test++,
-                           $test_name_string,
-                           $test_dir,
-                           $pipe_command_string,
-                           "",  # Don't let sub try to chmod  +x anything.
-                           "hello",
-                           $os,
-                           $verbose,
-                           $message_ref,
-                           $print_cannot_locate_message,
-                        );
-
-  if ($error == EXIT_FAILURE) {
-    $$message_ref =
-      $$message_ref . "\nDid $cmd produce out_par.par?\n";
-    return ($error);
-  }
-
-  #.................................................................
   $cmd = 'pp -B -p -o out_par_B.par ' . "\"$hello_pl_file\"";
   if (system("$cmd")) {
     $$message_ref = "\namsg118: sub $test_name_string cannot system $cmd\n";
@@ -1374,29 +1326,6 @@ sub pp_minus_B_with_small_minus_p_tests {
     $$message_ref =
       $$message_ref . "\nDid $cmd produce out_par_B.par?\n";
     return ($error);
-  }
-
-  #.................................................................
-
-  $pipe_command_string = "$perl \"$par\" out_par_B";
-  $error = pipe_a_command
-                         (
-                           $test_number,
-                           $sub_test++,
-                           $test_name_string,
-                           $test_dir,
-                           $pipe_command_string,
-                           "",  # Don't let sub try to chmod  +x anything.
-                           "hello",
-                           $os,
-                           $verbose,
-                           $message_ref,
-                           $print_cannot_locate_message,
-                        );
-
-  if ($error == EXIT_FAILURE) {
-    $$message_ref =
-      $$message_ref . "\nDid $cmd produce out_par_B.par?\n";
   }
 
   return ($error);
@@ -1662,9 +1591,8 @@ sub pp_minus_p_minus_e_print_hello {
   # -------
   # system pp -p -e "print \"hello\n\";"
   # pipe 'par a.par' and collect the results
-  # pipe 'par a' and collect the results
   #
-  # Success if "hello" was collected each time.  Failure otherwise.
+  # Success if "hello" was collected.  Failure otherwise.
   #--------------------------------------------------------------------
 
   my $error = EXIT_FAILURE;
@@ -1714,24 +1642,6 @@ sub pp_minus_p_minus_e_print_hello {
       $$message_ref . "\nDid $cmd produce a.par?\n";
     return ($error);
   }
-
-  #.................................................................
-
-  $pipe_command_string = "$perl \"$par\" a";
-  $error = pipe_a_command
-                         (
-                           $test_number,
-                           $sub_test++,
-                           $test_name_string,
-                           $test_dir,
-                           $pipe_command_string,
-                           "",
-                           "hello",
-                           $os,
-                           $verbose,
-                           $message_ref,
-                           $print_cannot_locate_message,
-                        );
 
   if ($error == EXIT_FAILURE) {
     $$message_ref =
