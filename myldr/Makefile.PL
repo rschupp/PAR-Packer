@@ -210,28 +210,40 @@ my $par = (($dynperl && $^O ne 'os2') ? $boot_exe : $par_exe);
 
 
 # If on Windows and Perl was built with GCC 4.x, then libperl*.dll
-# may depend on some libgcc*.dll (Strawberry Perl 5.12 is an example).
-# This libgcc*.dll has to be included into with any packed executbale 
+# may depend on some libgcc_*.dll (e.g. Strawberry Perl 5.12).
+# This libgcc_*.dll has to be included into with any packed executable 
 # in the same way as libperl*.dll itself, otherwise a packed executable
-# won't run when libgcc*.dll isn't installed.
-my $libgcc;
-if ($dynperl and $^O eq 'MSWin32'
-    and defined $Config{gccversion}     # gcc version 4.x or above was used
-    and $Config{gccversion} =~ m{\A(\d+)}ms && $1 >= 4) {
-    # look for a libgcc_*.dll 
+# won't run when libgcc_*.dll isn't installed.
+# The same holds for libstdc++*.dll (e.g. Strawberry Perl 5.16).
+
+sub find_dll
+{
+    my ($dll_glob) = @_;
+
+    # look for $dll_glob
     # - in the same directory as the perl executable itself
     # - in the same directory as gcc (only useful if it's an absolute path)
     # - in PATH
-    ($libgcc) = map { glob(File::Spec->catfile($_, "libgcc_*.$Config{so}")) }
-                    File::Basename::dirname($^X),
-                    File::Basename::dirname($cc),
-                    File::Spec->path;
+    my ($dll_path) = map { glob(File::Spec->catfile($_, $dll_glob)) }
+                         File::Basename::dirname($^X),
+                         File::Basename::dirname($cc),
+                         File::Spec->path;
+    return $dll_path;
 }
-$libgcc ||= "";
+
+
+my ($libgcc, $libstdcpp);
+if ($dynperl and $^O eq 'MSWin32'
+    and defined $Config{gccversion}     # gcc version 4.x or above was used
+    and $Config{gccversion} =~ m{\A(\d+)}ms && $1 >= 4) {
+    $libgcc = find_dll("libgcc_*.$Config{so}");
+    $libstdcpp = find_dll("libstdc++*.$Config{so}");
+}
 
 my @embedded_files = ($par_exe);       # must come first
 push @embedded_files, $libperl;
-push @embedded_files, $libgcc if $libgcc;
+push @embedded_files, $libgcc if defined $libgcc;
+push @embedded_files, $libstdcpp if defined $libstdcpp;
 
 my @strippedparl = qw( Static.pm );
 push @strippedparl, qw( Dynamic.pm ) if $dynperl;
