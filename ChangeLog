@@ -1,3 +1,48 @@
+[Changes for 1.014 - Dec 21, 2012]
+
+* tkpp 1.3 : --addfile option in GUI updated : 
+  - now it is possible to set a new filename or dirname in package 
+    using (old;new).
+
+* Bug fixes, etc.
+
+    - RT #75636: PAR::Packer Windows installation error (and suggested fix)
+      - apply PAR-Packer-1.013_V2.diff from above bug report
+
+    - Some versions of GCC link myldr/boot.exe with libgcc*.dll;
+      this renders any packed executable non-portable to machines
+      that don't have (this version of) libgcc*.dll installed
+      (problem reported by chandrashekaran_kannan@hotmail.com);
+      to fix add '-static-libgcc' to the command for linking 
+      boot.exe (when using the GCC toolchain)
+    - This also uncovered the following problem:
+      on some platforms (e.g. ActiveState + MingW) ldopts()
+      may contain a spurious trailing newline; 
+      chomp ldopts() and ccopts() for sanity
+
+    - Recent versions od Strawberry perl (5.16.x) link their perl*.dll
+      against the MingW libstdc++*.dll - hence pack it, too
+      (same as libgcc_*.dll). Rewrite how we generate the C file(s)
+      containing the custom perl interpreter, libperl DLL, libgcc DLL etc
+      as large byte arrays and how we extract this stuff on bootstrap.
+
+    - Bump requirement for Module::ScanDeps to a version that can grok
+      Unicode::UCD from Perl 5.17 to avoid test failures
+
+    - PAR 1.007 caused several tests to fail (t/20-pp.t, tests 8-9, 12).
+      IMHO these are bogus (depend on unspecified behaviour) and previously 
+      succeeded only by accident; removed the offending sub tests
+
+    - RT #75750: PAR::Filter::Bleach is broken
+      - NOTE: original code works as intended due to the funny way 
+	pack 'b' is implemented, but apply patch just for sanity
+
+    - RT #78396: [manifypods] Error 255
+      - s/MAN3PODS/MAN1PODS/ as suggested
+
+    - Update to Module::Install 1.06
+
+------------------------------------------------------------------------
 [Changes for 1.013 - Feb 22, 2012]
 
 * New version of Tkpp (Version 1.2) (cf. RT #69517)
