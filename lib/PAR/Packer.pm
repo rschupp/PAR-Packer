@@ -49,8 +49,6 @@ use constant OPTIONS => {
     'X|exclude:s@'   => 'Exclude modules',
     'f|filter:s@'    => 'Input filters for scripts',
     'g|gui'          => 'No console window',
-    'i|icon:s'       => 'Icon file',
-    'N|info:s@'      => 'Executable header info',
     'I|lib:s@'       => 'Include directories (for perl)',
     'l|link:s@'      => 'Include additional shared libraries',
     'L|log:s'        => 'Where to log packaging process information',
@@ -811,22 +809,6 @@ sub pack_manifest_hash {
             $dep_manifest->{ $root . "lib/$pfile" } =
               [ string => $content_ref ];
         }
-        elsif (
-            File::Basename::basename($map{$pfile}) =~ /^Tk\.dll$/i and $opt->{i}
-            and eval { require Win32::Exe; 1 }
-            and eval { require Win32::Exe::IconFile; 1 }
-            and 0 # XXX - broken on larger icon files - XXX
-        ) {
-            my $tkdll = Win32::Exe->new($map{$pfile});
-            $tkdll = $tkdll->create_resource_section if !$tkdll->has_resource_section;
-            my $ico = Win32::Exe::IconFile->new($opt->{i});
-            $tkdll->set_icons(scalar $ico->icons);
-
-            $full_manifest->{ $root . "lib/$pfile" } =
-              [ string => $tkdll->dump ];
-            $dep_manifest->{ $root . "lib/$pfile" } =
-              [ string => $tkdll->dump ];
-        }
         else {
             $full_manifest->{ $root . "lib/$pfile" } =
               [ file => $map{$pfile} ];
@@ -1252,36 +1234,9 @@ sub _par_to_exe {
     if ($^O ne 'MSWin32' or $opt->{p} or $opt->{P}) {
         $self->_generate_output();
     }
-    elsif (!$opt->{N} and !$opt->{i}) {
+    else {
         $self->_generate_output();
         $self->_fix_console() if $opt->{g};
-    }
-    elsif (eval { require Win32::Exe; 1 }) {
-        # FIXME --info results in a corrupted executable
-        if ($opt->{N}) {
-            $self->_warn("--info is currently broken, disabling it");
-            delete $opt->{N};
-        }
-
-        $self->_move_parl();
-        my $exe = Win32::Exe->new($self->{parl});
-        $exe = $exe->create_resource_section if !$exe->has_resource_section;
-        $exe->update(
-            icon => $opt->{i},
-            info => $opt->{N},
-        );
-
-        $self->_append_parl();
-        $self->_generate_output();
-
-        $self->_fix_console();
-        unlink($self->{parl});
-        unlink($self->{orig_parl});
-        unlink("$self->{parl}.bak");
-        return;
-    }
-    else {
-        $self->_die("--icon and --info support needs Win32::Exe");
     }
 }
 

@@ -135,8 +135,8 @@ replaced by F<a.exe> instead.
     % pp hello --log=c          # Pack 'hello' into 'a.out', logs
                                 # messages into 'c'
 
-    # Pack 'hello' into a console-less 'out.exe' with icon (Win32 only)
-    % pp --gui --icon hello.ico -o out.exe hello
+    # Pack 'hello' into a console-less 'out.exe' (Win32 only)
+    % pp --gui -o out.exe hello
 
     % pp @file hello.pl         # Pack 'hello.pl' but read _additional_
                                 # options from file 'file'
@@ -275,25 +275,6 @@ ignored on non-MSWin32 platforms or when C<-p> is specified.
 =item B<-h>, B<--help>
 
 Show basic usage information.
-
-=item B<-i>, B<--icon>=I<FILE>
-
-Specify an icon file (in F<.ico>, F<.exe> or F<.dll> format) for the
-executable. This option is ignored on non-MSWin32 platforms or when C<-p>
-is specified.
-
-=item B<-N>, B<--info>=I<KEY=VAL>
-
-Add additional information for the packed file, both in C<META.yml>
-and in the executable header (if applicable).  The name/value pair is
-joined by C<=>.  You may specify C<-N> multiple times, or use C<;> to
-link several pairs.
-
-For Win32 executables, these special C<KEY> names are recognized:
-
-    Comments        CompanyName     FileDescription FileVersion
-    InternalName    LegalCopyright  LegalTrademarks OriginalFilename
-    ProductName     ProductVersion
 
 =item B<-I>, B<--lib>=I<DIR>
 

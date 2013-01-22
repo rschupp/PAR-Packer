@@ -5566,40 +5566,31 @@ sub pp_gui_tests {
      ) = @_;
 
   #--------------------------------------------------------------------
-  # Goal: Test of 'pp --gui --icon hi.ico -o hello.exe hello.pl'
+  # Goal: Test of 'pp --gui -o hello.exe hello.pl'
   # ----
-  #            The file hi.ico should already exist in the same
-  #            directory as the running program, so that it can
-  #            be copied to the test directory.  hello.pl is created.
   #
   # Outline
   # -------
   # . Create the file hello.pl with code that will print "hello".
-  # . Assume the icon hi.ico already exists.
   # . Build the out.exe with
-  #     pp --gui --icon hi.ico -o out.exe hello.pl
-  # . Test the out.exe for gui and icon. We can use Win32::Exe
-  #   itself to inspect the GUI and icon status of the resulting
+  #     pp --gui -o out.exe hello.pl
+  # . Test the out.exe for gui. We can use Win32::Exe
+  #   itself to inspect the GUI of the resulting
   #   exe, so the snippet below should do:
   # 
   #   my $exe = Win32::Exe->new('out.exe');
-  #   my $ico = Win32::Exe->new('hi.ico');
   #   is($exe->Subsystem, 'windows');
-  #   is($exe->dump_iconfile, $ico->dump_iconfile);
   # Success if true in both cases, failure otherwise.  # 
   # 
   # 
   #--------------------------------------------------------------------
   my $error = EXIT_FAILURE;
-  my $cmd = 'pp --gui --icon hi.ico -o ' . "$hello_executable $hello_pl_file";
+  my $cmd = 'pp --gui -o ' . "$hello_executable $hello_pl_file";
 
   my $sub_test = 0;
   my $file_to_copy = "";
   my $exe = "";
-  my $ico = "";
   my $FALSE = 0;
-  my $exe_is_okay = $FALSE;
-  my $ico_is_okay = $FALSE;
   my $test_file = $hello_pl_file;
   my $print_cannot_locate_message = $FALSE;
 
@@ -5628,16 +5619,6 @@ sub pp_gui_tests {
 
 
   #.................................................................
-  $file_to_copy = File::Spec->catfile($orig_dir, 'hi.ico');
-  if(!(copy($file_to_copy, "$test_dir"))) {
-      $$message_ref = "\namsg568: sub $test_name_string: cannot " .
-                       "copy $file_to_copy to $test_dir:$!:\n";
-      return (EXIT_FAILURE);
-  }
-  if ($verbose) {
-    print ("Copied $file_to_copy to $test_dir\n");
-  }
-  #.................................................................
   $error = create_file($test_file, "hello", $verbose, $message_ref);
   if ($error == EXIT_FAILURE) {
     $$message_ref = "\npgt_msg570: sub $test_name_string: $$message_ref";
@@ -5656,37 +5637,13 @@ sub pp_gui_tests {
 
   #.................................................................
   $exe = Win32::Exe->new($hello_executable);
-  $ico = Win32::Exe::IconFile->new('hi.ico');
-  #.................................................................
-
-  if ($ico->dump_iconfile eq $exe->dump_iconfile) {
-    $ico_is_okay = $TRUE;
-  } else {
-    $ico_is_okay = $FALSE;
-    $$message_ref = $$message_ref . "amsg574: sub $test_name_string " .
-               ": ico->dump_iconfile is not exe->dump_iconfile\n";
-  }
-
-  #.................................................................
-  if ($exe->Subsystem eq 'windows') {
-    $exe_is_okay = $TRUE;
-  } else {
-    $exe_is_okay = $FALSE;
+  if ($exe->Subsystem ne 'windows') {
     $$message_ref = $$message_ref . "amsg576: sub $test_name_string " .
                ": exe->Subsystem is not windows\n";
-  }
-
-  if ($exe_is_okay && $ico_is_okay) {
-    if ($verbose) {
-      print ("Win32::Exe shows a good icon file\n");
-    }
-
-    return (EXIT_SUCCESS);
-  } else {
-      $$message_ref = $$message_ref . 
-        "\nThe command $cmd did not produce a good icon on exe\n";
     return (EXIT_FAILURE)
   }
+
+  return (EXIT_SUCCESS);
   #.................................................................
 
 }
