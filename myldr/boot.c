@@ -30,18 +30,23 @@ static
 int extract_embedded_file(embedded_file_t *emb_file, const char* ext_name, const char* stmpdir, char** ext_path) {
     int fd;
     chunk_t *chunk;
+    struct stat statbuf;
 
     *ext_path = malloc(strlen(stmpdir) + 1 + strlen(ext_name) + 1);
     sprintf(*ext_path, "%s/%s", stmpdir, ext_name);
 
     fd = open(*ext_path, O_CREAT | O_EXCL | O_WRONLY | OPEN_O_BINARY, 0755);
     if ( fd == -1 ) {
-        struct stat statbuf;
-        if ( errno == EEXIST 
-             && par_lstat(*ext_path, &statbuf) == 0 
-             && statbuf.st_size == emb_file->size )
-            return 1;           /* file already exists and has the expected size */
-        return 0;
+        if ( errno != EEXIST ) return 0;
+
+        if (par_lstat(*ext_path, &statbuf) == 0 
+            && statbuf.st_size == emb_file->size )
+            /* file already exists and has the expected size */
+            return 1;           
+
+        /* corrupted file? re-try writing it */
+        fd = open(*ext_path, O_CREAT | O_WRONLY | OPEN_O_BINARY, 0755);
+        if ( fd == -1 ) return 0;
     }
 
     chunk = emb_file->chunks;
