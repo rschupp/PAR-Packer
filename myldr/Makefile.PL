@@ -6,7 +6,7 @@
 
 use strict;
 use Config;
-use File::Spec;
+use File::Spec::Functions qw( rel2abs );
 use ExtUtils::Embed;
 use ExtUtils::MakeMaker;
 use DynaLoader;
@@ -19,9 +19,9 @@ sub find_file {
     my $file = shift;
 
     my @paths = (
-	    $Config{bin},
-    	File::Spec->catdir($Config{'archlibexp'}, 'CORE'),
-	    split(/\Q$Config{path_sep}\E/, $ENV{$Config{ldlibpthname}} || ''),
+	$Config{bin},
+    	catdir($Config{'archlibexp'}, 'CORE'),
+	split(/\Q$Config{path_sep}\E/, $ENV{$Config{ldlibpthname}} || ''),
     	split(/ /, $Config{libpth}),
     );
 
@@ -29,12 +29,8 @@ sub find_file {
     if ($libperl = DynaLoader::dl_findfile("-lperl")) {
         if (-l $libperl) {
             my $realpath = readlink($libperl);
-            if (!File::Spec->file_name_is_absolute($realpath)) {
-                $realpath = File::Spec->rel2abs(
-                    File::Spec->catfile(
-                        dirname($libperl) => $realpath
-                    )
-                );
+            if (!file_name_is_absolute($realpath)) {
+                $realpath = rel2abs(catfile(dirname($libperl), $realpath));
             }
             $libperl = $realpath;
         }
@@ -42,15 +38,15 @@ sub find_file {
     }
 
     foreach my $path (@paths) {
-	    $libperl = File::Spec->catfile($path, $file);
+	    $libperl = catfile($path, $file);
     	return $libperl if -e $libperl;
         
     	# for MinGW
-	    $libperl = File::Spec->catfile($path, $1) if $file =~ /^lib(.+)/;
+	    $libperl = catfile($path, $1) if $file =~ /^lib(.+)/;
     	return $libperl if -e $libperl;
         
        	# for Cygwin
-    	$libperl = File::Spec->catfile($path, $file.$Config{_a});
+    	$libperl = catfile($path, $file.$Config{_a});
     	return $libperl if -e $libperl;
     }
 }
@@ -72,12 +68,12 @@ my $cc = $Config{cc};
 my $ld = $Config{ld} || (($^O eq 'MSWin32') ? 'link.exe' : $Config{cc});
 $ld = $Config{cc} if ($^O =~ /^(?:dec_osf|aix|hpux)$/);
 
-my $f2c = File::Spec->catfile('.', "file2c.pl");
-my $par_pl = File::Spec->catfile('..', 'script', "par.pl");
-my $par_exe = File::Spec->catfile('.', "par$exe");
-my $par_exe_link = File::Spec->catfile('.', "par$link_exe");
-my $boot_exe = File::Spec->catfile('.', "boot$exe");
-my $boot_exe_link = File::Spec->catfile('.', "boot$link_exe");
+my $f2c = catfile('.', "file2c.pl");
+my $par_pl = catfile('..', 'script', "par.pl");
+my $par_exe = catfile('.', "par$exe");
+my $par_exe_link = catfile('.', "par$link_exe");
+my $boot_exe = catfile('.', "boot$exe");
+my $boot_exe_link = catfile('.', "boot$link_exe");
 my $parl_exe = "parl$exe";
 my $parldyn_exe = "parldyn$exe";
 
@@ -224,10 +220,10 @@ sub find_dll
     # - in the same directory as the perl executable itself
     # - in the same directory as gcc (only useful if it's an absolute path)
     # - in PATH
-    my ($dll_path) = map { glob(File::Spec->catfile($_, $dll_glob)) }
-                         File::Basename::dirname($^X),
-                         File::Basename::dirname($cc),
-                         File::Spec->path;
+    my ($dll_path) = map { glob(catfile($_, $dll_glob)) }
+                         dirname($^X),
+                         dirname($cc),
+                         path();
     return $dll_path;
 }
 
@@ -270,7 +266,7 @@ WriteMakefile(
     SKIP        => [qw(static static_lib dynamic dynamic_lib test)],
     NO_META     => 1,
     PL_FILES    => {},
-    PM          => { map { $_ => File::Spec->catfile('$(INST_LIBDIR)', qw( PAR StrippedPARL ), $_) }
+    PM          => { map { $_ => catfile('$(INST_LIBDIR)', qw( PAR StrippedPARL ), $_) }
                      @strippedparl },
     MAN1PODS    => {},
     EXE_FILES   => \@parl_exes,
