@@ -93,7 +93,7 @@ if( $cc =~ m/^cl\b/i ) {
     $lddebug = $debug ? '-debug ' : '-release ';
     $warn = $debug ? '-W3' : '';
     my $machinearch = ( $Config{ptrsize} == 8 ) ? 'AMD64' : 'X86';
-   $pre_res = qq(winres\\pp.res);
+   $pre_res = catfile(qw( winres pp.res ));
    $rt_cmd = qq(rc winres\\pp.rc);
     $res_cmd = qq(cvtres /NOLOGO /MACHINE:$machinearch /OUT:ppresource.obj $pre_res);
     $res = 'ppresource.obj';
@@ -113,9 +113,9 @@ if( $cc =~ m/^cl\b/i ) {
     if ( $^O =~ /^(?:MSWin|cygwin)/ ) {
         my $target = $Config{archname} =~ /x64/ ? 'pe-x86-64' : 'pe-i386';
         $res = 'ppresource.coff';
-        $pre_res = qq(winres\\pp.rc);
+        $pre_res = catfile(qw( winres pp.rc ));
         $rt_cmd = '-$(NOOP)';
-        $res_cmd = qq(windres -i winres\\pp.rc -o ppresource.coff --input-format=rc --output-format=coff --target=$target);
+        $res_cmd = qq(windres -i $pre_res -o ppresource.coff --input-format=rc --output-format=coff --target=$target);
         $res_section = $res;
     }
     $mt_cmd = '-$(NOOP)';
