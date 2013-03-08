@@ -6,7 +6,7 @@
 
 use strict;
 use Config;
-use File::Spec::Functions qw( rel2abs );
+use File::Spec::Functions ':ALL';
 use ExtUtils::Embed;
 use ExtUtils::MakeMaker;
 use DynaLoader;
@@ -81,10 +81,7 @@ my $parldyn_exe = "parldyn$exe";
 my( $out, $ccdebug, $lddebug, $warn, $rm, $mv, $mt_cmd );
 
 my $res = '';
-my $pre_res = '';
-my $res_cmd = '-$(NOOP)';
-my $rt_cmd = '-$(NOOP)';
-my $res_section = 'noresource.o'; # is never built
+my $res_section = '';
 my $boot_ldflags = '';
 
 if( $cc =~ m/^cl\b/i ) {
@@ -93,11 +90,13 @@ if( $cc =~ m/^cl\b/i ) {
     $lddebug = $debug ? '-debug ' : '-release ';
     $warn = $debug ? '-W3' : '';
     my $machinearch = ( $Config{ptrsize} == 8 ) ? 'AMD64' : 'X86';
-   $pre_res = catfile(qw( winres pp.res ));
-   $rt_cmd = qq(rc winres\\pp.rc);
-    $res_cmd = qq(cvtres /NOLOGO /MACHINE:$machinearch /OUT:ppresource.obj $pre_res);
     $res = 'ppresource.obj';
-    $res_section = $res;
+    $res_section = <<"...";
+$res:
+	rc winres\\pp.rc
+	cvtres /NOLOGO /MACHINE:$machinearch /OUT:$res winres\\pp.res
+...
+
     # Embed the manifest file for VC 2005 (aka VC8) or higher, but not for the
     # 64-bit Platform SDK compiler.
     if( $Config{ptrsize} == 4 and $Config{ccversion} =~ /^(\d+)/ and $1 >= 14 ) {
@@ -113,10 +112,13 @@ if( $cc =~ m/^cl\b/i ) {
     if ( $^O =~ /^(?:MSWin|cygwin)/ ) {
         my $target = $Config{archname} =~ /x64/ ? 'pe-x86-64' : 'pe-i386';
         $res = 'ppresource.coff';
-        $pre_res = catfile(qw( winres pp.rc ));
-        $rt_cmd = '-$(NOOP)';
-        $res_cmd = qq(windres -i $pre_res -o ppresource.coff --input-format=rc --output-format=coff --target=$target);
-        $res_section = $res;
+        # Note: On cygwin the command below will be processed by the
+        # cygwin shell, so backslashes in pathnames might be a problem.
+        # Instead use forward slashes which work on Windows as well.
+        $res_section = <<"...";
+$res:
+	windres -i winres/pp.rc -o $res --input-format=rc --output-format=coff --target=$target
+...
     }
     $mt_cmd = '-$(NOOP)';
     $boot_ldflags = '-static-libgcc ';
@@ -297,9 +299,7 @@ main$o: main.c my_par_pl.c perlxsi.c internals.c \$(MKTMP_STUFF)
 sha1.c:
 	\$(PERLRUN) sha1.c.PL
 
-$res_section:
-	$rt_cmd
-	$res_cmd
+$res_section
 
 clean::
 	-\$(RM_F) boot_embedded_files.c my_par_pl.c
@@ -317,7 +317,7 @@ my_par_pl.c: $par_pl
 	\$(PERLRUN) par_pl2c.pl my_par_pl < $par_pl > \$@ 
 
 $parl_exe: $par
-	\$(PERLRUN) -Mblib run_with_inc.pl $par -q -B -O\$@
+	\$(PERLRUN) -Mblib=.. run_with_inc.pl $par -q -B -O\$@
 
 Static.pm: Static.in $par
 	\$(PERLRUN) encode_append.pl Static.in $par Static.pm
@@ -339,7 +339,7 @@ EOT
 pure_all:: $parldyn_exe Dynamic.pm
 
 $parldyn_exe: $par_exe
-	\$(PERLRUN) -Mblib run_with_inc.pl $par_exe -q -B -O\$@
+	\$(PERLRUN) -Mblib=.. run_with_inc.pl $par_exe -q -B -O\$@
 
 boot$o: \$(MKTMP_STUFF) boot_embedded_files.c
 
