@@ -1090,9 +1090,9 @@ sub _add_file {
                 $manifest->{ $alias } = [ file => $file ];
 
                 $oldsize += -s $file;
-                $zip->addFile($file, $alias);
-                $zip->memberNamed($alias)->desiredCompressionMethod($method);
-                $zip->memberNamed($alias)->desiredCompressionLevel($level);
+                my $member = $zip->addFile($file, $alias);
+                $member->desiredCompressionMethod($method);
+                $member->desiredCompressionLevel($level);
             }
         }
         elsif (-e $fn and -r $fn) {
@@ -1103,9 +1103,9 @@ sub _add_file {
             $self->_vprint(1, "... adding $fn as $in\n");
 
             $oldsize += -s $fn;
-            $zip->addFile($fn => $in);
-            $zip->memberNamed($in)->desiredCompressionMethod($method);
-            $zip->memberNamed($in)->desiredCompressionLevel($level);
+            my $member = $zip->addFile($fn => $in);
+            $member->desiredCompressionMethod($method);
+            $member->desiredCompressionLevel($level);
         }
     }
     else {
@@ -1117,9 +1117,10 @@ sub _add_file {
         $oldsize += length($str);
 
         $self->_vprint(1, "... adding <string> as $in");
-        $zip->addString($str => $in)->unixFileAttributes(0644);
-        $zip->memberNamed($in)->desiredCompressionMethod($method);
-        $zip->memberNamed($in)->desiredCompressionLevel($level);
+        my $member = $zip->addString($str => $in);
+        $member->unixFileAttributes(0644);
+        $member->desiredCompressionMethod($method);
+        $member->desiredCompressionLevel($level);
     }
 
     $self->{pack_attrib}{old_size} = $oldsize;
