@@ -1,3 +1,30 @@
+[Changes for 1.015 - Oct 9, 2013]
+
+* featurectomy: remove --icon and --info options from pp and PAR::Packer
+  - they don't work on some versions of Windows (result in corrupted executables)
+  - these options are just passed on to Win32::Exe, so you may simply
+    post-process the executable, e.g. using exe_update.pl from Win32::Exe
+
+* bug fixes:
+
+  RT #82916: Terminating during unpack results in corrupted cache, failure on next start
+  - apply (slightly modified) patch from shutton@pobox.com, thanks!
+
+  RT #88297 (-M crashes pp if option contains backslashes)
+  - _add_file(): do _not_ use $zip->memberNamed(...) to refer to the just added 
+    Archive::Zip::Member; instead use the return value of $zip->addFile or
+    $zip->addString 
+
+  don't modify embedded files after initial extraction
+  - fixes bug (on Windows) reported by Ken Tuchman <tuchman@t-online.de>
+  
+  minor changes
+  - use File::Spec::Functions, get rid of ugly File::Spec->... calls 
+  - set $pre_res using catfile() instead of hardcoding a backslash;
+    this might help on Cygwin
+  - fix -Mblib option for run_with_inc.pl: we want the blib in the top level directory
+
+------------------------------------------------------------------------
 [Changes for 1.014 - Dec 21, 2012]
 
 * tkpp 1.3 : --addfile option in GUI updated : 
