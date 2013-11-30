@@ -1,3 +1,10 @@
+[Changes for 1.016 - Nov 30, 2013]
+* bug fixes:
+    RT #90870: Segmentation fault (core dumped) (MooX::Options)
+    - any "die" in a packed executable causes the executable to segfault
+      (at least on Linux and Perl 5.18.1)
+    - remove a line from XS code that sets an internal perl variable
+
 [Changes for 1.015 - Oct 9, 2013]
 
 * featurectomy: remove --icon and --info options from pp and PAR::Packer
