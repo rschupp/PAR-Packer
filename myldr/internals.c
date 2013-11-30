@@ -98,9 +98,6 @@ XS(XS_Internals_PAR_BOOT) {
 
     TAINT_NOT;
 
-    /* PL_main_cv = PL_compcv; */
-    PL_compcv = 0;
-
     /* create temporary PAR directory */
     stmpdir = par_getenv("PAR_TEMP");
     if ( !stmpdir ) {
