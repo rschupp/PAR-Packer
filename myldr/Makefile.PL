@@ -121,7 +121,7 @@ $res:
 ...
     }
     $mt_cmd = '-$(NOOP)';
-    $boot_ldflags = '-static-libgcc ';
+    $boot_ldflags .= '-static-libgcc ' if $^O eq 'MSWin32';
 } else {
     $out = '-o ';
     $ccdebug = '';
