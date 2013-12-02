@@ -1,4 +1,20 @@
+[Changes for 1.017 - Dec 1, 2013]
+
+* bug fixes:
+  RT #84588: OSX: incorrect detection of gcc (unsupported option '-static-libgcc')
+  merged with:
+  - RT #90198: PAR::Packer fails to compile in Mac OS X 10.9 Mavericks
+  - RT #91086: PAR-Packer-1.016 fails to install on OSX)
+
+  clang on OSX pretends to be gcc, but doesn't implement gcc's option "-static-libgcc" 
+  - use this option only on Windows (when using the MingW toolchain).
+
+  Drop a test that was using Inline::C just to wrap native execvp().
+  - It caused failures on CPAN Testers (if accidentally Inline was
+    installed) that were unrelated to PAR::Packer.
+
 [Changes for 1.016 - Nov 30, 2013]
+
 * bug fixes:
     RT #90870: Segmentation fault (core dumped) (MooX::Options)
     - any "die" in a packed executable causes the executable to segfault
