@@ -11,12 +11,9 @@ use FindBin;
 use Test::More;
 plan skip_all => "Fails if run in a path that contains spaces" 
     if $FindBin::Bin =~ / /;
-plan tests => 4;
+plan tests => 3;
 
 $ENV{PAR_TMPDIR} = File::Temp::tempdir(TMPDIR => 1, CLEANUP => 1);
-
-my $has_inline_c = eval "use Inline; 1;";
-# warn $@ if $@;
 
 ####
 my $EXEC = File::Spec->catfile( $FindBin::Bin, "test-10$Config{_exe}" );
@@ -59,42 +56,6 @@ is( $out_path, $out_full, "Found the same file via PATH and full path" );
 
 # warn qq(out_full="$out_full"\n out_path="$out_path"\n);;
 
-####
-SKIP: {
-    skip "Inline::C not installed; Can't verify with execvp", 1
-            unless $has_inline_c;
-    skip "Can't get running executable that isn't in PATH on $^O", 1
-            unless $^O =~ /linux/i or 
-		   ( $^O =~ /freebsd/i and -l "/proc/$$/file" );
-
-    diag( "Please wait" );
-    Inline->bind( C => <<'C' );
-#include <unistd.h>
-#include <stdio.h>
-
-        void exec_prog( char *full_path, char *exec ) 
-        {
-            char * args[]={NULL, NULL};
-            args[0] = exec;
-            execvp( full_path, args );
-            perror( "execvp failed" );
-            exit(3);
-        }
-C
-
-
-    my $pid = open PROG, "-|";
-    die "Can't fork: $!" unless defined $pid;
-    unless( $pid ) {        # child
-        $ENV{PAR_GLOBAL_TMPDIR} = $TEMP;
-        # warn "EXEC=$EXEC file=$file" ;
-		$ENV{PATH} = $path;
-        exec_prog( $EXEC, $file );
-    }
-    my $exec_full = join '', <PROG>;
-
-    is( $exec_full, $out_path, "Found the same file via execvp and PATH" );
-}
 
 #### Clean up
 unlink $EXEC;
