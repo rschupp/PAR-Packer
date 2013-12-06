@@ -2,31 +2,28 @@
 
 use strict;
 use Config;
-use File::Spec;
+use File::Spec::Functions;
 use File::Temp ();
-use FindBin;
 
 use Test::More;
-plan skip_all => "Unicode::UCD appeared first in perl 5.8.0"
-    unless $] >= 5.008;
+# Unicode::UCD appeared first in perl 5.8.0
+plan skip_all => "Unicode::UCD not installed"
+    unless eval "require Unicode::UCD; 1";
+
 plan tests => 3; # FIXME
 
 $ENV{PAR_TMPDIR} = File::Temp::tempdir(TMPDIR => 1, CLEANUP => 1);
 
-my $EXE = File::Spec->catfile( File::Spec->tmpdir,"rt59710$Config{_exe}");
-my $PP = File::Spec->catdir( $FindBin::Bin, File::Spec->updir, qw( blib script pp ));
-
-unlink $EXE;
+my $EXE = File::Spec->catfile($ENV{PAR_TMPDIR},"rt59710$Config{_exe}");
+my $PP = File::Spec->catfile(qw( blib script pp ));
 
 system $PP, 
     -o => $EXE, 
     -e => 'use Unicode::UCD qw(charinfo); my $i = charinfo(0x42); print $i->{name};';
-ok( $? == 0 && -f $EXE, "Created \"$EXE\"" ) 
-        or die "Failed to create \"$EXE\"!\n";
+ok( $? == 0 && -f $EXE, qq[successfully packed "$EXE"] ) 
+    or die qq[couldn't pack "$EXE"];
 
 my $name = qx( $EXE );
-ok( $? == 0, "\"$EXE\" ran successfully");
-is( $name, "LATIN CAPITAL LETTER B" );
+ok( $? == 0, qq[successfully ran "$EXE"]);
+is( $name, "LATIN CAPITAL LETTER B", "name of U+0042" );
 
-# cleanup
-unlink $EXE;
