@@ -155,7 +155,7 @@ elsif ($dynperl) {
     $file = "libperl.$so" if $file eq 'libper'; # workaround Red Hat bug
 
     $file =~ s/\.(?!\d)[^.]*$/.$Config{so}/;
-    $file =~ s/^lib// if $^O eq "MSWin32";
+    $file =~ s/^lib// if $^O eq 'MSWin32';
 
     $libperl = find_file($file);
     if (not -e $libperl) {
@@ -197,6 +197,16 @@ if ($dynperl) {
         my ($soname) = qx(objdump -ax $libperl) =~ /^\s*SONAME\s+(\S+)/m;
         $extract_libperl_as = $soname if $? == 0 && defined $soname;
     }
+    # on Debian derived distros make sure that the Debian package "libperl-dev"
+    # is installed (which contains the /usr/lib/libperl.so symlink)
+    die qq[You need to install the distro (Debian, Ubuntu etc) package "libperl-dev"\n] 
+       if $^O =~ /^(linux|gnukfreebsd)$/i
+          && -x "/usr/bin/dpkg"                 
+                # probably Debian or a derivative
+          && system("dpkg -S $^X >/dev/null 2>&1") == 0 
+                # we're building with the system (distro) perl
+          && system("dpkg -l libperl-dev >/dev/null 2>&1") != 0;
+                # check install status of libperl-dev
 } else {
     my $file = $Config{libperl};
     $file = 'libperl.a' if $file eq 'libper'; # same redhat bug? Just making sure...
