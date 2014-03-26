@@ -11,6 +11,7 @@ use ExtUtils::Embed;
 use ExtUtils::MakeMaker;
 use DynaLoader;
 use File::Basename;
+use File::Glob ':bsd_glob';
 
 xsinit(undef);
 
