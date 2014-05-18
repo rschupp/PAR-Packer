@@ -1,3 +1,19 @@
+[Changes for 1.018 - May 18, 2014]
+
+* [DJIBEL] tkpp 1.4 : Since PAR::Packer 1.015, tkpp doesn't work. 
+  I Removed --icon and --info options. Now tkpp work.
+
+* bug fixes:
+
+  Use bsd_glob() instead of glob() to avoid problems with patterns that
+  contain whitespace, e.g. "C:\\Program Files\..." on Windows. 
+  Found by Victor Wheeler <vaw_info999@comcast.net>.
+
+  Fix RT #93008: install failure with ubuntu / puppet
+  (and several similar ones): When building on a Debian derived Linux distro
+  (and building with the system perl) check that distro package "libperl-dev"
+  is installed.
+
 [Changes for 1.017 - Dec 1, 2013]
 
 * bug fixes:
