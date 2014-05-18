@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 #===============================================================================
 # $Author    : Djibril Ousmanou (DJIBEL) and Doug Gruber (DOUGTHUG)            $
-# $Copyright : 2012                                                            $
-# $Update    : 09/04/2012 21:16:00                                             $
+# $Copyright : 2014                                                            $
+# $Update    : 16/05/2014 16:04:38                                             $
 # $AIM       : GUI to use easily Tkpp                                          $
 #===============================================================================
 use Carp;
@@ -34,11 +34,7 @@ BEGIN {
   my $modules_message = $nbr > 1 ? 'these modules' : 'this module';
   if ( $nbr > 0 ) {
     print "You have to install $modules_message : \n";
-    foreach (@modules_to_install) { print "\t- $_\n"; }
-    print "\n Try : "
-      . 'perl -MCPAN -e "install '
-      . join( $SPACE, @modules_to_install )
-      . $DOUBLE_QUOTE . "\n";
+    foreach (@modules_to_install) { print "\t- $_ [try command : cpan -i $_]\n"; }
     exit;
   }
 }
@@ -59,7 +55,7 @@ use Tk::TextUndo;
 use Time::HiRes qw ( sleep );
 
 use vars qw($VERSION);
-$VERSION = '1.3';
+$VERSION = '1.4';
 $OUTPUT_AUTOFLUSH++;
 
 # We need to work in read/write because on some Windows vista system,
@@ -498,13 +494,17 @@ $header_frame->Label(
 #=======
 my $notebook = $main->NoteBook( -font => '{Arial} 10 bold', -backpagecolor => 'white', );
 my $general_notebook = $notebook->add( 'General',     -label => 'General Options' );
-my $info_notebook    = $notebook->add( 'Information', -label => 'Information' );
+
+# DEPRECATED
+#my $info_notebook    = $notebook->add( 'Information', -label => 'Information' );
+
 my $size_notebook    = $notebook->add( 'Size',        -label => 'Size' );
 my $option_notebook  = $notebook->add( 'Option',      -label => 'Other Options' );
 my $output_notebook  = $notebook->add( 'Output',      -label => 'Output' );
 
 display_general_notebook();
-display_info_notebook();
+# DEPRECATED
+#display_info_notebook();
 display_size_notebook();
 display_other_options_notebook();
 display_output_notebook();
@@ -702,16 +702,16 @@ sub save_pp_configuration {
       grep { m/^p:\s*(.+)/msx and chomp } $add_files_rep_listbox->get( '0', 'end' );
 
     # Product Informations
-    my @product_information;
-    foreach my $type ( sort keys %{ $options_pp{'--information'} } ) {
-      foreach my $key ( sort keys %{ $options_pp{'--information'}{$type} } ) {
-        if ( my $value = $options_pp{'--information'}{$type}{$key}{-value} ) {
-          $value =~ s{$DOUBLE_QUOTE}{}g;
-          push @product_information, "$key=$DOUBLE_QUOTE$value$DOUBLE_QUOTE";
-        }
-      }
-    }
-    $ref_options_pp->{'info'} = join ';', @product_information;
+    # my @product_information;
+    # foreach my $type ( sort keys %{ $options_pp{'--information'} } ) {
+    #   foreach my $key ( sort keys %{ $options_pp{'--information'}{$type} } ) {
+    #     if ( my $value = $options_pp{'--information'}{$type}{$key}{-value} ) {
+    #       $value =~ s{$DOUBLE_QUOTE}{}g;
+    #       push @product_information, "$key=$DOUBLE_QUOTE$value$DOUBLE_QUOTE";
+    #     }
+    #   }
+    # }
+    # $ref_options_pp->{'info'} = join ';', @product_information;
 
     $widget_opt->save_options($savefile);
     print_ok("File $savefile : saved");
@@ -1006,25 +1006,26 @@ sub display_size_notebook {
   return;
 }
 
-sub display_info_notebook {
-
-  foreach my $labframe_label ( sort keys %{ $options_pp{'--information'} } ) {
-    my $labframe = $info_notebook->LabFrame( -label => $labframe_label, -font => '{Arial} 10 bold', );
-
-    # Entries
-    foreach my $label_entry ( sort keys %{ $options_pp{'--information'}{$labframe_label} } ) {
-      my $label = get_label_widget( $labframe,
-        { text => $options_pp{'--information'}{$labframe_label}{$label_entry}{-label} } );
-      my $entry = get_entry_widget( $labframe,
-        { textvariable => \$options_pp{'--information'}{$labframe_label}{$label_entry}{-value} } );
-
-      $label->grid( $entry, qw/ -sticky w -padx 10 -pady 1 / );
-    }
-    $labframe->pack(qw/ -fill none -expand 0/);
-  }
-
-  return;
-}
+# DEPRECATED
+#sub display_info_notebook {
+#  
+#  foreach my $labframe_label ( sort keys %{ $options_pp{'--information'} } ) {
+#    my $labframe = $info_notebook->LabFrame( -label => $labframe_label, -font => '{Arial} 10 bold', );
+#
+#    # Entries
+#    foreach my $label_entry ( sort keys %{ $options_pp{'--information'}{$labframe_label} } ) {
+#      my $label = get_label_widget( $labframe,
+#        { text => $options_pp{'--information'}{$labframe_label}{$label_entry}{-label} } );
+#      my $entry = get_entry_widget( $labframe,
+#        { textvariable => \$options_pp{'--information'}{$labframe_label}{$label_entry}{-value} } );
+#
+#      $label->grid( $entry, qw/ -sticky w -padx 10 -pady 1 / );
+#    }
+#    $labframe->pack(qw/ -fill none -expand 0/);
+#  }
+#
+#  return;
+#}
 
 sub display_output_notebook {
   my $label_commandline = $output_notebook->Label(
@@ -1129,22 +1130,22 @@ sub display_general_notebook {
     }
   );
 
+  # DEPRECATED
   # 3- icon file
-  my $label_iconfile = get_label_widget( $labframe_general, { text => $options_pp{'--icon'}{-label} } );
-  my $entry_iconfile
-    = get_entry_widget( $labframe_general, { textvariable => \$options_pp{'--icon'}{-value} } );
-  $options_pp{'--icon'}{-widget} = $entry_iconfile;
-  my $button_iconfile = get_button_widget(
-    $labframe_general,
-    { text    => '...',
-      tooltip => $options_pp{'--icon'}{-comment},
-      command => sub {
-        $options_pp{'--icon'}{-value}
-          = get_file( $labframe_general, [ 'ICO Files', [ '.ico', '.exe', '.dll' ] ] )
-          || $options_pp{'--icon'}{-value};
-        }
-    }
-  );
+  # my $label_iconfile = get_label_widget( $labframe_general, { text => $options_pp{'--icon'}{-label} } );
+  # my $entry_iconfile = get_entry_widget( $labframe_general, { textvariable => \$options_pp{'--icon'}{-value} } );
+  # $options_pp{'--icon'}{-widget} = $entry_iconfile;
+  # my $button_iconfile = get_button_widget(
+  #   $labframe_general,
+  #   { text    => '...',
+  #     tooltip => $options_pp{'--icon'}{-comment},
+  #    command => sub {
+  #       $options_pp{'--icon'}{-value}
+  #         = get_file( $labframe_general, [ 'ICO Files', [ '.ico', '.exe', '.dll' ] ] )
+  #         || $options_pp{'--icon'}{-value};
+  #       }
+  #   }
+  # );
 
   # 4- log file
   my $label_logfile = get_label_widget( $labframe_general, { text => $options_pp{'--log'}{-label} } );
@@ -1241,7 +1242,8 @@ sub display_general_notebook {
   # Display
   $label_sourcefile->grid( $entry_sourcefile, $button_sourcefile, qw/ -sticky w -padx 10 -pady 1 / );
   $label_outputfile->grid( $entry_outputfile, $button_outputfile, qw/ -sticky w -padx 10 -pady 1 / );
-  $label_iconfile->grid( $entry_iconfile, $button_iconfile, qw/ -sticky w -padx 10 -pady 1 / );
+  # DEPRECATED
+  #$label_iconfile->grid( $entry_iconfile, $button_iconfile, qw/ -sticky w -padx 10 -pady 1 / );
   $label_logfile->grid( $entry_logfile, $button_logfile, qw/ -sticky w -padx 10 -pady 1 / );
   $label_perlfile->grid( $entry_perlfile, $button_perlfile, qw/ -sticky w -padx 10 -pady 1 / );
   $label_ppfile->grid( $entry_ppfile, $button_ppfile, qw/ -sticky w -padx 10 -pady 1 / );
@@ -1598,25 +1600,25 @@ sub build_pp {
   }
 
   # Check iconfile
-  if ( my $icon = $ref_options->{'--icon'}{-value} ) {
-    my $error
-      = ( !-e $ref_options->{'--icon'}{-value} ) ? 'You have to set an existing icon file'
-      : ( $icon !~ m{\.(?:dll|ico|exe)$}msxi ) ? 'You are trying to use an icon with bad extension ('
-      . basename($icon) . ').'
-      . "\nExtension must be .dll, .exe or .ico."
-      : undef;
-
-    if ( defined $error ) {
-      popup_information_warning( $widget, $error );
-      $options_pp{'--icon'}{-widget}->focus;
-      $notebook->raise('General');
-      print_error($error);
-      return;
-    }
-    else {
-      $command .= ' --icon="' . $ref_options->{'--icon'}{-value} . $DOUBLE_QUOTE;
-    }
-  }
+  # if ( my $icon = $ref_options->{'--icon'}{-value} ) {
+  #   my $error
+  #     = ( !-e $ref_options->{'--icon'}{-value} ) ? 'You have to set an existing icon file'
+  #     : ( $icon !~ m{\.(?:dll|ico|exe)$}msxi ) ? 'You are trying to use an icon with bad extension ('
+  #     . basename($icon) . ').'
+  #     . "\nExtension must be .dll, .exe or .ico."
+  #     : undef;
+  # 
+  #   if ( defined $error ) {
+  #     popup_information_warning( $widget, $error );
+  #     $options_pp{'--icon'}{-widget}->focus;
+  #     $notebook->raise('General');
+  #     print_error($error);
+  #     return;
+  #   }
+  #   else {
+  #     $command .= ' --icon="' . $ref_options->{'--icon'}{-value} . $DOUBLE_QUOTE;
+  #   }
+  # }
 
   # GUI
   if ( $ref_options->{'--gui'}{-value} == 1 ) { $command .= ' --gui'; }
@@ -1654,14 +1656,15 @@ sub build_pp {
   }
 
   # Product Informations
-  foreach my $type ( sort keys %{ $options_pp{'--information'} } ) {
-    foreach my $key ( sort keys %{ $options_pp{'--information'}{$type} } ) {
-      if ( my $value = $options_pp{'--information'}{$type}{$key}{-value} ) {
-        $value =~ s{$DOUBLE_QUOTE}{}g;
-        $command .= $SPACE . "--info $key=$DOUBLE_QUOTE$value$DOUBLE_QUOTE";
-      }
-    }
-  }
+  # DEPRECATED
+  #foreach my $type ( sort keys %{ $options_pp{'--information'} } ) {
+  #  foreach my $key ( sort keys %{ $options_pp{'--information'}{$type} } ) {
+  #    if ( my $value = $options_pp{'--information'}{$type}{$key}{-value} ) {
+  #      $value =~ s{$DOUBLE_QUOTE}{}g;
+  #      $command .= $SPACE . "--info $key=$DOUBLE_QUOTE$value$DOUBLE_QUOTE";
+  #    }
+  #  }
+  #}
 
   # Exclude Perl
   if ( $options_pp{'--dependent'}{-value} == 1 ) {
@@ -2234,7 +2237,7 @@ In the event this application breaks, you get both pieces :-)
 
 =head1 COPYRIGHT
 
-Copyright 2003, 2004, 2005, 2006, 2011 by Doug Gruber E<lt>doug(a)dougthug.comE<gt>,
+Copyright 2003, 2004, 2005, 2006, 2011, 2014 by Doug Gruber E<lt>doug(a)dougthug.comE<gt>,
 Audrey Tang E<lt>cpan@audreyt.orgE<gt> and Djibril Ousmanou E<lt>djibel(a)cpan.orgE<gt>.
 
 Neither this program nor the associated L<pp> program impose any
