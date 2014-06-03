@@ -378,8 +378,9 @@ is used.
 
 When the program is run, its contents are extracted to a temporary
 directory.  On Unix systems, this is commonly
-F</tmp/par-USERNAME/cache-XXXXXXX>.  F<USERNAME> is replaced by the
-user running the program, and F<XXXXXXX> is either a hash of the
+F</tmp/par-USER/cache-XXXXXXX>.  F<USER> is replaced by the
+name of the user running the program, but "spelled" in hex.
+F<XXXXXXX> is either a hash of the
 executable or the value passed to the C<-T> or C<--tempcache> switch.
 
 =item B<-v>, B<--verbose>[=I<NUMBER>]
