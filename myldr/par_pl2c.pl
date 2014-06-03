@@ -13,6 +13,8 @@ PAR::Filter::PodStrip->new->apply(\$slurp);
 print "const char *$var =\n";
 foreach (split(/\n/, $slurp))
 {
+    s/^\s*|\s*$//g;             # strip leading and trailing whitespace
+    next if /^#|^$/;            # skip comment and empty lines
     s/(["\\])/\\$1/g;           # escape quotes and backslashes
     print qq["$_\\n"\n];
 }
