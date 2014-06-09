@@ -11,7 +11,7 @@ use ExtUtils::Embed;
 use ExtUtils::MakeMaker;
 use DynaLoader;
 use File::Basename;
-use File::Glob ':bsd_glob';
+use File::Glob;
 
 xsinit(undef);
 
@@ -233,7 +233,7 @@ sub find_dll
     # - in the same directory as the perl executable itself
     # - in the same directory as gcc (only useful if it's an absolute path)
     # - in PATH
-    my ($dll_path) = map { glob(catfile($_, $dll_glob)) }
+    my ($dll_path) = map { File::Glob::glob(catfile($_, $dll_glob)) }
                          dirname($^X),
                          dirname($cc),
                          path();
