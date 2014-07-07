@@ -1,3 +1,26 @@
+[Changes for 1.019 - July 7, 2014]
+
+Fix RT #96288: PAR::Packer unable to build under Win32/ActivePerl v5.14.2
+    RT #96739: "bsd_glob" is not defined on perl 5.14.x and earlier
+    RT #97018 (Issue while upgrading PAR::Packer )
+
+  Don't "use File::Glob ':bsd_glob'":
+  - this remaps CORE::glob() to File::Glob::bsd_glob() globally, but some 
+    versions of ExtUtils::MakeMaker rely on CORE::glob() legacy behaviour
+  - the tag :bsd_glob isn't exported in Perl <= 14.2
+  - explicitly call File::Glob::bsd_glob() instead of glob()
+
+Fix RT #59224 (make error with version 1.006 on aix 5.3)
+
+  The string contents of myldr/my_par_pl.c (generated from 
+  script/par.pl by myldr/par_pl2c.pl) is passed in argv[]
+  during the build. This is too large for the default limit (24k)
+  that AIX 5.3 has for passing argv+env in execve().
+  Shrink it a bit by removing leading whitespace and comment-only lines
+  (in addition to using PAR::Filter::PodStrip).
+
+Update documentation wrt the name of the cache directory.
+
 [Changes for 1.018 - May 18, 2014]
 
 * [DJIBEL] tkpp 1.4 : Since PAR::Packer 1.015, tkpp doesn't work. 
