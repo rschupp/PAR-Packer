@@ -1,3 +1,11 @@
+[Changes for 1.020 - Aug 24, 2014]
+
+Implement option --xargs for pp:
+
+- splits value of --xargs using Text::ParseWords::shellquote
+- passes result as @ARGV when running script for -x
+- bump required version of Module::ScanDeps to the first to implement this
+
 [Changes for 1.019 - July 7, 2014]
 
 Fix RT #96288: PAR::Packer unable to build under Win32/ActivePerl v5.14.2
