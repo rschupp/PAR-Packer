@@ -4,7 +4,7 @@ package Module::Install::Base;
 use strict 'vars';
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '1.08';
+	$VERSION = '1.10';
 }
 
 # Suspend handler for "redefined" warnings

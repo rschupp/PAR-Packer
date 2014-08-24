@@ -6,7 +6,7 @@ use Module::Install::Base ();
 
 use vars qw{$VERSION @ISA $ISCORE};
 BEGIN {
-	$VERSION = '1.08';
+	$VERSION = '1.10';
 	@ISA     = 'Module::Install::Base';
 	$ISCORE  = 1;
 }
@@ -32,3 +32,7 @@ sub auto_include_dependent_dists {
 }
 
 1;
+
+__END__
+
+#line 50
