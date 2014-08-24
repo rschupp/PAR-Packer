@@ -21,7 +21,10 @@ use Getopt::Long qw(:config no_ignore_case);
 sub go {
     my $class = shift;
 
-    unshift(@ARGV, split / +/, $ENV{PP_OPTS}) if $ENV{PP_OPTS};
+    if ($ENV{PP_OPTS}) {
+        require Text::ParseWords;
+        unshift @ARGV, Text::ParseWords::shellwords($ENV{PP_OPTS});
+    }
     
     my %opt;
     GetOptions( \%opt, PAR::Packer->options, 'h|help', 'V|version' );

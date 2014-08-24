@@ -760,7 +760,7 @@ sub pack_manifest_hash {
     %skip = map { $_, 1 } map &$inc_find($_), @exclude;
     %skip = (%skip, map { $_, 1 } @SharedLibs);
 
-    &$add_deps(
+    $add_deps->(
         rv      => \%map,
         modules => \@modules,
         skip    => \%skip,
@@ -778,7 +778,7 @@ sub pack_manifest_hash {
     my $size = 0;
     my $old_member;
 
-    if ($opt->{'m'} and -e $par_file) {
+    if ($opt->{m} and -e $par_file) {
         my $tmpzip = Archive::Zip->new();
         $tmpzip->read($par_file);
 
