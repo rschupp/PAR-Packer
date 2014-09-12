@@ -20,9 +20,14 @@ requires    'Text::ParseWords'  => 0;
 requires    'Getopt::ArgvFile'  => '1.07';
 
 if ($^O eq 'MSWin32') {
-    requires  'Parse::Binary'     => '0.04';
-    requires  'Win32::Exe'        => '0.17';
-    requires  'Win32::Process';
+    build_requires 'Win32::ShellQuote' => 0;
+    requires  'Parse::Binary'   => '0.04';
+    requires  'Win32::Exe'      => '0.17';
+    requires  'Win32::Process'  => 0;
+}
+else
+{
+    build_requires 'String::ShellQuote' => 0;
 }
 
 # for tkpp only
