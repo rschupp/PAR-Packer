@@ -1,10 +1,11 @@
-#!/usr/bin/perl -w
+#!perl
 # Copyright 2002-2009 by Audrey Tang.
 # Copyright (c) 2002 Mattia Barbon.
 # This package is free software; you can redistribute it and/or
 # modify it under the same terms as Perl itself.
 
 use strict;
+use warnings;
 use Config;
 use File::Spec::Functions ':ALL';
 use ExtUtils::Embed;
@@ -254,9 +255,11 @@ sub find_dll
 
 my ($libgcc, $libstdcpp);
 if ($dynperl and $^O eq 'MSWin32'
-    and defined $Config{gccversion}     # gcc version 4.x or above was used
+    and defined $Config{gccversion}             # gcc version >= 4.x was used
     and $Config{gccversion} =~ m{\A(\d+)}ms && $1 >= 4) {
     $libgcc = find_dll("libgcc_*.$Config{so}");
+}
+if ($ld =~ /(\b|-)g\+\+(-.*)?(\.exe)?$/) {      # g++ was used to link
     $libstdcpp = find_dll("libstdc++*.$Config{so}");
 }
 
