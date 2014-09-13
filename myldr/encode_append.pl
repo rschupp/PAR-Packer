@@ -1,3 +1,5 @@
+#!perl
+
 use strict;
 use warnings;
 # Used in myldr/Makefile.PL / myldr/Makefile.

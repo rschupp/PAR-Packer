@@ -1,5 +1,8 @@
 #!perl
 
+use strict;
+use warnings;
+
 use File::Temp;
 $ENV{PAR_TMPDIR} = File::Temp::tempdir(TMPDIR => 1, CLEANUP => 1);
 

@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!perl
 
 # Copyright (c) 2002 Mattia Barbon.
 # Copyright (c) 2002 Audrey Tang.
@@ -6,6 +6,7 @@
 # modify it under the same terms as Perl itself.
 
 use strict;
+use warnings;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use File::Basename;
