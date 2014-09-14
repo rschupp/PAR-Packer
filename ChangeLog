@@ -1,3 +1,10 @@
+[Changes for 1.021 - Sep 14, 2014]
+
+Fix #98791: PAR-Packer fails to build with DWIMPerl/Strawberry Perl due to unquoted path name
+
+  - quote the list of embedded file wrt OS native shell
+  - require Win32::ShellQuote on Windows and String::ShellQuote otherwise
+
 [Changes for 1.020 - Aug 24, 2014]
 
 Implement option --xargs for pp:
