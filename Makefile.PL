@@ -9,32 +9,30 @@ all_from    'lib/PAR/Packer.pm';
 
 perl_version '5.008001';
 configure_requires 'ExtUtils::Embed';
-requires    'File::Temp'        => '0.05';
-requires    'Compress::Zlib'    => ($^O eq 'MSWin32') ? '1.16' : '1.30';
+build_requires $^O eq 'MSWin32' 
+         ? ('Win32::ShellQuote'  => 0)
+         : ('String::ShellQuote' => 0);
+requires    'File::Temp'         => '0.05';
+requires    'Compress::Zlib'     => ($^O eq 'MSWin32') ? '1.16' : '1.30';
 requires    'IO::Compress::Gzip' => 0;
-requires    'Archive::Zip'      => '1.00';
-requires    'Module::ScanDeps'  => '1.15';
-requires    'PAR::Dist'         => '0.22';
-requires    'PAR'               => '1.005';
-requires    'Text::ParseWords'  => 0;
-requires    'Getopt::ArgvFile'  => '1.07';
+requires    'Archive::Zip'       => '1.00';
+requires    'Module::ScanDeps'   => '1.15';
+requires    'PAR::Dist'          => '0.22';
+requires    'PAR'                => '1.005';
+requires    'Text::ParseWords'   => 0;
+requires    'Getopt::ArgvFile'   => '1.07';
 
 if ($^O eq 'MSWin32') {
-    build_requires 'Win32::ShellQuote' => 0;
-    requires  'Parse::Binary'   => '0.04';
-    requires  'Win32::Exe'      => '0.17';
-    requires  'Win32::Process'  => 0;
-}
-else
-{
-    build_requires 'String::ShellQuote' => 0;
+    requires  'Parse::Binary'    => '0.04';
+    requires  'Win32::Exe'       => '0.17';
+    requires  'Win32::Process'   => 0;
 }
 
 # for tkpp only
-recommends  'Tk'                => 0;
-recommends  'Tk::ColoredButton' => 0;
-recommends  'Tk::EntryCheck'    => 0;
-recommends  'Tk::Getopt'        => 0;
+recommends  'Tk'                 => 0;
+recommends  'Tk::ColoredButton'  => 0;
+recommends  'Tk::EntryCheck'     => 0;
+recommends  'Tk::Getopt'         => 0;
 
 
 if (can_use('Crypt::OpenPGP') or can_run('gpg')) {
