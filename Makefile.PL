@@ -9,9 +9,6 @@ all_from    'lib/PAR/Packer.pm';
 
 perl_version '5.008001';
 configure_requires 'ExtUtils::Embed';
-build_requires $^O eq 'MSWin32' 
-         ? ('Win32::ShellQuote'  => 0)
-         : ('String::ShellQuote' => 0);
 requires    'File::Temp'         => '0.05';
 requires    'Compress::Zlib'     => ($^O eq 'MSWin32') ? '1.16' : '1.30';
 requires    'IO::Compress::Gzip' => 0;
@@ -28,27 +25,16 @@ if ($^O eq 'MSWin32') {
     requires  'Win32::Process'   => 0;
 }
 
-# for tkpp only
+# for tkpp
 recommends  'Tk'                 => 0;
 recommends  'Tk::ColoredButton'  => 0;
 recommends  'Tk::EntryCheck'     => 0;
 recommends  'Tk::Getopt'         => 0;
 
-
-if (can_use('Crypt::OpenPGP') or can_run('gpg')) {
-    my $has_sha1 = (
-        can_use('Digest::SHA1') or
-        can_use('Digest::SHA')  or
-        can_use('Digest::SHA::PurePerl')
-    );
-
-    feature 'Digital signature support',
-    recommends
-            'Digest',
-            ($has_sha1 ? () : (can_cc() ? 'Digest::SHA'
-                                        : 'Digest::SHA::PurePerl')),
-            'Module::Signature';
-}
+# for digital signature support
+recommends 'Digest'              => 0;
+recommends 'Digest::SHA'         => 0;
+recommends 'Module::Signature'   => 0;
 
 include_deps        'Test::More';
 no_index            directory => 'contrib';

@@ -79,18 +79,6 @@ my $boot_exe_link = catfile('.', "boot$link_exe");
 my $parl_exe = "parl$exe";
 my $parldyn_exe = "parldyn$exe";
 
-# quote(): quotes a list of strings to be passed to a native shell
-if ($^O eq 'MSWin32') 
-{
-    require Win32::ShellQuote;
-    *quote = sub { join(" ", Win32::ShellQuote::quote_system(@_)) };
-}
-else
-{
-    require String::ShellQuote;
-    *quote = \&String::ShellQuote::shell_quote;
-}
-
 my( $out, $ccdebug, $lddebug, $warn, $rm, $mv, $mt_cmd );
 
 my $res = '';
@@ -263,12 +251,15 @@ if ($ld =~ /(\b|-)g\+\+(-.*)?(\.exe)?$/) {      # g++ was used to link
     $libstdcpp = find_dll("libstdc++*.$Config{so}");
 }
 
-my $embedded_files = quote(grep { defined }
+# enclose the filenames in double quotes
+# NOTE: This quoting is not perfect (e.g. won't protect dollar signs
+# or double quotes in filenames), but should work in all reasonable
+# scenarios on both *nix and Windows).
+my @embedded_files = map{ qq["$_"] } grep { defined } 
     $par_exe,       # must come first
     $libperl,
     $libgcc,
-    $libstdcpp
-);
+    $libstdcpp;
 
 my @strippedparl = qw( Static.pm );
 push @strippedparl, qw( Dynamic.pm ) if $dynperl;
@@ -375,7 +366,7 @@ $boot_exe: boot$o
 	$mt_cmd
 
 boot_embedded_files.c: $par_exe
-	\$(PERLRUN) $f2c -c $chunk_size $embedded_files > \$@
+	\$(PERLRUN) $f2c -c $chunk_size @embedded_files > \$@
 
 Dynamic.pm: Dynamic.in $par_exe
 	\$(PERLRUN) encode_append.pl Dynamic.in $par_exe Dynamic.pm
