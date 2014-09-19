@@ -1,3 +1,19 @@
+[Changes for 1.022 - Sep 19, 2014]
+
+Fix RT#98955: installation fails | Can't locate String/ShellQuote.pm
+
+  Revert the fix for RT#98791: In order to be fullfilled at "perl Makefile.PL"
+  {String,Win32}::ShellQuote would need to be in the _distributed_
+  META.yml as "configure_require".  But this can't handle arch-specific
+  "configure_require"s and we can't require _both_ as Win32::ShellQuote
+  won't build on *nix systems.
+
+  Simply enclose the filenames in double quotes, should work on both
+  *nix and Windows in all reasonable scenarios.
+
+Drop incorrectly specified 'Digital signature support' "feature": simply
+"recommends" the required modules.
+
 [Changes for 1.021 - Sep 14, 2014]
 
 Fix #98791: PAR-Packer fails to build with DWIMPerl/Strawberry Perl due to unquoted path name
