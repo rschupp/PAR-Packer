@@ -695,7 +695,7 @@ sub pack_manifest_hash {
     my %map;
 
     unshift(@INC, @{ $opt->{I} || [] });
-    unshift(@SharedLibs, map $self->_find_shlib($_, $sn), @{ $opt->{l} || [] });
+    unshift(@SharedLibs, map $self->_find_shlib($_), @{ $opt->{l} || [] });
 
     my $inc_find = $self->_obj_function($fe, '_find_in_inc');
 
@@ -1471,7 +1471,7 @@ sub _chase_lib {
 }
 
 sub _find_shlib {
-    my ($self, $file, $script_name) = @_;
+    my ($self, $file) = @_;
 
     if ($^O eq 'MSWin32') {
         if ($file !~ /^[a-z]:/i) {
@@ -1492,25 +1492,41 @@ sub _find_shlib {
                            ? $ENV{ $Config{ldlibpthname} } : undef;
     }
     if (not defined $libpthname) {
-        print "Can't find $file. Environment variable "
-          . ($^O eq 'MSWin32' ? 'PATH' : $Config{ldlibpthname})
-          . " does not exist.\n";
+        $self->_die(sprintf(
+                "Don't know how to find shared library (option -l) %s: ".
+                "environment variable %s is not set.",
+                $file, $^O eq 'MSWin32' ? 'PATH' : $Config{ldlibpthname}));
         return;
     }
 
     $file = File::Basename::basename($file);
-    for my $dir (File::Basename::dirname($0),
-        split(/\Q$Config{path_sep}\E/, $libpthname))
+    my @path = (File::Basename::dirname($0), split(/\Q$Config{path_sep}\E/, $libpthname));
+
+    my $lib = $self->_find_shlib_in_path($file, @path);
+    return $lib if $lib;
+
+    $self->_die("Can't find shared library (option -l): $file")
+        if $^O eq 'MSWin32' || $file =~ /^lib/;
+
+    # be extra magical and prepend "lib" to the filename
+    $lib = $self->_find_shlib_in_path("lib$file", @path);
+    return $lib if $lib;
+
+    $self->_die("Can't find shared library (option -l): $file (also tried lib$file)");
+}
+
+sub _find_shlib_in_path
+{
+    my ($self, $file, @path) = @_;
+
+    for my $dir (@path)
     {
         my $abs = File::Spec->catfile($dir, $file);
         return $self->_chase_lib($abs) if -e $abs;
         $abs = File::Spec->catfile($dir, "$file.$Config{dlext}");
         return $self->_chase_lib($abs) if -e $abs;
     }
-
-    # be extra magical and prepend "lib" to the filename
-    return if $^O eq 'MSWin32';
-    return $self->_find_shlib("lib$file", $script_name) unless $file =~ /^lib/;
+    return;
 }
 
 sub _can_run {
