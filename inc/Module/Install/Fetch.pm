@@ -6,7 +6,7 @@ use Module::Install::Base ();
 
 use vars qw{$VERSION @ISA $ISCORE};
 BEGIN {
-	$VERSION = '1.10';
+	$VERSION = '1.14';
 	@ISA     = 'Module::Install::Base';
 	$ISCORE  = 1;
 }
@@ -91,7 +91,3 @@ END_FTP
 }
 
 1;
-
-__END__
-
-#line 109
