@@ -1,3 +1,24 @@
+1.023  2014-11-02
+
+  - Fix RT #99231: Problem with PAR::Packer 1.022 on Perl 5.20.1 and earlier.
+    Add libwinpthreads*.dll to embedded files (used on recent 
+    Strawberry builds). Patch by sergio.fanchiotti@standardandpoors.com, thanks!
+
+  - Fix RT #63939: The behaviour of "pp --link ..." is subtly different between OSX and Linux.
+    Applied patch from lamprecht@cpan.org, thanks!
+
+  - Bump required version of Module::ScanDeps,
+    makes t/90-rt59710.t pass again on perl 5.21.x
+
+  - die if a requested shared library (option -l) can't be found.
+
+  - Add a patch rule so that Mozilla::CA finds its (extracted) cacert.pem file.
+
+  - Rename ChangeLog file to Changes and reformat it 
+    according to CPAN::Changes::Spec.
+
+  - Upgrade to Module::Install 1.14.
+
 1.022  2014-09-19
 
   - Fix RT#98955: installation fails | Can't locate String/ShellQuote.pm
