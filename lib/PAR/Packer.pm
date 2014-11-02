@@ -1448,6 +1448,8 @@ sub _check_par {
 sub _chase_lib {
    my ($self, $file) = @_;
 
+   return $self->_chase_lib_darwin($file) if $^O eq q/darwin/;
+
    while ($Config::Config{d_symlink} and -l $file) {
        if ($file =~ /^(.*?\.\Q$Config{dlext}\E\.\d+)\..*/) {
            return $1 if -e $1;
@@ -1469,6 +1471,34 @@ sub _chase_lib {
 
    return $file;
 }
+
+sub _chase_lib_darwin {
+   my ($self, $file) = @_;
+
+   while (-l $file) {
+       if ($file =~ /^(.*?\.\d+)(\.\d+)*\.dylib$/) {
+           my $name = $1 . q/.dylib/;
+           return $name if -e $name;
+       }
+
+       return $file if $file =~ /\D\.\d+\.dylib$/;
+
+       my $dir = File::Basename::dirname($file);
+       $file = readlink($file);
+
+       unless (File::Spec->file_name_is_absolute($file)) {
+           $file = File::Spec->rel2abs($file, $dir);
+       }
+   }
+
+   if ($file =~ /^(.*?\.\d+)(\.\d+)*\.dylib$/) {
+       my $name = $1 . q/.dylib/;
+       return $name if -e $name;
+   }
+
+   return $file;
+}
+
 
 sub _find_shlib {
     my ($self, $file) = @_;
@@ -1519,11 +1549,11 @@ sub _find_shlib_in_path
 {
     my ($self, $file, @path) = @_;
 
+    my $dlext = $^O eq 'darwin' ? 'dylib' : $Config{dlext};
     for my $dir (@path)
     {
         my $abs = File::Spec->catfile($dir, $file);
-        return $self->_chase_lib($abs) if -e $abs;
-        $abs = File::Spec->catfile($dir, "$file.$Config{dlext}");
+        $abs = File::Spec->catfile($dir, "$file.$dlext") unless -e $abs;
         return $self->_chase_lib($abs) if -e $abs;
     }
     return;
