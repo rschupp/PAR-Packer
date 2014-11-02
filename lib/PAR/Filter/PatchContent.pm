@@ -30,6 +30,10 @@ sub PATCH_CONTENT () { +{
         ' = $0' =>
         ' = $ENV{PAR_0} || $0',
     ],
+    'Mozilla/CA.pm' => [
+        'File::Spec->catfile(dirname(__FILE__), "CA", "cacert.pem")' =>
+        'File::Spec->catfile($ENV{PAR_TEMP}, qw(inc lib Mozilla CA cacert.pem))',
+    ],
     # Some versions of Spreadsheet::ParseExcel have a weird non-POD construct =cmmt
     # that is used to comment out a block of code. perl treats it as POD and strips it.
     # Since it's not POD, POD parsers ignore it.
