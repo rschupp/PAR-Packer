@@ -241,11 +241,12 @@ sub find_dll
 }
 
 
-my ($libgcc, $libstdcpp);
+my ($libgcc, $libstdcpp, $libwinpthread);
 if ($dynperl and $^O eq 'MSWin32'
     and defined $Config{gccversion}             # gcc version >= 4.x was used
     and $Config{gccversion} =~ m{\A(\d+)}ms && $1 >= 4) {
     $libgcc = find_dll("libgcc_*.$Config{so}");
+    $libwinpthread = find_dll("libwinpthreads*.$Config{so}");
 }
 if ($ld =~ /(\b|-)g\+\+(-.*)?(\.exe)?$/) {      # g++ was used to link
     $libstdcpp = find_dll("libstdc++*.$Config{so}");
@@ -259,6 +260,7 @@ my @embedded_files = map{ qq["$_"] } grep { defined }
     $par_exe,       # must come first
     $libperl,
     $libgcc,
+    $libwinpthread,
     $libstdcpp;
 
 my @strippedparl = qw( Static.pm );
