@@ -1,3 +1,8 @@
+1.024  2014-11-07
+
+  - Fix RT #99231: Problem with PAR::Packer 1.022 on Perl 5.20.1 and earlier.
+    Correct a typo to really fix this bug.
+
 1.023  2014-11-02
 
   - Fix RT #99231: Problem with PAR::Packer 1.022 on Perl 5.20.1 and earlier.
