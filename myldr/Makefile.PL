@@ -246,7 +246,7 @@ if ($dynperl and $^O eq 'MSWin32'
     and defined $Config{gccversion}             # gcc version >= 4.x was used
     and $Config{gccversion} =~ m{\A(\d+)}ms && $1 >= 4) {
     $libgcc = find_dll("libgcc_*.$Config{so}");
-    $libwinpthread = find_dll("libwinpthreads*.$Config{so}");
+    $libwinpthread = find_dll("libwinpthread*.$Config{so}");
 }
 if ($ld =~ /(\b|-)g\+\+(-.*)?(\.exe)?$/) {      # g++ was used to link
     $libstdcpp = find_dll("libstdc++*.$Config{so}");
