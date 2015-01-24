@@ -66,7 +66,7 @@ int extract_embedded_file(embedded_file_t *emb_file, const char* ext_name, const
     if (close(fd) == -1)
         return EXTRACT_FAIL;
 
-    chmod(*ext_path, 0755);
+    chmod(*ext_path, 0750);
     return EXTRACT_OK;
 }
 
