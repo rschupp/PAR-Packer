@@ -64,18 +64,8 @@ if (!samefiles($startperl, $^X)) {
     exit;
 }
 
-unshift @INC, File::Spec->catdir($cwd, 'inc');
-unshift @INC, File::Spec->catdir($cwd, 'blib', 'lib');
-unshift @INC, File::Spec->catdir($cwd, 'blib', 'script');
-
 $ENV{PAR_GLOBAL_CLEAN} = 1;
 
-$ENV{PATH} = join(
-    $Config{path_sep},
-    grep length,
-        File::Spec->catdir($cwd, 'blib', 'script'),
-        $ENV{PATH},
-);
 $ENV{PERL5LIB} = join(
     $Config{path_sep},
     grep length,
@@ -85,7 +75,13 @@ $ENV{PERL5LIB} = join(
 );
 
 chdir $test_dir;
-do "automated_pp_test.pl";
+{
+    local @ARGV = (
+        "--pp_location"   => File::Spec->catfile($cwd, qw(blib script pp)),
+        "--par_location"  => File::Spec->catfile($cwd, qw(blib script par.pl))
+    );
+    do "automated_pp_test.pl";
+}
 
 sub can_run {
     my ($self, $cmd) = @_;

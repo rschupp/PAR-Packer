@@ -37,7 +37,7 @@ mkpath( [$TEMP], 0, 0700 );
 ####
 diag( "Please wait" );
 my $test_proc = File::Spec->catfile('t', 'test-proc');
-system( $PP, '-o', $EXEC, $test_proc );
+system( $^X, $PP, '-o', $EXEC, $test_proc );
 
 ok( (-f $EXEC), "Created \"$EXEC\"" ) 
         or die "Failed to create \"$EXEC\"!\n";
