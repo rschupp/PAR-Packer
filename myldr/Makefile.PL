@@ -142,9 +142,6 @@ my $optimize = $Config{optimize};
 my $ldflags = "$lddebug$pldflags $perl58lib";
 my $static_ldflags = $ldflags;
 
-$static_ldflags =~ s/\s+-lperl\s+/ /g;
-$boot_ldflags .= $static_ldflags;
-
 my $libperl;
 
 if ($dynperl and $^O eq 'os2') {
@@ -168,6 +165,17 @@ elsif ($dynperl) {
     # 	unless -e $libperl;
     undef $dynperl if !-e $libperl;
 }
+
+my $perllibshortname = 'perl';
+if ($dynperl) {
+    $perllibshortname = basename($libperl);
+    my $so = $Config{so} || 'so';
+    $perllibshortname =~ s/^lib//;
+    $perllibshortname =~ s/\Q.$so\E$//;
+}
+$static_ldflags =~ s/(^|\s)-l$perllibshortname(\s|$)/ /g;
+$boot_ldflags .= $static_ldflags;
+
 
 # In the $dynperl case, we've already found the $libperl DSO.
 # The only problem is: when the linker links $par_exe against $libperl
