@@ -27,7 +27,8 @@ sub go {
     }
     
     my %opt;
-    GetOptions( \%opt, PAR::Packer->options, 'h|help', 'V|version' );
+    GetOptions( \%opt, PAR::Packer->options, 'h|help', 'V|version' )
+        or die qq[Run "$0 --help" to show available options.\n];
     help() if $opt{h};
     version() if $opt{V};
 
