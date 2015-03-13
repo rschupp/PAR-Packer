@@ -3,7 +3,7 @@
 #===============================================================================
 # $Author    : Djibril Ousmanou (DJIBEL) and Doug Gruber (DOUGTHUG)            $
 # $Copyright : 2015                                                            $
-# $Update    : 22/02/2015                                                      $
+# $Update    : 06/03/2015                                                      $
 # $AIM       : GUI to use easily Tkpp                                          $
 #===============================================================================
 use Carp;
@@ -126,7 +126,7 @@ my $pp_extension = ( $OSNAME eq 'MSWin32' ) ? '.bat' : $EMPTY;
 
 my %general_configuration = (
 	authors => {
-		DJIBEL   => [ 'Djibril Ousmanou', 'djibel@cpan.org',   undef ],
+		DJIBEL   => [ 'Djibril Ousmanou', 'djibel@cpan.org',   'http://search.cpan.org/~djibel/' ],
 		DOUGTHUG => [ 'Doug Gruber',      'dougthug@cpan.org', 'http://www.dougthug.com' ],
 	},
 	perl_path        => $EXECUTABLE_NAME,
