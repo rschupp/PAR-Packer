@@ -15,7 +15,7 @@ requires    'IO::Compress::Gzip' => 0;
 requires    'Archive::Zip'       => '1.00';
 requires    'Module::ScanDeps'   => '1.17';
 requires    'PAR::Dist'          => '0.22';
-requires    'PAR'                => '1.005';
+requires    'PAR'                => '1.009';
 requires    'Text::ParseWords'   => 0;
 requires    'Getopt::ArgvFile'   => '1.07';
 
