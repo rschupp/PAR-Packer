@@ -26,13 +26,17 @@ sub PATCH_CONTENT () { +{
         '$is_dosish = ' =>
         '$is_dosish = $^O eq \'cygwin\' || ',
     ],
-    'Pod/Usage.pm' => [
-        ' = $0' =>
-        ' = $ENV{PAR_0} || $0',
+    'MIME/Types.pm' => [
+        'File::Spec->catfile(dirname(__FILE__),' =>
+        'File::Spec->catfile($ENV{PAR_TEMP}, qw(inc lib MIME),',
     ],
     'Mozilla/CA.pm' => [
         'File::Spec->catfile(dirname(__FILE__), "CA", "cacert.pem")' =>
         'File::Spec->catfile($ENV{PAR_TEMP}, qw(inc lib Mozilla CA cacert.pem))',
+    ],
+    'Pod/Usage.pm' => [
+        ' = $0' =>
+        ' = $ENV{PAR_0} || $0',
     ],
     # Some versions of Spreadsheet::ParseExcel have a weird non-POD construct =cmmt
     # that is used to comment out a block of code. perl treats it as POD and strips it.
