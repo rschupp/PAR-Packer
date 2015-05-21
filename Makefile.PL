@@ -40,7 +40,8 @@ include_deps        'Test::More';
 no_index            directory => 'contrib';
 auto_provides;
 
-repository 'https://www.openfoundry.org/svn/par/PAR-Packer/trunk';
+license     'perl';
+repository  'https://www.openfoundry.org/svn/par/PAR-Packer/trunk';
 
 par_base 'SMUELLER';
 

@@ -93,11 +93,11 @@ Please consult the documentation of 'pp' for more information.
 
 You can check out the most recent revision from PAR's Subversion repository:
 
-    http://svn.openfoundry.org/par/PAR-Packer
+    https://www.openfoundry.org/svn/par/PAR-Packer/trunk
 
 Same applies to the main PAR distribution:
 
-    http://svn.openfoundry.org/par/trunk
+    https://www.openfoundry.org/svn/par/trunk
 
 There is anonymous access to all. Commit access is handed out liberally;
 contact the mailing list for details.
