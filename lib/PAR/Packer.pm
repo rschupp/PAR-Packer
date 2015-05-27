@@ -543,6 +543,7 @@ sub _make_manifest {
     my ($self) = @_;
 
     my $full_manifest = $self->{full_manifest};
+    my $add_manifest  = $self->{add_manifest};
 
     my $opt      = $self->{options};
     my $par_file = $self->{par_file};
@@ -554,7 +555,7 @@ sub _make_manifest {
 
     my $manifest = join("\n",
 '    <!-- accessible as jar:file:///NAME.par!/MANIFEST in compliant browsers -->',
-        (sort keys %$full_manifest),
+        (sort keys %$full_manifest, keys %$add_manifest),
 q(    # <html><body onload="var X=document.body.innerHTML.split(/\n/);var Y='<iframe src=&quot;META.yml&quot; style=&quot;float:right;height:40%;width:40%&quot;></iframe><ul>';for(var x in X){if(!X[x].match(/^\s*#/)&&X[x].length)Y+='<li><a href=&quot;'+X[x]+'&quot;>'+X[x]+'</a>'}document.body.innerHTML=Y">)
     );
 
@@ -565,7 +566,7 @@ conflicts: {}
 dist_name: $dist_name
 distribution_type: par
 dynamic_config: 0
-generated_by: '$class version $version
+generated_by: '$class version $version'
 license: unknown
 par:
   clean: $clean
