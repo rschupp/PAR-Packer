@@ -11,7 +11,7 @@ plan tests => 3;
 
 $ENV{PAR_TMPDIR} = tempdir(TMPDIR => 1, CLEANUP => 1);
 
-my $EXE = catfile($ENV{PAR_TMPDIR},"rt103861$Config{_exe}");
+my $EXE = catfile($ENV{PAR_TMPDIR},"packed$Config{_exe}");
 my $PP = catfile(qw( blib script pp ));
 
 system $^X, $PP, 

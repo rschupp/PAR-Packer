@@ -842,6 +842,9 @@ sub pack_manifest_hash {
             $full_manifest->{"script/$name"} = [ file => $in ];
             $dep_manifest->{"script/$name"}  = [ file => $in ];
         }
+
+        delete $full_manifest->{$root . "lib/$name"};
+        delete $dep_manifest->{$root . "lib/$name"};
     }
 
     my $shlib = "shlib/$Config{archname}";
