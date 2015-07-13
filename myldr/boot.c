@@ -217,7 +217,7 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     }
 
     par_setenv("PAR_SPAWNED", "1");
-    rc = spawnvpe(P_WAIT, my_perl, (const char* const*)argv, (const char* const*)environ);
+    rc = spawnvpe(P_WAIT, my_perl, (char* const*)argv, (char* const*)environ);
 
     par_cleanup(stmpdir);
     exit(rc);

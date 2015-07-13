@@ -292,7 +292,7 @@ close PWOUT;
 
 
 WriteMakefile(
-    NAME        => "par$exe",
+    NAME        => "myldr",
     SKIP        => [qw(static static_lib dynamic dynamic_lib test)],
     NO_META     => 1,
     PL_FILES    => {},
