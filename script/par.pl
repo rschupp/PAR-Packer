@@ -241,14 +241,29 @@ my ($start_pos, $data_pos);
     open _FH, '<', $progname or last;
     binmode(_FH);
 
+    # Search for the "\nPAR.pm\n signature backward from the end of the file
     my $buf;
-    seek _FH, -8, 2;
-    read _FH, $buf, 8;
-    last unless $buf eq "\nPAR.pm\n";
+    my $size = -s $progname;
+    my $offset = 512;
+    my $idx = -1;
+    while (1)
+    {
+        $offset = $size if $offset > $size;
+        seek _FH, -$offset, 2 or die qq[seek failed on "$progname": $!];
+        my $nread = read _FH, $buf, $offset;
+        die qq[read failed on "$progname": $!] unless $nread == $offset;
+        $idx = rindex($buf, "\nPAR.pm\n");
+        last if $idx >= 0 || $offset == $size || $offset > 128 * 1024;
+        $offset *= 2;
+    }
+    last unless $idx >= 0;
 
-    seek _FH, -12, 2;
+    # Seek 4 bytes backward from the signature to get the offset of the 
+    # first embedded FILE, then seek to it
+    $offset -= $idx - 4;
+    seek _FH, -$offset, 2;
     read _FH, $buf, 4;
-    seek _FH, -12 - unpack("N", $buf), 2;
+    seek _FH, -$offset - unpack("N", $buf), 2;
     read _FH, $buf, 4;
 
     $data_pos = (tell _FH) - 4;
@@ -367,6 +382,10 @@ my ($start_pos, $data_pos);
     }
 
     # }}}
+
+    # increase the chunk size for Archive::Zip so that it will find the EOCD
+    # even if more stuff has been appended to the .par
+    $Archive::Zip::ChunkSize = 128*1024;
 
     last unless $buf eq "PK\003\004";
     $start_pos = (tell _FH) - 4;

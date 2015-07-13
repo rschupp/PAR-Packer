@@ -20,14 +20,29 @@ sub extract_embedded
     open my $fh, '<', $exe or die qq[failed to open "$exe": $!];
     binmode $fh;
 
+    # search for the "\nPAR.pm\n signature backward from the end of the file
     my $buf;
-    seek $fh, -8, 2;
-    read $fh, $buf, 8;
-    die qq[no PAR signature found in "$exe"] unless $buf eq "\nPAR.pm\n";
+    my $size = -s $exe;
+    my $offset = 512;
+    my $idx = -1;
+    while (1)
+    {
+        $offset = $size if $offset > $size;
+        seek $fh, -$offset, 2 or die qq[seek failed on "$exe": $!];
+        my $nread = read $fh, $buf, $offset;
+        die qq[read failed on "$exe": $!] unless $nread == $offset;
+        $idx = rindex($buf, "\nPAR.pm\n");
+        last if $idx >= 0 || $offset == $size || $offset > 128 * 1024;
+        $offset *= 2;
+    }
+    die qq[no PAR signature found in "$exe"] unless $idx >= 0;
 
-    seek $fh, -12, 2;
+    # seek 4 bytes backward from the signature to get the offset of the 
+    # first embedded FILE, then seek to it
+    $offset -= $idx - 4;
+    seek $fh, -$offset, 2;
     read $fh, $buf, 4;
-    seek $fh, -12 - unpack("N", $buf), 2;
+    seek $fh, -$offset - unpack("N", $buf), 2;
     read $fh, $buf, 4;
 
     while ($buf eq "FILE") 

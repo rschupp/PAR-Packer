@@ -1299,25 +1299,6 @@ sub _move_parl {
     $self->{fh} = $fh;
 }
 
-sub _append_parl {
-    my ($self) = @_;
-
-    my $fh = delete $self->{fh};
-
-    my $buf;
-    seek $fh, -8, 2;
-    read $fh, $buf, 8;
-    die unless $buf eq "\nPAR.pm\n";
-    seek $fh, -12, 2;
-    read $fh, $buf, 4;
-    seek $fh, -12 - unpack("N", $buf), 2;
-
-    local $/;
-    my $cfh = $self->_open('>>', $self->{parl});
-    print $cfh readline($fh);
-    close $cfh;
-}
-
 sub _generate_output {
     my ($self) = @_;
 
