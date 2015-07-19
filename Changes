@@ -1,3 +1,45 @@
+1.026  2015-07-19
+
+  - Fix RT#101800: [PATCH] Reinstate files to inc dir if deleted by external process
+
+    - The actual fix is in PAR (cf r1584) (add a "canary" file),
+      bump the required version of PAR, add a test.
+
+  - Find the "\nPAR.pm\n" signature in a .par (or packed executable)
+    even if it's not at end of the file (algorithm stolen from Archive::Zip's
+    search for the EOCD signature).
+
+     - This is intended to help code signing which may add stuff at the
+       end of the executable.
+
+  - Fix RT#104635 for PAR-Packer: IO error the first time an executable built by the packer is run on OSX
+
+  - Fix RT#104509: Problem signing PAR file,
+    and RT#104560: [PATCH] list added files in manifest
+
+    - Apply (slightly modified) patch by Shawn Laffan (SLAFFAN@cpan.org)
+      from RT#104560. Thanks, Shawn!
+
+  - Make MIME::Types work "out of the box"
+
+    - pack its data file MIME/types.db
+    - patch the code to read MIME/types.db
+    - bump required version of Module::ScanDeps
+      (needed for MIME::Types %preload rule and fix for handling of
+      "open FH, '<:encoding(utf8)', ..." since that's what MIME::Types does)
+
+  - Bump requirement on PAR (for the fix for RT #103861), add a test.
+
+  - Update tkpp ito 1.5: 
+    - using -M will now work (the current directory added in @INC)
+    - tkpp delete and test building file.
+
+  - Make pp fail when an unknown option is encountered.
+
+  - Remove PAR::Packer::_append_parl(), not called anywhere.
+
+  - Add license; update repository OpenFoundry repository URL
+
 1.025  2015-01-24
 
   - Fix PAR::Packer "make test" problem with Strawberry Portable
