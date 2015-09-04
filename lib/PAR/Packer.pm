@@ -675,6 +675,11 @@ sub pack_manifest_hash {
     my (@modules, @data, @exclude);
 
     foreach my $name (@{ $opt->{M} || [] }) {
+        # for "-M Foo::Bar::" also add everything below .../Foo/Bar
+        if ($name =~ s/^([\w:]+)::$/$1/) {
+            (my $mod = $name) =~ s/::/\//g;
+            Module::ScanDeps::add_preload_rule("$mod.pm", 'sub');
+        }
         $self->_name2moddata($name, \@modules, \@data);
     }
 

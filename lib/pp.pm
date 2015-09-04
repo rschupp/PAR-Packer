@@ -324,12 +324,17 @@ L<PAR::Filter::Bleach>.
 =item B<-M>, B<--module>=I<MODULE>
 
 Add the specified module into the package, along with its dependencies.
-Also accepts filenames relative to the C<@INC> path; i.e. C<-M
-Module::ScanDeps> means the same thing as C<-M Module/ScanDeps.pm>.
+
+If I<MODULE> has a trailing double colon, e.g. C<Foo::Bar::>, add
+not only C<Foo/Bar.pm>, but also all modules below C<Foo/Bar>.
+
+Instead of a module name, I<MODULE> may also be specified as a filename
+relative to the C<@INC> path, i.e.  C<-M Module/ScanDeps.pm>
+means the same thing as C<-M Module::ScanDeps>.
 
 If I<MODULE> has an extension that is not C<.pm>/C<.ix>/C<.al>, it will not
 be scanned for dependencies, and will be placed under C</> instead of
-C</lib/> inside the PAR file.  This use is deprecated -- consider using
+C</lib/> inside the PAR file.  This use is B<deprecated> -- consider using
 the B<-a> option instead.
 
 You may specify C<-M> multiple times.
