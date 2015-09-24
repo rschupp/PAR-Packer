@@ -385,7 +385,7 @@ my ($start_pos, $data_pos);
 
     # increase the chunk size for Archive::Zip so that it will find the EOCD
     # even if more stuff has been appended to the .par
-    $Archive::Zip::ChunkSize = 128*1024;
+    $Archive::Zip::setChunkSize(128*1024);
 
     last unless $buf eq "PK\003\004";
     $start_pos = (tell _FH) - 4;

@@ -12,7 +12,7 @@ configure_requires 'ExtUtils::Embed';
 requires    'File::Temp'         => '0.05';
 requires    'Compress::Zlib'     => ($^O eq 'MSWin32') ? '1.16' : '1.30';
 requires    'IO::Compress::Gzip' => 0;
-requires    'Archive::Zip'       => '1.00';
+requires    'Archive::Zip'       => '1.02';
 requires    'Module::ScanDeps'   => '1.20';
 requires    'PAR::Dist'          => '0.22';
 requires    'PAR'                => '1.010';
