@@ -723,12 +723,12 @@ sub pack_manifest_hash {
           or $self->_die("Cannot find module $module (specified with -M)\n");
         push @files, $file;
         
-        my $preload = Module::ScanDeps::_get_preload($module) or next;
+        my @preload = Module::ScanDeps::_get_preload($module) or next;
         
         $add_deps->(
             used_by => $file,
             rv      => \%map,
-            modules => $preload,
+            modules => \@preload,
             skip    => \%skip,
 #            warn_missing => $args->{warn_missing},
         );
