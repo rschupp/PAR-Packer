@@ -732,7 +732,7 @@ sub pack_manifest_hash {
             skip    => \%skip,
 #            warn_missing => $args->{warn_missing},
         );
-        push @files, map {&$inc_find($_)} @$preload;
+        push @files, map {&$inc_find($_)} @preload;
     }
     push @files, @$input;
 
