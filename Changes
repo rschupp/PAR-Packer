@@ -1,3 +1,13 @@
+1.027  2015-11-18
+
+- Add option -M Foo::Bar:: to pp (note the trailing double colon):
+  it adds Foo/Bar.pm and anything below Foo/Bar.
+
+  Bump required Module::ScanDeps version for 
+  Module::ScanDeps::add_preload_rule() to implement this.
+
+- Fix RT#109110: Incompatible with Module::ScanDeps 1.20
+
 1.026  2015-07-19
 
   - Fix RT#101800: [PATCH] Reinstate files to inc dir if deleted by external process
