@@ -30,7 +30,7 @@ system $^X, $PP,
     -o => $EXE, 
     -a => "$tmpfile1;check1.txt",
     -a => "$tmpdir1;checkdir1",
-    -e => "print q[hello from rt101800]";
+    -e => "print q[regression test for rt104560]";
 ok( $? == 0 && -f $EXE, qq[successfully packed "$EXE"] ) 
     or die qq[couldn't pack "$EXE"];
 

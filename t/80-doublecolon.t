@@ -27,7 +27,7 @@ system $^X, $PP,
     -o => $EXE, 
     -I => "t",
     -M => "Double::Colon::",
-    -e => "print 'test -M with trailing ::'";
+    -e => q[print qq[testing 'pp -M ...' with trailing ::\n]];
 ok( $? == 0 && -f $EXE, qq[successfully packed "$EXE"] ) 
     or die qq[couldn't pack "$EXE"];
 
