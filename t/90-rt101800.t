@@ -44,8 +44,8 @@ ok(-e $canary, "canary file found in $par_temp");
 ok(-d $par_temp_inc, "inc directory found in $par_temp");
 ok(-e $inc_data, "data file found in $par_temp");
 my $files_in_inc = find_all_files($par_temp_inc);
-is(scalar(grep { stat($_)->mtime < $t0 } @$files_in_inc), 0,
-    "all files in $par_temp_inc are newer than extraction");
+my @older_than_extraction = grep { stat($_)->mtime < $t0 } @$files_in_inc;
+is("@older_than_extraction", "", "all files in $par_temp_inc are newer than extraction");
 
 sleep(3);
 
@@ -55,8 +55,8 @@ ok( $? == 0, qq[successfully ran "$EXE" a second time] );
 ok(-e $canary, "canary file found in $par_temp");
 ok(-d $par_temp_inc, "inc directory found in $par_temp");
 ok(-e $inc_data, "data file found in $par_temp");
-is(scalar(grep { stat($_)->mtime >= $t1 } @$files_in_inc), 0,
-    "no files in $par_temp_inc have been updated for second run");
+my @newer_than_extraction = grep { stat($_)->mtime >= $t1 } @$files_in_inc;
+is("@newer_than_extraction", "", "no files in $par_temp_inc have been updated for second run");
 
 sleep(3);
 
@@ -73,7 +73,8 @@ ok( $? == 0, qq[successfully ran "$EXE" a third time] );
 ok(-e $canary, "canary file found in $par_temp");
 ok(-d $par_temp_inc, "inc directory found in $par_temp");
 ok(-e $inc_data, "data file found in $par_temp");
-is(scalar(grep { !-e $_ } @deleted), 0, "all deleted files in $par_temp_inc haven been restored");
+my @not_restored = grep { !-e $_ } @deleted;
+is("@not_restored", "", "all deleted files in $par_temp_inc haven been restored");
 
 sub find_all_files
 {
