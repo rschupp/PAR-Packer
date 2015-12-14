@@ -514,7 +514,7 @@ Jeff Goff for suggesting the name C<pp>.
 Audrey Tang E<lt>cpan@audreyt.orgE<gt>,
 Steffen Mueller E<lt>smueller@cpan.orgE<gt>
 
-L<http://par.perl.org/> is the official PAR website.  You can write
+You can write
 to the mailing list at E<lt>par@perl.orgE<gt>, or send an empty mail to
 E<lt>par-subscribe@perl.orgE<gt> to participate in the discussion.
 
