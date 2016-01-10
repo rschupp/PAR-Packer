@@ -19,13 +19,13 @@ my $EXE = catfile($ENV{PAR_TMPDIR},"packed$Config{_exe}");
 my $PP = catfile(qw( blib script pp ));
 my $data = "AUTHORS";
 
-# Note: there's nothing special about Test::More here - any module that
+# Note: there's nothing special about IPC::Open3 here - any module that
 # (1) we know to be installed and (2) is not one of the "bundled" modules
 # will do.
 system $^X, $PP, 
     -o => $EXE, 
     -a => $data,
-    -e => q[use Test::More; print qq[PAR_TEMP=$ENV{PAR_TEMP}\n];];
+    -e => q[use IPC::Open3; print qq[PAR_TEMP=$ENV{PAR_TEMP}\n];];
 ok( $? == 0 && -f $EXE, qq[successfully packed "$EXE"] ) 
     or die qq[couldn't pack "$EXE"];
 
