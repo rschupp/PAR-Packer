@@ -1,16 +1,3 @@
-static void par_redo_stack (pTHX_ void *data) {
-#if PERL_VERSION > 10
-    PUSHEVAL((&cxstack[0]) , "");
-#else
-    PUSHEVAL((&cxstack[0]) , "", Nullgv);
-#endif
-}
-
-XS(XS_Internals_PAR_CLEARSTACK) {
-    dounwind(-1);
-    SAVEDESTRUCTOR_X(par_redo_stack, 0);
-}
-
 XS(XS_Internals_PAR_BOOT) {
     GV* tmpgv;
     AV* tmpav;
@@ -123,7 +110,4 @@ static void par_xs_init(pTHX)
 {
     xs_init(aTHX);
     newXSproto("Internals::PAR::BOOT", XS_Internals_PAR_BOOT, "", "");
-#ifdef PAR_CLEARSTACK
-    newXSproto("Internals::PAR::CLEARSTACK", XS_Internals_PAR_CLEARSTACK, "", "");
-#endif
 }
