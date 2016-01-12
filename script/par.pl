@@ -775,6 +775,7 @@ sub require_modules {
     eval { require Archive::Unzip::Burst };
     eval { require Tie::Hash::NamedCapture };
     eval { require PerlIO; require PerlIO::scalar };
+    eval { require utf8 };
 }
 
 # The C version of this code appears in myldr/mktmpdir.c

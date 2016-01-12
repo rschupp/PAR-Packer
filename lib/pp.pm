@@ -90,7 +90,7 @@ pp - PAR Packager
 
 =head1 SYNOPSIS
 
-B<pp> S<[ B<-ABCEFILMPTSVXacdefghilmnoprsvxz> ]> S<[ I<parfile> | I<scriptfile> ]>...
+B<pp> S<[ B<-ABCEFILMPTSVXacdefghilmnoprsuvxz> ]> S<[ I<parfile> | I<scriptfile> ]>...
 
 =head1 EXAMPLES
 
@@ -397,6 +397,22 @@ F</tmp/par-USER/cache-XXXXXXX>.  F<USER> is replaced by the
 name of the user running the program, but "spelled" in hex.
 F<XXXXXXX> is either a hash of the
 executable or the value passed to the C<-T> or C<--tempcache> switch.
+
+=item B<-u>, B<--unicode>
+
+Package Unicode support (essentially F<utf8_heavy.pl> and everything
+below the directory F<unicore> in your perl library). 
+
+This option exists because it is impossible to detect using static analysis
+if your program needs Unicode support at runtime. (Note: If your 
+programm contains C<use utf8> this does B<not> imply it needs Unicode
+support. It merely says that your programm is written in UTF-8.)
+
+If your packed program exits with an error message like
+
+  Can't locate utf8_heavy.pl in @INC (@INC contains: ...)
+
+try to pack it with C<-u> (or use C<-x>).
 
 =item B<-v>, B<--verbose>[=I<NUMBER>]
 

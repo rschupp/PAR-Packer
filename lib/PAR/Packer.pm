@@ -65,6 +65,7 @@ use constant OPTIONS => {
     'S|save'         => 'Preserve intermediate PAR files',
     's|sign'         => 'Sign PAR files',
     'T|tempcache:s'  => 'Temp cache name',
+    'u|unicode'      => 'Include Unicode stuff',
     'v|verbose:i'    => 'Verbosity level',
     'vv|verbose2',   => 'Verbosity level 2',
     'vvv|verbose3',  => 'Verbosity level 3',
@@ -681,6 +682,10 @@ sub pack_manifest_hash {
             Module::ScanDeps::add_preload_rule("$mod.pm", 'sub');
         }
         $self->_name2moddata($name, \@modules, \@data);
+    }
+
+    if ($opt->{u}) {
+        push @modules, "utf8_heavy.pl";
     }
 
     # Skip either
