@@ -1,11 +1,18 @@
+1.029  2016-01-12
+
+- Add option "-u" ("--unicode") to pp to explicitly package Unicode support
+
+- Remove all references to http://par.perl.org/, doesn't exist anymore
+
+- Remove Internals::PAR::CLEARSTACK - it hasn't been enabled for ages,
+  causes segfaults if enabled and doesn't even compile with perl > 5.23.6
+
 1.028  2015-11-19
 
 - Fix RT#109123: v1.027 tests are not passed under windows
   Apparently, even when called with a list, system() on Strawberry Perl
   on Windows has a problem with arguments containing double quotes,
   hence avoid them.
-
-------------------------------------------------------------------------
 
 1.027  2015-11-18
 
