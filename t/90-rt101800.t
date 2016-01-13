@@ -35,28 +35,37 @@ ok( $? == 0, qq[successfully ran "$EXE"] )
     or die qq[running "$EXE" failed];
 my ($par_temp) = $out =~ /^PAR_TEMP=(.*)$/m
     or die qq[can't find PAR_TEMP in "$out"];
+diag("PAR_TEMP = $par_temp");
 
 my $canary = catfile($par_temp, $PAR::SetupTemp::Canary);
 my $par_temp_inc = catdir($par_temp, "inc");
 my $inc_data = catfile($par_temp_inc, $data);
 
-ok(-e $canary, "canary file found in $par_temp");
-ok(-d $par_temp_inc, "inc directory found in $par_temp");
-ok(-e $inc_data, "data file found in $par_temp");
+ok(-e $canary, 'canary file found in $PAR_TEMP');
+ok(-d $par_temp_inc, 'inc directory found in $PAR_TEMP');
+ok(-e $inc_data, 'data file found in $PAR_TEMP');
 my $files_in_inc = find_all_files($par_temp_inc);
 my @older_than_extraction = grep { stat($_)->mtime < $t0 } @$files_in_inc;
-is("@older_than_extraction", "", "all files in $par_temp_inc are newer than extraction");
+unless (is(scalar(@older_than_extraction), 0, 
+           'all files in $PAR_TEMP/inc are newer than extraction')) {
+    diag("time of extraction: $t0");
+    diag(sprintf("mtime %s: %d", $_, stat($_)->mtime)) foreach @older_than_extraction;
+}
 
 sleep(3);
 
 my $t1 = time();
 qx( $EXE );
 ok( $? == 0, qq[successfully ran "$EXE" a second time] );
-ok(-e $canary, "canary file found in $par_temp");
-ok(-d $par_temp_inc, "inc directory found in $par_temp");
-ok(-e $inc_data, "data file found in $par_temp");
+ok(-e $canary, 'canary file found in $PAR_TEMP');
+ok(-d $par_temp_inc, 'inc directory found in $PAR_TEMP');
+ok(-e $inc_data, 'data file found in $PAR_TEMP');
 my @newer_than_extraction = grep { stat($_)->mtime >= $t1 } @$files_in_inc;
-is("@newer_than_extraction", "", "no files in $par_temp_inc have been updated for second run");
+unless (is(scalar(@newer_than_extraction), 0,
+           'no files in $PAR_TEMP/inc have been updated for second run')) {
+    diag("time of second run: $t1");
+    diag(sprintf("mtime %s: %d", $_, stat($_)->mtime)) foreach @newer_than_extraction;
+}
 
 sleep(3);
 
@@ -70,11 +79,14 @@ ok(!-e $inc_data, "data file removed");
 
 qx( $EXE );
 ok( $? == 0, qq[successfully ran "$EXE" a third time] );
-ok(-e $canary, "canary file found in $par_temp");
-ok(-d $par_temp_inc, "inc directory found in $par_temp");
-ok(-e $inc_data, "data file found in $par_temp");
+ok(-e $canary, 'canary file found in $PAR_TEMP');
+ok(-d $par_temp_inc, 'inc directory found in $PAR_TEMP');
+ok(-e $inc_data, 'data file found in $PAR_TEMP');
 my @not_restored = grep { !-e $_ } @deleted;
-is("@not_restored", "", "all deleted files in $par_temp_inc haven been restored");
+unless (is(scalar(@not_restored), 0, 
+           'all deleted files in $PAR_TEMP/inc haven been restored')) {
+    diag("not restored: $_") foreach @not_restored;
+}
 
 sub find_all_files
 {
