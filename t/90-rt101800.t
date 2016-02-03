@@ -11,7 +11,15 @@ use File::stat;
 use PAR::SetupTemp;     # for $PAR::SetupTemp::Canary
 
 use Test::More;
-plan tests => 18;
+
+if (eval { require Archive::Unzip::Burst; 1; })
+{
+    plan skip_all => "Archive::Unzip::Burst detected";
+}
+else
+{
+    plan tests => 18;
+}
 
 $ENV{PAR_TMPDIR} = tempdir(TMPDIR => 1, CLEANUP => 1);
 
