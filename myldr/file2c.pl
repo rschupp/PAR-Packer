@@ -26,7 +26,7 @@ GetOptions(
 binmode STDOUT;
 
 my $i = 0;
-my @embedded_files = map { process($i++, $_) } @ARGV;
+my @embedded_files = map { file2c($i++, $_) } @ARGV;
 
 print "embedded_file_t embedded_files[] = {\n";
 print "  { \"$_->{name}\", $_->{size}, $_->{chunks} },\n" foreach @embedded_files;
@@ -35,7 +35,7 @@ print "  { NULL, 0, NULL }\n};";
 exit 0;
 
 
-sub process
+sub file2c
 {
     my ($i, $path) = @_;
 
@@ -81,18 +81,24 @@ sub process
     };
 }
 
-
 sub print_chunk 
 {
     my ($chunk, $name) = @_;
 
     my $len = length($chunk);
-    print "static unsigned char ${name}[] = {\n";
-    for (my $i = 0; $i < $len; $i++) {
-        printf "0x%02x,", ord(substr($chunk, $i, 1));
-        print "\n" if $i % 16 == 15;
-    }
-    print "};\n";
+    print qq[static unsigned char ${name}[] =];
+    my $i = 0;
+    do
+    {
+        print qq[\n"];
+        while ($i < $len)
+        {
+            printf "\\x%02x", ord(substr($chunk, $i++, 1));
+            last if $i % 16 == 0;
+        }
+        print qq["];
+    } while ($i < $len);
+    print ";\n";
     return $len;
 }
 
