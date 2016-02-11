@@ -174,7 +174,6 @@ if ($dynperl) {
     $perllibshortname =~ s/\Q.$so\E$//;
 }
 $static_ldflags =~ s/(^|\s)-l$perllibshortname(\s|$)/ /g;
-$boot_ldflags .= $static_ldflags;
 
 
 # In the $dynperl case, we've already found the $libperl DSO.
