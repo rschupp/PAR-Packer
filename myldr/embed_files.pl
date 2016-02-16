@@ -106,6 +106,8 @@ sub ldd
     # weed out system libraries (except the perl shared library)
     while (my ($name, $path) = each %dlls)
     {
+        delete $dlls{$name} unless -r $path;    # huh?
+
         next if $name =~ /^libperl/;
         delete $dlls{$name} if is_system_lib($path);
     }
