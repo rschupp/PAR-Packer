@@ -69,22 +69,13 @@ for ($^O)
 }
 
 
-my $n = 0;
-my @embedded_files = {          # par is always the first embedded file
-    name   => basename($par),
-    size   => -s $par,
-    chunks => file2c("file$n", $par),
-};
-$n++;
+# par is always the first embedded file
+my @embedded_files;
+embed(\@embedded_files, basename($par), $par);
 
 while (my ($name, $file) = each %$dlls)
 {
-    push @embedded_files, {
-        name   => $name,
-        size   => -s $file,
-        chunks => file2c("file$n", $file),
-    };
-    $n++;
+    embed(\@embedded_files, $name, $file);
 }
 
 print "static embedded_file_t embedded_files[] = {\n";
@@ -93,6 +84,20 @@ print "  { NULL, 0, NULL }\n};";
            
 exit 0;
 
+
+sub embed
+{
+    my ($embedded, $name, $file) = @_;
+    print STDERR qq[# embedding "$file" as "$name"\n];
+
+    my $n = @$embedded;
+    push @$embedded, 
+    { 
+        name   => $name, 
+        size   => -s $file, 
+        chunks => file2c("file$n", $file) 
+    };
+}
 
 sub ldd
 {
