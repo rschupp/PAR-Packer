@@ -106,12 +106,22 @@ sub ldd
     my $out = qx(ldd $file);
     die qq["ldd $file" failed\n] unless $? == 0;
 
-    my %dlls = $out =~ /^ \s* (\S+) \s* => \s* (\S+) /gmx;
+    # NOTE: On older Linux/glibc (e.g. seen on Linux 3.2.0/glibc 2.13)
+    # ldd prints a line like
+    #    linux-vdso.so.1 =>  (0x00007fffd2ff2000)
+    # (without a pathname between "=>" and the address)
+    # while newer versions omit "=>" in this case.
+    my %dlls = $out =~ /^ \s* (\S+) \s* => \s* ( \/ \S+ ) /gmx;
 
     # weed out system libraries (except the perl shared library)
     while (my ($name, $path) = each %dlls)
     {
-        delete $dlls{$name} unless -r $path;    # huh?
+        unless (-r $path)
+        {
+            warn qq[# ldd reported strange path: $path\n];
+            delete $dlls{$name};
+            next;
+        }
 
         next if $name =~ /^libperl/;
         delete $dlls{$name} if is_system_lib($path);
