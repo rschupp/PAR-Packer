@@ -1,3 +1,35 @@
+1.30  2016-03-29
+
+- Fix RT#111455: unable to use -x and -u with pp
+      RT#110480: Unpacking exe: File exists
+
+  Do not add %Preload dependencies of "-M" arguments to the list
+  of input files, this causes several problems (and doesn't gain anything).
+
+- Fix RT#111896: PAR Question Solaris 10
+
+  Link myldr/boot only with what's actually required.
+
+  Move detection of libraries that should be embedded into myldr/boot
+  from myldr/Makefile.PL into myldr/embed_files.pl.
+  Get rid of guessing the shared libraries our custom Perl interpreter
+  is linked with (and hence have to be packed into boot_embedded_files.c) -
+  at least on platforms where we know how to determine the shared libraries
+  required by an executable:
+  - use "ldd" on Linux, Solaris and BDSs
+  - use "otool -L" on Mac OS X if available
+  - use "objdump -ax" on Windows if available (when using the Mingw toolchain)
+
+- file2c.pl: switch back from array of unsiged to (hex encoded) strings.
+  At least for gcc, the former is much harder on the compiler, both
+  in CPU time and memory consumption.
+
+- Skip a test if Archive::Unzip::Burst is detected (this messes up expected
+  mtimes for extracted files).
+
+- Make a test work with early versions of Perl 5.8.x (x < 9) that have a bug
+  with compiled regexes and the /m modifier.
+
 1.029  2016-01-12
 
 - Add option "-u" ("--unicode") to pp to explicitly package Unicode support
