@@ -8,7 +8,7 @@ use Archive::Zip qw( :ERROR_CODES :CONSTANTS );;
 
 use Test::More;
 
-plan tests => 3; # FIXME
+plan tests => 3;
 
 $ENV{PAR_TMPDIR} = File::Temp::tempdir(TMPDIR => 1, CLEANUP => 1);
 
@@ -39,5 +39,8 @@ $zip->read($EXE) == AZ_OK
     or die qq[can't open zip file "$EXE"];
 my $manifest = $zip->contents("MANIFEST")
     or die qq[can't read MANIFEST member];
-like($manifest, qr{^\Qcheck1.txt\E$}m,           "MANIFEST lists check1.txt");
-like($manifest, qr{^\Qcheckdir1/check2.txt\E$}m, "MANIFEST lists checkdir1/check2.txt");
+# NOTE: Don't use like() below: early versions of Perl 5.8.x (x < 9)
+# have a bug with the /m qualifier on compiled regexes that makes
+# the test fail though $manifest is OK.
+ok($manifest =~ m{^check1\.txt$}m,           "MANIFEST lists check1.txt");
+ok($manifest =~ m{^checkdir1/check2\.txt$}m, "MANIFEST lists checkdir1/check2.txt");
