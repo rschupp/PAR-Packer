@@ -180,7 +180,7 @@ Since the command lines can become sufficiently long to reach the limits
 imposed by some shells, it is possible to have I<pp> read some of its
 options from one or more text files. The basic usage is to just include
 an argument starting with an 'at' (@) sigil. This argument will be
-interpeted as a file to read options from. Mixing ordinary options
+interpreted as a file to read options from. Mixing ordinary options
 and C<@file> options is possible. This is implemented using the
 L<Getopt::ArgvFile> module, so read its documentation for advanced usage.
 
@@ -224,7 +224,7 @@ allows the program to start up faster next time.
 
 =item B<-c>, B<--compile>
 
-Run C<perl -c inputfile> to determine additonal run-time dependencies.
+Run C<perl -c inputfile> to determine additional run-time dependencies.
 
 =item B<-cd>, B<--cachedeps>=I<FILE>
 
@@ -249,7 +249,7 @@ Behaves just like C<-e>, except that it implicitly enables all optional features
 
 =item B<-x>, B<--execute>
 
-Run C<perl inputfile> to determine additonal run-time dependencies.
+Run C<perl inputfile> to determine additional run-time dependencies.
 
 =item B<--xargs>=I<STRING>
 

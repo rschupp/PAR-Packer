@@ -22,7 +22,7 @@ PAR::Filter - Input filter for PAR
 
 Starting with PAR 0.76, C<pp -f> takes a filter name, like C<Bleach>, and
 invokes this module to transform the programs with L<PAR::Filter::Bleach>.
-Similarily, C<pp -F Bleach> applies the B<Bleach> filter to all included
+Similarly, C<pp -F Bleach> applies the B<Bleach> filter to all included
 modules.
 
 It is possible to pass in multiple such filters, which are applied in turn.
