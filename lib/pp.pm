@@ -177,7 +177,7 @@ example, the three lines below are all equivalent:
     % pp --output=output.exe input.pl
 
 Since the command lines can become sufficiently long to reach the limits
-imposed by some shells, it is possible to have I<pp> read some of its
+imposed by some shells, it is possible to have F<pp> read some of its
 options from one or more text files. The basic usage is to just include
 an argument starting with an 'at' (@) sigil. This argument will be
 interpreted as a file to read options from. Mixing ordinary options
@@ -250,6 +250,16 @@ Behaves just like C<-e>, except that it implicitly enables all optional features
 =item B<-x>, B<--execute>
 
 Run C<perl inputfile> to determine additional run-time dependencies.
+
+Using this option, F<pp> may be able to detect the use of modules that
+can't be determined by static analysis of C<inputfile>. Examples
+are stuff loaded by run-time loaders like L<Module::Runtime> or
+"plugin" loaders like L<Module::Loader>. Note that which modules are
+detected depends on which parts of your program are exercised
+when running C<inputfile>. E.g. if your program immediately terminates
+when run as C<perl inputfile> because it lacks mandatory arguments,
+then this option will probably have no effect. You may use B<--xargs> to
+supply arguments in this case.
 
 =item B<--xargs>=I<STRING>
 
@@ -523,7 +533,7 @@ partially adapted into the C<-g> flag.
 
 Mattia Barbon for providing the C<myldr> binary loader code.
 
-Jeff Goff for suggesting the name C<pp>.
+Jeff Goff for suggesting the name F<pp>.
 
 =head1 AUTHORS
 
