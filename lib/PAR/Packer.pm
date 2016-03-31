@@ -57,6 +57,7 @@ use constant OPTIONS => {
     'M|module|add:s@'=> 'Include modules',
     'm|multiarch'    => 'Build PAR file for multiple architectures',
     'n|noscan'       => 'Skips static scanning',
+    'N|namespace:s@' => 'Include all modules in namespace',
     'o|output:s'     => 'Output file',
     'p|par'          => 'Generate PAR file',
     'P|perlscript'   => 'Generate perl script',
@@ -684,6 +685,18 @@ sub pack_manifest_hash {
         $self->_name2moddata($name, \@modules, \@data);
     }
 
+    # Search for scannable code in all -I'd paths
+    # NOTE: we need this early, because $inc_glob and $inc_find below
+    # use @IncludeLibs
+    push @Module::ScanDeps::IncludeLibs, @{$opt->{I}} if $opt->{I};
+    
+    my $inc_glob = $self->_obj_function($fe, '_glob_in_inc');
+
+    foreach my $name (@{ $opt->{N} || [] }) {
+        (my $mod = $name) =~ s/::/\//g;
+        $self->_name2moddata($_, \@modules, \@data) foreach &$inc_glob($mod, 1);
+    }
+
     if ($opt->{u}) {
         push @modules, "utf8_heavy.pl";
     }
@@ -740,9 +753,6 @@ sub pack_manifest_hash {
     }
     push @files, @$input;
 
-    # Search for scannable code in all -I'd paths
-    push @Module::ScanDeps::IncludeLibs, @{$opt->{I}} if $opt->{I};
-    
     if ($opt->{x} && defined $opt->{xargs}) {
         require Text::ParseWords;
         $opt->{x} = [ Text::ParseWords::shellwords($opt->{xargs}) ];

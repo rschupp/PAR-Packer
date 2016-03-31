@@ -358,6 +358,19 @@ Build a multi-architecture PAR file.  Implies B<-p>.
 Skip the default static scanning altogether, using run-time
 dependencies from B<-c> or B<-x> exclusively.
 
+=item B<-N>, B<--namespace>=I<NAMESPACE>
+
+Add all modules in the namespace into the package, 
+along with their dependencies. If C<NAMESPACE> is something like C<Foo::Bar>
+then this will add all modules C<Foo/Bar/Quux.pm>, C<Foo/Bar/Fred/Barnie.pm> etc
+that can be located in your module search path. It mimics the behaviour
+of "plugin" loaders like L<Module::Loader>.
+
+This is different from using C<-M Foo::Bar::>, as the latter insists
+on adding C<Foo/Bar.pm> which might not exist in the above "plugin" scenario.
+
+You may specify C<-N> multiple times.
+
 =item B<-o>, B<--output>=I<FILE>
 
 File name for the final packaged executable.
