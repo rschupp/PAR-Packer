@@ -57,7 +57,6 @@ use constant OPTIONS => {
     'M|module|add:s@'=> 'Include modules',
     'm|multiarch'    => 'Build PAR file for multiple architectures',
     'n|noscan'       => 'Skips static scanning',
-    'N|namespace:s@' => 'Include all modules in namespace',
     'o|output:s'     => 'Output file',
     'p|par'          => 'Generate PAR file',
     'P|perlscript'   => 'Generate perl script',
@@ -676,25 +675,30 @@ sub pack_manifest_hash {
     my $par_file = $self->{par_file};
     my (@modules, @data, @exclude);
 
-    foreach my $name (@{ $opt->{M} || [] }) {
-        # for "-M Foo::Bar::" also add everything below .../Foo/Bar
-        if ($name =~ s/^([\w:]+)::$/$1/) {
-            (my $mod = $name) =~ s/::/\//g;
-            Module::ScanDeps::add_preload_rule("$mod.pm", 'sub');
-        }
-        $self->_name2moddata($name, \@modules, \@data);
-    }
-
     # Search for scannable code in all -I'd paths
-    # NOTE: we need this early, because $inc_glob and $inc_find below
-    # use @IncludeLibs
+    # NOTE: We need this early, because Module::ScanDeps::_find_in_inc 
+    # and others refer to @IncludeLibs.
     push @Module::ScanDeps::IncludeLibs, @{$opt->{I}} if $opt->{I};
     
-    my $inc_glob = $self->_obj_function($fe, '_glob_in_inc');
+    foreach my $name (@{ $opt->{M} || [] }) {
+        if ($name =~ s/^([\w:]+)::(\*{0,2})$/$1/) {
+            my $ns = length $2;        # namespace depth indicator
 
-    foreach my $name (@{ $opt->{N} || [] }) {
-        (my $mod = $name) =~ s/::/\//g;
-        $self->_name2moddata($_, \@modules, \@data) foreach &$inc_glob($mod, 1);
+            if ($ns == 0) {
+                # "-MFoo::" shorthand for "-MFoo -MFoo::**"
+                $self->_name2moddata($name, \@modules, \@data);
+                $ns = 2;
+            }
+
+            (my $mod = $name) =~ s/::/\//g;
+            my @mods_in_ns = $ns == 1
+                ? Module::ScanDeps::_glob_in_inc_1($mod, 1)
+                : Module::ScanDeps::_glob_in_inc($mod, 1);
+            $self->_name2moddata($_, \@modules, \@data) foreach @mods_in_ns;
+        } 
+        else {
+            $self->_name2moddata($name, \@modules, \@data);
+        }
     }
 
     if ($opt->{u}) {
@@ -721,9 +725,7 @@ sub pack_manifest_hash {
     unshift(@INC, @{ $opt->{I} || [] });
     unshift(@SharedLibs, map $self->_find_shlib($_), @{ $opt->{l} || [] });
 
-    my $inc_find = $self->_obj_function($fe, '_find_in_inc');
-
-    my %skip = map { $_, 1 } map &$inc_find($_), @exclude;
+    my %skip = map { Module::ScanDeps::_find_in_inc($_), 1 } @exclude;
     if ($^O eq 'MSWin32') {
         %skip = (%skip, map { s{\\}{/}g; lc($_), 1 } @SharedLibs);
     }
@@ -737,7 +739,7 @@ sub pack_manifest_hash {
     # Apply %Preload to the -M'd modules and add them to the list of
     # files to scan
     foreach my $module (@modules) {
-        my $file = &$inc_find($module)
+        my $file = Module::ScanDeps::_find_in_inc($module)
           or $self->_die("Cannot find module $module (specified with -M)\n");
         push @files, $file;
         
@@ -777,7 +779,7 @@ sub pack_manifest_hash {
         ),
     );
 
-    %skip = map { $_, 1 } map &$inc_find($_), @exclude;
+    %skip = map { Module::ScanDeps::_find_in_inc($_), 1 } @exclude;
     %skip = (%skip, map { $_, 1 } @SharedLibs);
 
     $add_deps->(

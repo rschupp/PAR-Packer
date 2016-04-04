@@ -335,8 +335,26 @@ L<PAR::Filter::Bleach>.
 
 Add the specified module into the package, along with its dependencies.
 
-If I<MODULE> has a trailing double colon, e.g. C<Foo::Bar::>, add
-not only C<Foo/Bar.pm>, but also all modules below C<Foo/Bar>.
+The following variants may be used to add whole module namespaces:
+
+=over 4
+
+=item B<-M Foo::**>
+
+Add every module in the C<Foo> namespace except C<Foo> itself, i.e.
+add C<Foo::Bar>, C<Foo::Bar::Quux> etc up to any depth.
+
+=item B<-M Foo::*>
+
+Add every module at level 1 in the C<Foo> namespace, i.e.
+add C<Foo::Bar>, but B<neither> C<Foo::Bar::Quux> B<nor> C<Foo>.
+
+=item B<-M Foo::>
+
+Shorthand for C<-MFoo -MF:**>: every module in the C<Foo> namespace 
+including C<Foo> itself.
+
+=back
 
 Instead of a module name, I<MODULE> may also be specified as a filename
 relative to the C<@INC> path, i.e.  C<-M Module/ScanDeps.pm>
