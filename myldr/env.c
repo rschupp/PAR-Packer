@@ -92,12 +92,13 @@ par_getenv(name)
 static int
 par_setenv(name, value)
 	const char *name;
-	register char *value;
+	register const char *value;
 {
 	extern char **environ;
 	static int alloced = 0;         /* if allocated space before */
 	register char *c;
-	unsigned int l_value, offset;
+	size_t l_value;
+        int offset;
 
 	if (*value == '=')			/* no `=' in value */
 		++value;

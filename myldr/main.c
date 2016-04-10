@@ -118,7 +118,7 @@ int main ( int argc, char **argv, char **env )
 #endif
 
     fakeargv[argno++] = "-e";
-    fakeargv[argno++] = my_par_pl;
+    fakeargv[argno++] = (char *)my_par_pl;
 
 #ifndef ALLOW_PERL_OPTIONS
     fakeargv[argno++] = "--";
@@ -128,10 +128,10 @@ int main ( int argc, char **argv, char **env )
 
     for (i = 1; i < argc; i++)
         fakeargv[i + options_count - 1] = argv[i];
-    fakeargv[argc + options_count - 1] = 0;
+    fakeargv[argc + options_count - 1] = NULL;
 
     exitstatus = perl_parse(my_perl, par_xs_init, argc + options_count - 1,
-                            fakeargv, (char **)NULL);
+                            fakeargv, NULL);
 
     if (exitstatus == 0)
 	exitstatus = perl_run( my_perl );

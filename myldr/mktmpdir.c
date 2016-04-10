@@ -60,7 +60,8 @@ void par_setup_libpath( const char * stmpdir )
         "PATH", "DYLD_LIBRARY_PATH", "SHLIB_PATH", NULL
     };
 
-    for ( i = 0 ; key = ld_path_keys[i]; i++ ) {
+    /* parentheses around the "for" condition are there to shut up compiler warnings */
+    for ( i = 0 ; (key = ld_path_keys[i]); i++ ) {
         if ( (val = par_getenv(key)) == NULL || strlen(val) == 0 ) {
             par_setenv(key, stmpdir);
         }
