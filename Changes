@@ -1,3 +1,20 @@
+1.31  2016-04-10
+
+- Fix RT#113618: Strange issue with not packing libperl.dylib
+  Restore guessing what files to embed in myldr/Makefile.PL,
+  but make myldr/embed_files.pl ignore this list if it knows
+  a better way to determine these files. Also use "otools -h" on
+  OSX, as "otool --version" doesn't work on older versions of OSX.
+  Thanks to Phil Kime for help in investigating this.
+
+- Implement namespace options for "-M" like ActiveState's perlapp:
+  pp now accepts "-M Foo::", "-M Foo:*" and  "-M Foo:**".
+  Bump requirements for Module::ScanDeps to 1.21 for the helper
+  function to implement this.
+
+- Fix RT#113463: Fix spelling error in manpage
+  Applied patch from the Debian Perl group. Thanks, guys!
+
 1.30  2016-03-29
 
 - Fix RT#111455: unable to use -x and -u with pp
