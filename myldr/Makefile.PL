@@ -7,11 +7,12 @@
 use strict;
 use warnings;
 use Config;
+use File::Spec::Functions ':ALL';
 use ExtUtils::Embed;
 use ExtUtils::MakeMaker;
 use DynaLoader;
 use File::Basename;
-use File::Spec::Functions ':ALL';
+use File::Glob;
 
 xsinit(undef);
 
@@ -222,6 +223,51 @@ if ($dynperl) {
 
 my $par = (($dynperl && $^O ne 'os2') ? $boot_exe : $par_exe);
 
+
+# If on Windows and Perl was built with GCC 4.x, then libperl*.dll
+# may depend on some libgcc_*.dll (e.g. Strawberry Perl 5.12).
+# This libgcc_*.dll has to be included into with any packed executable 
+# in the same way as libperl*.dll itself, otherwise a packed executable
+# won't run when libgcc_*.dll isn't installed.
+# The same holds for libstdc++*.dll (e.g. Strawberry Perl 5.16).
+
+sub find_dll
+{
+    my ($dll_glob) = @_;
+
+    # look for $dll_glob
+    # - in the same directory as the perl executable itself
+    # - in the same directory as gcc (only useful if it's an absolute path)
+    # - in PATH
+    my ($dll_path) = map { File::Glob::bsd_glob(catfile($_, $dll_glob)) }
+                         dirname($^X),
+                         dirname($cc),
+                         path();
+    return $dll_path;
+}
+
+
+my ($libgcc, $libstdcpp, $libwinpthread);
+if ($dynperl and $^O eq 'MSWin32'
+    and defined $Config{gccversion}             # gcc version >= 4.x was used
+    and $Config{gccversion} =~ m{\A(\d+)}ms && $1 >= 4) {
+    $libgcc = find_dll("libgcc_*.$Config{so}");
+    $libwinpthread = find_dll("libwinpthread*.$Config{so}");
+}
+if ($ld =~ /(\b|-)g\+\+(-.*)?(\.exe)?$/) {      # g++ was used to link
+    $libstdcpp = find_dll("libstdc++*.$Config{so}");
+}
+
+# enclose the filenames in double quotes
+# NOTE: This quoting is not perfect (e.g. won't protect dollar signs
+# or double quotes in filenames), but should work in all reasonable
+# scenarios on both *nix and Windows).
+my @fallback_embedded_files = map{ qq["$_"] } grep { defined } 
+    $libperl,
+    $libgcc,
+    $libwinpthread,
+    $libstdcpp;
+
 my @strippedparl = qw( Static.pm );
 push @strippedparl, qw( Dynamic.pm ) if $dynperl;
 my @parl_exes = $parl_exe;
@@ -327,7 +373,7 @@ $boot_exe: boot$o
 	$mt_cmd
 
 boot_embedded_files.c: $par_exe
-	\$(PERLRUN) embed_files.pl -c $chunk_size $par_exe > \$@
+	\$(PERLRUN) embed_files.pl -c $chunk_size $par_exe @fallback_embedded_files > \$@
 
 Dynamic.pm: Dynamic.in $par_exe
 	\$(PERLRUN) encode_append.pl Dynamic.in $par_exe Dynamic.pm

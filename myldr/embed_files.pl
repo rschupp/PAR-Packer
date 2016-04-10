@@ -23,9 +23,9 @@ my $compress = 0;
 GetOptions(
     "c|chunk-size=i"    => \$chunk_size,
     "z|compress"        => \$compress)
-    && @ARGV == 1
-        or die "Usage: $0 [-c CHUNK][-z] par > file.c\n";
-my ($par) = @ARGV;
+    && @ARGV >= 1
+        or die "Usage: $0 [-c CHUNK][-z] par fallback_embedded_file... > file.c\n";
+my ($par, @fallback_embedded_files) = @ARGV;
 
 sub is_system_lib;
 
@@ -42,7 +42,7 @@ for ($^O)
         last;
     }
 
-    # Max OS X: use "otool -L"
+    # Max OS X: use "otool -L" if available
     if (/darwin/i && (qx(otool -h $par), $? == 0)) 
     {
         print STDERR qq[# using "otool -L" to find shared libraries needed by $par\n];
@@ -65,7 +65,7 @@ for ($^O)
 
     # fall back to guessing game
     print STDERR qq[# fall back to guessing what DLLs are needed by $par\n];
-    $dlls = fallback($par);
+    $dlls = { map { basename($_) => $_ } @fallback_embedded_files };
 }
 
 
@@ -193,52 +193,6 @@ sub _find_dll
     }
     return;
 }
-
-# If on Windows and Perl was built with GCC 4.x, then libperl*.dll
-# may depend on some libgcc_*.dll (e.g. Strawberry Perl 5.12).
-# This libgcc_*.dll has to be included into with any packed executable 
-# in the same way as libperl*.dll itself, otherwise a packed executable
-# won't run when libgcc_*.dll isn't installed.
-# The same holds for libstdc++*.dll (e.g. Strawberry Perl 5.16).
-
-sub fallback
-{
-    my ($file) = @_;
-
-    my @libs;
-    if ($^O eq 'MSWin32'
-        and defined $Config{gccversion}             # gcc version >= 4.x was used
-        and $Config{gccversion} =~ m{\A(\d+)}ms && $1 >= 4) 
-    {
-        push @libs, _find_dll_glob("libgcc_*.$Config{so}"),
-                    _find_dll_glob("libwinpthread*.$Config{so}");
-    }
-
-    my $ld = $Config{ld} || (($^O eq 'MSWin32') ? 'link.exe' : $Config{cc});
-    $ld = $Config{cc} if ($^O =~ /^(?:dec_osf|aix|hpux)$/);
-    if ($ld =~ /(\b|-)g\+\+(-.*)?(\.exe)?$/)        # g++ was used to link
-    {
-        push @libs, _find_dll_glob("libstdc++*.$Config{so}");
-    }
-
-    return { map { basename($_) => $_ } grep { defined } @libs };
-}
-
-sub _find_dll_glob
-{
-    my ($dll_glob) = @_;
-
-    # look for $dll_glob
-    # - in the same directory as the perl executable itself
-    # - in the same directory as gcc (only useful if it's an absolute path)
-    # - in PATH
-    my ($dll_path) = map { File::Glob::bsd_glob(catfile($_, $dll_glob)) }
-                         dirname($^X),
-                         dirname($Config{cc}),
-                         path();
-    return $dll_path;
-}
-
 
 sub file2c
 {
