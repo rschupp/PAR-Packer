@@ -43,7 +43,7 @@ for ($^O)
     }
 
     # Max OS X: use "otool -L"
-    if (/darwin/i && (qx(otool --version), $? == 0)) 
+    if (/darwin/i && (qx(otool -h $par), $? == 0)) 
     {
         print STDERR qq[# using "otool -L" to find shared libraries needed by $par\n];
         *is_system_lib = sub { shift =~ m{^/usr/lib|^/System/Library/} };
