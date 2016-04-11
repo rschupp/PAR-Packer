@@ -43,8 +43,9 @@ sub extract_embedded
     seek $fh, -$offset, 2;
     read $fh, $buf, 4;
     seek $fh, -$offset - unpack("N", $buf), 2;
-    read $fh, $buf, 4;
+    printf STDERR qq[embedded files in "%s" start at offset %d\n], $exe, tell($fh);
 
+    read $fh, $buf, 4;
     while ($buf eq "FILE") 
     {
         read $fh, $buf, 4;
