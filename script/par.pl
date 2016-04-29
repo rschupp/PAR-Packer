@@ -547,24 +547,18 @@ if ($out) {
 
         require_modules();
 
-        my @inc = sort {
-            length($b) <=> length($a)
-        } grep {
-            !/BSDPAN/
-        } grep {
-            ($bundle ne 'site') or
-            ($_ ne $Config::Config{archlibexp} and
-             $_ ne $Config::Config{privlibexp});
-        } @INC;
+        my @inc = grep { !/BSDPAN/ } 
+                       grep {
+                           ($bundle ne 'site') or
+                           ($_ ne $Config::Config{archlibexp} and
+                           $_ ne $Config::Config{privlibexp});
+                       } @INC;
 
-        # File exists test added to fix RT #41790:
-        # Funny, non-existing entry in _<....auto/Compress/Raw/Zlib/autosplit.ix.
-        # This is a band-aid fix with no deeper grasp of the issue.
-        # Somebody please go through the pain of understanding what's happening,
-        # I failed. -- Steffen
+        # Now determine the files loaded above by require_modules():
+        # Perl source files are found in values %INC and DLLs are
+        # found in @DynaLoader::dl_shared_objects.
         my %files;
-        /^_<(.+)$/ and -e $1 and $files{$1}++ for keys %::;
-        $files{$_}++ for values %INC;
+        $files{$_}++ for @DynaLoader::dl_shared_objects, values %INC;
 
         my $lib_ext = $Config::Config{lib_ext};
         my %written;
