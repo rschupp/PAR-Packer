@@ -26,6 +26,7 @@ have a C compiler.
 
 use Config;
 use Archive::Zip ();
+use ExtUtils::MakeMaker (); # just for maybe_command()
 use Cwd ();
 use File::Basename ();
 use File::Find ();
