@@ -1,3 +1,14 @@
+1.032  2016-05-07
+
+- Unbreak PAR::Packer for Perl 5.23.9 and higher:
+  Perl 5.23.9 removed the keys starting with "_<" from %:: 
+  script/par.pl used to glean the DLLs loaded via require_modules() 
+  from these keys; replace them with @DynaLoader::dl_shared_objects.
+
+- Fix RT#114155: Makefile.PL error - not loading ExtUtils::MakeMaker
+
+- extract-embedded.pl: show starting offset of embedded files
+
 1.031  2016-04-10
 
 - Fix RT#113618: Strange issue with not packing libperl.dylib
