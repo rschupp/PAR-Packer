@@ -295,8 +295,9 @@ WriteMakefile(
     PL_FILES    => {},
     PM          => { map { $_ => catfile('$(INST_LIBDIR)', qw( PAR StrippedPARL ), $_) }
                      @strippedparl },
-    MAN1PODS    => {},
     EXE_FILES   => \@parl_exes,
+    MAN1PODS    => {},
+    MAN3PODS    => {},
     macro       => { FIXIN => '$(NOOP)' },
 );
 
