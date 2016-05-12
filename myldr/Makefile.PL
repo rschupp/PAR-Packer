@@ -291,7 +291,7 @@ close PWOUT;
 WriteMakefile(
     NAME        => "myldr",
     SKIP        => [qw(static static_lib dynamic dynamic_lib)],
-    NO_META     => 1,
+    NO_MYMETA   => 1,
     PL_FILES    => {},
     PM          => { map { $_ => catfile('$(INST_LIBDIR)', qw( PAR StrippedPARL ), $_) }
                      @strippedparl },
