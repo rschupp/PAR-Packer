@@ -91,18 +91,11 @@ XS(XS_Internals_PAR_BOOT) {
         stmpdir = par_mktmpdir( fakeargv );
         if ( !stmpdir ) 
             croak("Unable to create cache directory");
-#ifndef WIN32
-        i = execvp(SvPV_nolen(GvSV(tmpgv)), fakeargv);
-        croak("%s: execution of %s failed (errno=%i)\n", 
-              fakeargv[0], SvPV_nolen(GvSV(tmpgv)), i);
-        return;
-#endif
     }
     i = PerlDir_mkdir(stmpdir, 0700);
     if ( (i != 0) && (i != EEXIST) && (i != -1) ) {
         croak("%s: creation of private cache subdirectory %s failed (errno=%i)\n", 
               fakeargv[0], stmpdir, i);
-        return;
     }
 }
 
