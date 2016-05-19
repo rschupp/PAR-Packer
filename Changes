@@ -1,3 +1,18 @@
+1.033  2016-05-19
+
+- Fix RT#114229: v1.32 still won't install on strawberry perl v5.22.2
+ 
+  This is actually a problem caused by (some) newer versions of 
+  ExtUtils::MakeMaker.
+
+- Drop the "re-exec myself" in myldr/internals.c, may cause problems
+  on machines with low argv+env limits; the reason for this execvp()
+  is unknown and it's only relevant for standalone invocations of parl,
+  anyway (ie. NOT when running a packed executable)
+
+- Really suppress generation of myldr/MYMETA.* and don't install 
+  man pages for myldr/{Dynamic,Static}.pm (nothing there to see anyway).
+
 1.032  2016-05-07
 
 - Unbreak PAR::Packer for Perl 5.23.9 and higher:
