@@ -78,7 +78,8 @@ chdir $test_dir;
 {
     local @ARGV = (
         "--pp_location"   => File::Spec->catfile($cwd, qw(blib script pp)),
-        "--par_location"  => File::Spec->catfile($cwd, qw(blib script par.pl))
+        "--par_location"  => File::Spec->catfile($cwd, qw(blib script par.pl)),
+        (defined($ENV{TEST_VERBOSE}) && $ENV{TEST_VERBOSE} > 1) ? ("--verbose") : ()
     );
     do "automated_pp_test.pl";
 }

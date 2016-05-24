@@ -5661,7 +5661,7 @@ my $pl_verbiage =
 'my $line;' . "\n" .
 "\n" .
 'my $text = "";' . "\n" .
-'$text = PAR::read_file("' . $modified_fqpn . '");' . "\n" .
+'$text = PAR::read_file("' . quotemeta($modified_fqpn) . '");' . "\n" .
 "\n" .
 'print($text);' . "\n" .
 "\n";
@@ -6254,7 +6254,7 @@ my $pl_verbiage =
 'use PAR;' . "\n" .
 'use strict;' . "\n" .
 "\n" .
-'my @files = split "[\r\n]+", PAR::read_file(' . "\"$all_text_files\"" . ');' . "\n" .
+'my @files = split "[\r\n]+", PAR::read_file("' . quotemeta($all_text_files) . '");' . "\n" .
 "\n" .
 'my $file = "";' . "\n" .
 'my $text = "";' . "\n" .
