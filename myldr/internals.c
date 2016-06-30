@@ -83,6 +83,12 @@ XS(XS_Internals_PAR_BOOT) {
 #endif
     }
 
+    /* PAR::Packer isn't included in a packed executable, but we provide
+     * this scalar so that a packed script may refer to the version
+     * of PAR::Packer it was built with.
+     */
+    sv_setpv(get_sv("PAR::Packer::VERSION", GV_ADD), PP_VERSION);
+
     TAINT_NOT;
 
     /* create temporary PAR directory */

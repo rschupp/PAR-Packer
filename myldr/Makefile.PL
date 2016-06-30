@@ -291,6 +291,7 @@ close PWOUT;
 WriteMakefile(
     NAME        => "myldr",
     SKIP        => [qw(static static_lib dynamic dynamic_lib)],
+    VERSION_FROM => "../lib/PAR/Packer.pm",
     NO_MYMETA   => 1,
     PL_FILES    => {},
     PM          => { map { $_ => catfile('$(INST_LIBDIR)', qw( PAR StrippedPARL ), $_) }
@@ -306,7 +307,7 @@ sub MY::postamble
     my $make_frag = <<"EOT";
 LD=$ld
 CC=$cc
-CFLAGS=$cflags -DPARL_EXE=\\"parl$exe\\"
+CFLAGS=$cflags -DPARL_EXE=\\"parl$exe\\" -DPP_VERSION=\\"\$(VERSION)\\"
 OPTIMIZE=$optimize
 LDFLAGS=$Config{ldflags}
 PERL_LDFLAGS=$ldflags
