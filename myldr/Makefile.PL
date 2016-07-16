@@ -89,7 +89,7 @@ if( $cc =~ m/^cl\b/i ) {
     $ccdebug = $debug ? '-Zi -Zm1000 ' : '-Zm1000 ';
     $lddebug = $debug ? '-debug ' : '-release ';
     $warn = $debug ? '-W3' : '';
-    my $machinearch = ( $Config{ptrsize} == 8 ) ? 'AMD64' : 'X86';
+    my $machinearch = $Config{ptrsize} == 8 ? 'AMD64' : 'X86';
     $res = 'ppresource.obj';
     $res_section = <<"...";
 $res:
@@ -110,7 +110,7 @@ $res:
     $lddebug = ($debug or $^O eq 'darwin') ? '' : '-s ';
     $warn = $debug ? '-Wall -Wno-comments ' : '';
     if ( $^O =~ /^(?:MSWin|cygwin)/ ) {
-        my $target = $Config{archname} =~ /x64/ ? 'pe-x86-64' : 'pe-i386';
+        my $target = $Config{ptrsize} == 8 ? 'pe-x86-64' : 'pe-i386';
         $res = 'ppresource.coff';
         # Note: On cygwin the command below will be processed by the
         # cygwin shell, so backslashes in pathnames might be a problem.
