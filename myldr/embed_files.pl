@@ -33,12 +33,27 @@ my $dlls;
 for ($^O)
 {
     # sane platforms: use "ldd"
-    if (/linux|solaris|freebsd|openbsd/i) 
+    if (/linux|solaris|freebsd|openbsd|cygwin/i) 
     {
         print STDERR qq[# using "ldd" to find shared libraries needed by $par\n];
-        *is_system_lib = sub { shift =~ m{^(?:/usr)?/lib(?:32|64)?/} };
+        if ($^O =~ /cygwin/i)
+        {
+            chomp(my $system_root = qx( cygpath --unix '$ENV{SYSTEMROOT}' ));
+            print STDERR "### SystemRoot (as Unix path) = $system_root\n";
+            *is_system_lib = sub { shift =~ m{^/usr/bin/|^\Q$system_root\E/}i };
+        }
+        else
+        {
+            *is_system_lib = sub { shift =~ m{^(?:/usr)?/lib(?:32|64)?/} };
+        }
 
         $dlls = ldd($par); 
+
+        # weed out system libs (but exclude the shared perl lib)
+        while  (my ($name, $path) = each %$dlls)
+        {
+            delete $dlls->{$name} if is_system_lib($path) && $name !~ /perl/;
+        }
         last;
     }
 
@@ -49,6 +64,12 @@ for ($^O)
         *is_system_lib = sub { shift =~ m{^/usr/lib|^/System/Library/} };
 
         $dlls = otool($par); 
+
+        # weed out system libs (but exclude the shared perl lib)
+        while  (my ($name, $path) = each %$dlls)
+        {
+            delete $dlls->{$name} if is_system_lib($path) && basename($path) !~ /perl/;
+        }
         last;
     }
 
@@ -113,7 +134,6 @@ sub ldd
     # while newer versions omit "=>" in this case.
     my %dlls = $out =~ /^ \s* (\S+) \s* => \s* ( \/ \S+ ) /gmx;
 
-    # weed out system libraries (except the perl shared library)
     while (my ($name, $path) = each %dlls)
     {
         unless (-r $path)
@@ -122,9 +142,6 @@ sub ldd
             delete $dlls{$name};
             next;
         }
-
-        next if $name =~ /^libperl/;
-        delete $dlls{$name} if is_system_lib($path);
     }
 
     return \%dlls;
@@ -140,9 +157,7 @@ sub otool
     my $out = qx(otool -L $file);
     die qq["otool -L $file" failed\n] unless $? == 0;
 
-    return { map { basename($_) => $_ }
-                 grep { basename($_) =~ /^libperl/ || !is_system_lib($_) }
-                      $out =~ /^ \s+ (\S+) /gmx };
+    return { map { basename($_) => $_ } $out =~ /^ \s+ (\S+) /gmx };
 }
 
 sub objdump
