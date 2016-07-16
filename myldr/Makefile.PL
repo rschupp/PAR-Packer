@@ -121,7 +121,7 @@ $res:
 ...
     }
     $mt_cmd = '-$(NOOP)';
-    $boot_ldflags .= '-static-libgcc ' if $^O eq 'MSWin32';
+    $boot_ldflags .= ' -static-libgcc' if $^O eq 'MSWin32';
 } else {
     $out = '-o ';
     $ccdebug = '';
@@ -165,15 +165,8 @@ elsif ($dynperl) {
     undef $dynperl if !-e $libperl;
 }
 
-my $perllibshortname = 'perl';
-if ($dynperl) {
-    $perllibshortname = basename($libperl);
-    my $so = $Config{so} || 'so';
-    $perllibshortname =~ s/^lib//;
-    $perllibshortname =~ s/\Q.$so\E$//;
-}
-$static_ldflags =~ s/(^|\s)-l$perllibshortname(\s|$)/ /g;
-
+$static_ldflags =~ s/(^|\s)-l\S*perl\S*(\s|$)/ /g;
+$boot_ldflags .= " $static_ldflags";
 
 # In the $dynperl case, we've already found the $libperl DSO.
 # The only problem is: when the linker links $par_exe against $libperl
