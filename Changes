@@ -1,3 +1,20 @@
+1.034  2016-07-17
+
+- Fix RT#116056: Fixes for Cygwin build of PAR::Packer
+  - detect whether we're using a 32-bit or 64-bit perl
+  - fix elision of "-l<perl lib>" from $static_ldflags
+  - add $static_ldflags back to $boot_ldflags
+
+- Add information to packed executable about which version 
+  of PAR::Packer was used to build it (suggested by Johan Vromans):
+  - accessible from the packaged Perl script as $PAR::Packer::VERSION
+  - by looking for the string "Packed by PAR::Packer ..." in the executable 
+    itself (using "strings exe | grep ..." or the like)
+
+- Use ldd on cygwin, too
+  - NOTE: a "system lib" on cygwin is either in /usr/bin 
+    or a Windows "system lib"
+
 1.033  2016-05-19
 
 - Fix RT#114229: v1.32 still won't install on strawberry perl v5.22.2
