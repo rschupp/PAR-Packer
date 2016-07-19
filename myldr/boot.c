@@ -109,7 +109,7 @@ void seek_to_subsystem( int fd ) {
 }
 #endif
 
-char pp_version_info[] = "@(#) Packed by PAR::Packer " PP_VERSION;
+char pp_version_info[] = "@(#) Packed by PAR::Packer " PAR_PACKER_VERSION;
 
 int main ( int argc, char **argv, char **env )
 {

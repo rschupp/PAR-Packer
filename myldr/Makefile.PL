@@ -300,7 +300,7 @@ sub MY::postamble
     my $make_frag = <<"EOT";
 LD=$ld
 CC=$cc
-CFLAGS=$cflags -DPARL_EXE=\\"parl$exe\\" -DPP_VERSION=\\"\$(VERSION)\\"
+CFLAGS=$cflags -DPARL_EXE=\\"parl$exe\\" -DPAR_PACKER_VERSION=\\"\$(VERSION)\\"
 OPTIMIZE=$optimize
 LDFLAGS=$Config{ldflags}
 PERL_LDFLAGS=$ldflags

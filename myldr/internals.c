@@ -87,7 +87,7 @@ XS(XS_Internals_PAR_BOOT) {
      * this scalar so that a packed script may refer to the version
      * of PAR::Packer it was built with.
      */
-    sv_setpv(get_sv("PAR::Packer::VERSION", GV_ADD), PP_VERSION);
+    sv_setpv(get_sv("PAR::Packer::VERSION", GV_ADD), PAR_PACKER_VERSION);
 
     TAINT_NOT;
 
