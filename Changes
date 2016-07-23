@@ -1,3 +1,10 @@
+1.035  2016-07-23
+
+- Fix RT#116254: Compilation error under strawberry perl 5.24 x64
+
+  s/PP_VERSION/PAR_PACKER_VERSION/ as Strawberry Perl also defines
+  PP_VERSION (in c/x86_64-w64-mingw32/include/wincrypt.h)
+
 1.034  2016-07-17
 
 - Fix RT#116056: Fixes for Cygwin build of PAR::Packer
