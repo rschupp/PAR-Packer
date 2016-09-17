@@ -25,8 +25,8 @@ sub go {
     
     my %opt;
     GetOptions( \%opt, PAR::Packer->options, 'h|help', 'V|version' );
-    help() if $opt{h};
-    version() if $opt{V};
+    &help if $opt{h};
+    &version if $opt{V};
     
     App::Packer::PAR->new(
         frontend    => 'Module::ScanDeps',
@@ -46,7 +46,7 @@ sub help {
         exec "perldoc $0";
         exec "pod2text $0";
     }
-    version();
+    &version;
 }
 
 sub version {

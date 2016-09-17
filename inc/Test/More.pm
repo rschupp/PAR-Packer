@@ -1,5 +1,6 @@
 #line 1
 package Test::More;
+# $Id$
 
 use 5.006;
 use strict;
@@ -18,7 +19,7 @@ sub _carp {
     return warn @_, " at $file line $line\n";
 }
 
-our $VERSION = '0.92';
+our $VERSION = '0.86';
 $VERSION = eval $VERSION;    ## no critic (BuiltinFunctions::ProhibitStringyEval)
 
 use Test::Builder::Module;
@@ -31,13 +32,12 @@ our @EXPORT = qw(ok use_ok require_ok
   eq_array eq_hash eq_set
   $TODO
   plan
-  done_testing
   can_ok isa_ok new_ok
   diag note explain
   BAIL_OUT
 );
 
-#line 163
+#line 158
 
 sub plan {
     my $tb = Test::More->builder;
@@ -71,14 +71,7 @@ sub import_extra {
     return;
 }
 
-#line 216
-
-sub done_testing {
-    my $tb = Test::More->builder;
-    $tb->done_testing(@_);
-}
-
-#line 289
+#line 258
 
 sub ok ($;$) {
     my( $test, $name ) = @_;
@@ -87,7 +80,7 @@ sub ok ($;$) {
     return $tb->ok( $test, $name );
 }
 
-#line 367
+#line 325
 
 sub is ($$;$) {
     my $tb = Test::More->builder;
@@ -103,7 +96,7 @@ sub isnt ($$;$) {
 
 *isn't = \&isnt;
 
-#line 411
+#line 369
 
 sub like ($$;$) {
     my $tb = Test::More->builder;
@@ -111,7 +104,7 @@ sub like ($$;$) {
     return $tb->like(@_);
 }
 
-#line 426
+#line 384
 
 sub unlike ($$;$) {
     my $tb = Test::More->builder;
@@ -119,7 +112,7 @@ sub unlike ($$;$) {
     return $tb->unlike(@_);
 }
 
-#line 471
+#line 423
 
 sub cmp_ok($$$;$) {
     my $tb = Test::More->builder;
@@ -127,7 +120,7 @@ sub cmp_ok($$$;$) {
     return $tb->cmp_ok(@_);
 }
 
-#line 506
+#line 458
 
 sub can_ok ($@) {
     my( $proto, @methods ) = @_;
@@ -161,53 +154,46 @@ sub can_ok ($@) {
     return $ok;
 }
 
-#line 572
+#line 519
 
 sub isa_ok ($$;$) {
     my( $object, $class, $obj_name ) = @_;
     my $tb = Test::More->builder;
 
     my $diag;
-
+    $obj_name = 'The object' unless defined $obj_name;
+    my $name = "$obj_name isa $class";
     if( !defined $object ) {
-        $obj_name = 'The thing' unless defined $obj_name;
         $diag = "$obj_name isn't defined";
     }
+    elsif( !ref $object ) {
+        $diag = "$obj_name isn't a reference";
+    }
     else {
-        my $whatami = ref $object ? 'object' : 'class';
         # We can't use UNIVERSAL::isa because we want to honor isa() overrides
         my( $rslt, $error ) = $tb->_try( sub { $object->isa($class) } );
         if($error) {
             if( $error =~ /^Can't call method "isa" on unblessed reference/ ) {
                 # Its an unblessed reference
-                $obj_name = 'The reference' unless defined $obj_name;
                 if( !UNIVERSAL::isa( $object, $class ) ) {
                     my $ref = ref $object;
                     $diag = "$obj_name isn't a '$class' it's a '$ref'";
                 }
             }
-            elsif( $error =~ /Can't call method "isa" without a package/ ) {
-                # It's something that can't even be a class
-                $diag = "$obj_name isn't a class or reference";
-            }
             else {
                 die <<WHOA;
-WHOA! I tried to call ->isa on your $whatami and got some weird error.
+WHOA! I tried to call ->isa on your object and got some weird error.
 Here's the error.
 $error
 WHOA
             }
         }
-        else {
-            $obj_name = "The $whatami" unless defined $obj_name;
-            if( !$rslt ) {
-                my $ref = ref $object;
-                $diag = "$obj_name isn't a '$class' it's a '$ref'";
-            }
+        elsif( !$rslt ) {
+            my $ref = ref $object;
+            $diag = "$obj_name isn't a '$class' it's a '$ref'";
         }
     }
 
-    my $name = "$obj_name isa $class";
     my $ok;
     if($diag) {
         $ok = $tb->ok( 0, $name );
@@ -220,7 +206,7 @@ WHOA
     return $ok;
 }
 
-#line 650
+#line 590
 
 sub new_ok {
     my $tb = Test::More->builder;
@@ -245,7 +231,7 @@ sub new_ok {
     return $obj;
 }
 
-#line 690
+#line 630
 
 sub pass (;$) {
     my $tb = Test::More->builder;
@@ -259,7 +245,7 @@ sub fail (;$) {
     return $tb->ok( 0, @_ );
 }
 
-#line 753
+#line 693
 
 sub use_ok ($;@) {
     my( $module, @imports ) = @_;
@@ -321,7 +307,7 @@ sub _eval {
     return( $eval_result, $eval_error );
 }
 
-#line 822
+#line 762
 
 sub require_ok ($) {
     my($module) = shift;
@@ -365,7 +351,7 @@ sub _is_module_name {
     return $module =~ /^[a-zA-Z]\w*$/ ? 1 : 0;
 }
 
-#line 899
+#line 839
 
 our( @Data_Stack, %Refs_Seen );
 my $DNE = bless [], 'Does::Not::Exist';
@@ -472,7 +458,7 @@ sub _type {
     return '';
 }
 
-#line 1059
+#line 999
 
 sub diag {
     return Test::More->builder->diag(@_);
@@ -482,13 +468,13 @@ sub note {
     return Test::More->builder->note(@_);
 }
 
-#line 1085
+#line 1025
 
 sub explain {
     return Test::More->builder->explain(@_);
 }
 
-#line 1151
+#line 1091
 
 ## no critic (Subroutines::RequireFinalReturn)
 sub skip {
@@ -516,7 +502,7 @@ sub skip {
     last SKIP;
 }
 
-#line 1238
+#line 1178
 
 sub todo_skip {
     my( $why, $how_many ) = @_;
@@ -537,7 +523,7 @@ sub todo_skip {
     last TODO;
 }
 
-#line 1293
+#line 1231
 
 sub BAIL_OUT {
     my $reason = shift;
@@ -546,7 +532,7 @@ sub BAIL_OUT {
     $tb->BAIL_OUT($reason);
 }
 
-#line 1332
+#line 1270
 
 #'#
 sub eq_array {
@@ -603,10 +589,6 @@ sub _deep_check {
 
         if( defined $e1 xor defined $e2 ) {
             $ok = 0;
-        }
-        elsif( !defined $e1 and !defined $e2 ) {
-            # Shortcut if they're both defined.
-            $ok = 1;
         }
         elsif( _dne($e1) xor _dne($e2) ) {
             $ok = 0;
@@ -672,7 +654,7 @@ WHOA
     }
 }
 
-#line 1465
+#line 1399
 
 sub eq_hash {
     local @Data_Stack = ();
@@ -705,7 +687,7 @@ sub _eq_hash {
     return $ok;
 }
 
-#line 1522
+#line 1456
 
 sub eq_set {
     my( $a1, $a2 ) = @_;
@@ -730,6 +712,6 @@ sub eq_set {
     );
 }
 
-#line 1735
+#line 1645
 
 1;

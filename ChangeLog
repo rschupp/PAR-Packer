@@ -1,14 +1,3 @@
-[Changes for 0.992_04 - Sep 11, 2009]
-* New features
-    - Reject "main.pl" as input scripts since this can override the
-      bootstrapping code. For wizards who really want this, there
-      should be still "-a main.pl;script/main.pl".
-
-* Bug fixes, etc.
-    - Fix RT #48614: ignore setting of PERL5OPT (and others) in a
-      packed executable (Roderich)
-    - Fix RT #48027: Fix building with ActivePerl & MinGW
-
 [Changes for 0.992_03 - Jul 24, 2009]
 * Bug fixes, etc.
     - Fix "Can't locate IO/file.pm in @INC ..." bug (Markus Jansen)

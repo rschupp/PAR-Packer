@@ -1,19 +1,13 @@
 #line 1
 package Test::Builder;
+# $Id$
 
 use 5.006;
 use strict;
 use warnings;
 
-our $VERSION = '0.92';
+our $VERSION = '0.86';
 $VERSION = eval $VERSION;    ## no critic (BuiltinFunctions::ProhibitStringyEval)
-
-BEGIN {
-    if( $] < 5.008 ) {
-        require Test::Builder::IO::Scalar;
-    }
-}
-
 
 # Make Test::Builder thread-safe for ithreads.
 BEGIN {
@@ -69,7 +63,7 @@ BEGIN {
     }
 }
 
-#line 117
+#line 111
 
 my $Test = Test::Builder->new;
 
@@ -79,7 +73,7 @@ sub new {
     return $Test;
 }
 
-#line 139
+#line 133
 
 sub create {
     my $class = shift;
@@ -90,7 +84,7 @@ sub create {
     return $self;
 }
 
-#line 158
+#line 152
 
 our $Level;
 
@@ -103,8 +97,6 @@ sub reset {    ## no critic (Subroutines::ProhibitBuiltinHomonyms)
 
     $self->{Have_Plan}    = 0;
     $self->{No_Plan}      = 0;
-    $self->{Have_Output_Plan} = 0;
-
     $self->{Original_Pid} = $$;
 
     share( $self->{Curr_Test} );
@@ -124,20 +116,13 @@ sub reset {    ## no critic (Subroutines::ProhibitBuiltinHomonyms)
     $self->{Todo}       = undef;
     $self->{Todo_Stack} = [];
     $self->{Start_Todo} = 0;
-    $self->{Opened_Testhandles} = 0;
 
     $self->_dup_stdhandles;
 
     return;
 }
 
-#line 219
-
-my %plan_cmds = (
-    no_plan     => \&no_plan,
-    skip_all    => \&skip_all,
-    tests       => \&_plan_tests,
-);
+#line 210
 
 sub plan {
     my( $self, $cmd, $arg ) = @_;
@@ -146,11 +131,27 @@ sub plan {
 
     local $Level = $Level + 1;
 
-    $self->croak("You tried to plan twice") if $self->{Have_Plan};
+    $self->croak("You tried to plan twice")
+      if $self->{Have_Plan};
 
-    if( my $method = $plan_cmds{$cmd} ) {
-        local $Level = $Level + 1;
-        $self->$method($arg);
+    if( $cmd eq 'no_plan' ) {
+        $self->carp("no_plan takes no arguments") if $arg;
+        $self->no_plan;
+    }
+    elsif( $cmd eq 'skip_all' ) {
+        return $self->skip_all($arg);
+    }
+    elsif( $cmd eq 'tests' ) {
+        if($arg) {
+            local $Level = $Level + 1;
+            return $self->expected_tests($arg);
+        }
+        elsif( !defined $arg ) {
+            $self->croak("Got an undefined number of tests");
+        }
+        else {
+            $self->croak("You said to run 0 tests");
+        }
     }
     else {
         my @args = grep { defined } ( $cmd, $arg );
@@ -160,26 +161,7 @@ sub plan {
     return 1;
 }
 
-
-sub _plan_tests {
-    my($self, $arg) = @_;
-
-    if($arg) {
-        local $Level = $Level + 1;
-        return $self->expected_tests($arg);
-    }
-    elsif( !defined $arg ) {
-        $self->croak("Got an undefined number of tests");
-    }
-    else {
-        $self->croak("You said to run 0 tests");
-    }
-
-    return;
-}
-
-
-#line 275
+#line 257
 
 sub expected_tests {
     my $self = shift;
@@ -192,17 +174,15 @@ sub expected_tests {
         $self->{Expected_Tests} = $max;
         $self->{Have_Plan}      = 1;
 
-        $self->_output_plan($max) unless $self->no_header;
+        $self->_print("1..$max\n") unless $self->no_header;
     }
     return $self->{Expected_Tests};
 }
 
-#line 299
+#line 281
 
 sub no_plan {
-    my($self, $arg) = @_;
-
-    $self->carp("no_plan takes no arguments") if $arg;
+    my $self = shift;
 
     $self->{No_Plan}   = 1;
     $self->{Have_Plan} = 1;
@@ -210,63 +190,7 @@ sub no_plan {
     return 1;
 }
 
-
-#line 333
-
-sub _output_plan {
-    my($self, $max, $directive, $reason) = @_;
-
-    $self->carp("The plan was already output") if $self->{Have_Output_Plan};
-
-    my $plan = "1..$max";
-    $plan .= " # $directive" if defined $directive;
-    $plan .= " $reason"      if defined $reason;
-
-    $self->_print("$plan\n");
-
-    $self->{Have_Output_Plan} = 1;
-
-    return;
-}
-
-#line 384
-
-sub done_testing {
-    my($self, $num_tests) = @_;
-
-    # If done_testing() specified the number of tests, shut off no_plan.
-    if( defined $num_tests ) {
-        $self->{No_Plan} = 0;
-    }
-    else {
-        $num_tests = $self->current_test;
-    }
-
-    if( $self->{Done_Testing} ) {
-        my($file, $line) = @{$self->{Done_Testing}}[1,2];
-        $self->ok(0, "done_testing() was already called at $file line $line");
-        return;
-    }
-
-    $self->{Done_Testing} = [caller];
-
-    if( $self->expected_tests && $num_tests != $self->expected_tests ) {
-        $self->ok(0, "planned to run @{[ $self->expected_tests ]} ".
-                     "but done_testing() expects $num_tests");
-    }
-    else {
-        $self->{Expected_Tests} = $num_tests;
-    }
-
-    $self->_output_plan($num_tests) unless $self->{Have_Output_Plan};
-
-    $self->{Have_Plan} = 1;
-
-    return 1;
-}
-
-
-#line 429
+#line 298
 
 sub has_plan {
     my $self = shift;
@@ -276,18 +200,22 @@ sub has_plan {
     return(undef);
 }
 
-#line 446
+#line 315
 
 sub skip_all {
     my( $self, $reason ) = @_;
 
+    my $out = "1..0";
+    $out .= " # Skip $reason" if $reason;
+    $out .= "\n";
+
     $self->{Skip_All} = 1;
 
-    $self->_output_plan(0, "SKIP", $reason) unless $self->no_header;
+    $self->_print($out) unless $self->no_header;
     exit(0);
 }
 
-#line 468
+#line 341
 
 sub exported_to {
     my( $self, $pack ) = @_;
@@ -298,7 +226,7 @@ sub exported_to {
     return $self->{Exported_To};
 }
 
-#line 498
+#line 371
 
 sub ok {
     my( $self, $test, $name ) = @_;
@@ -306,6 +234,8 @@ sub ok {
     # $test might contain an object which we don't want to accidentally
     # store, so we turn it into a boolean.
     $test = $test ? 1 : 0;
+
+    $self->_plan_check;
 
     lock $self->{Curr_Test};
     $self->{Curr_Test}++;
@@ -435,7 +365,7 @@ sub _is_dualvar {
     return $numval != 0 and $numval ne $val ? 1 : 0;
 }
 
-#line 649
+#line 524
 
 sub is_eq {
     my( $self, $got, $expect, $name ) = @_;
@@ -518,7 +448,7 @@ sub _isnt_diag {
 DIAGNOSTIC
 }
 
-#line 746
+#line 621
 
 sub isnt_eq {
     my( $self, $got, $dont_expect, $name ) = @_;
@@ -552,7 +482,7 @@ sub isnt_num {
     return $self->cmp_ok( $got, '!=', $dont_expect, $name );
 }
 
-#line 797
+#line 672
 
 sub like {
     my( $self, $this, $regex, $name ) = @_;
@@ -568,7 +498,7 @@ sub unlike {
     return $self->_regex_ok( $this, $regex, '!~', $name );
 }
 
-#line 821
+#line 696
 
 my %numeric_cmps = map { ( $_, 1 ) } ( "<", "<=", ">", ">=", "==", "!=", "<=>" );
 
@@ -648,7 +578,7 @@ sub _caller_context {
     return $code;
 }
 
-#line 920
+#line 795
 
 sub BAIL_OUT {
     my( $self, $reason ) = @_;
@@ -658,16 +588,18 @@ sub BAIL_OUT {
     exit 255;
 }
 
-#line 933
+#line 808
 
 *BAILOUT = \&BAIL_OUT;
 
-#line 944
+#line 819
 
 sub skip {
     my( $self, $why ) = @_;
     $why ||= '';
     $self->_unoverload_str( \$why );
+
+    $self->_plan_check;
 
     lock( $self->{Curr_Test} );
     $self->{Curr_Test}++;
@@ -693,11 +625,13 @@ sub skip {
     return 1;
 }
 
-#line 985
+#line 862
 
 sub todo_skip {
     my( $self, $why ) = @_;
     $why ||= '';
+
+    $self->_plan_check;
 
     lock( $self->{Curr_Test} );
     $self->{Curr_Test}++;
@@ -721,7 +655,7 @@ sub todo_skip {
     return 1;
 }
 
-#line 1062
+#line 941
 
 sub maybe_regex {
     my( $self, $regex ) = @_;
@@ -805,7 +739,7 @@ DIAGNOSTIC
 # I'm not ready to publish this.  It doesn't deal with array return
 # values from the code or context.
 
-#line 1162
+#line 1041
 
 sub _try {
     my( $self, $code, %opts ) = @_;
@@ -825,7 +759,7 @@ sub _try {
     return wantarray ? ( $return, $error ) : $return;
 }
 
-#line 1191
+#line 1070
 
 sub is_fh {
     my $self     = shift;
@@ -840,7 +774,7 @@ sub is_fh {
            eval { ( tied($maybe_fh) || '' )->can('TIEHANDLE') };
 }
 
-#line 1235
+#line 1114
 
 sub level {
     my( $self, $level ) = @_;
@@ -851,7 +785,7 @@ sub level {
     return $Level;
 }
 
-#line 1267
+#line 1146
 
 sub use_numbers {
     my( $self, $use_nums ) = @_;
@@ -862,7 +796,7 @@ sub use_numbers {
     return $self->{Use_Nums};
 }
 
-#line 1300
+#line 1179
 
 foreach my $attribute (qw(No_Header No_Ending No_Diag)) {
     my $method = lc $attribute;
@@ -880,7 +814,7 @@ foreach my $attribute (qw(No_Header No_Ending No_Diag)) {
     *{ __PACKAGE__ . '::' . $method } = $code;
 }
 
-#line 1353
+#line 1232
 
 sub diag {
     my $self = shift;
@@ -888,7 +822,7 @@ sub diag {
     $self->_print_comment( $self->_diag_fh, @_ );
 }
 
-#line 1368
+#line 1247
 
 sub note {
     my $self = shift;
@@ -925,7 +859,7 @@ sub _print_comment {
     return 0;
 }
 
-#line 1418
+#line 1297
 
 sub explain {
     my $self = shift;
@@ -944,7 +878,7 @@ sub explain {
     } @_;
 }
 
-#line 1447
+#line 1326
 
 sub _print {
     my $self = shift;
@@ -972,7 +906,7 @@ sub _print_to_fh {
     return print $fh $msg;
 }
 
-#line 1506
+#line 1381
 
 sub output {
     my( $self, $fh ) = @_;
@@ -1008,18 +942,6 @@ sub _new_fh {
     my $fh;
     if( $self->is_fh($file_or_fh) ) {
         $fh = $file_or_fh;
-    }
-    elsif( ref $file_or_fh eq 'SCALAR' ) {
-        # Scalar refs as filehandles was added in 5.8.
-        if( $] >= 5.008 ) {
-            open $fh, ">>", $file_or_fh
-              or $self->croak("Can't open scalar ref $file_or_fh: $!");
-        }
-        # Emulate scalar ref filehandles with a tie.
-        else {
-            $fh = Test::Builder::IO::Scalar->new($file_or_fh)
-              or $self->croak("Can't tie scalar ref $file_or_fh");
-        }
     }
     else {
         open $fh, ">", $file_or_fh
@@ -1058,10 +980,12 @@ sub _dup_stdhandles {
     return;
 }
 
+my $Opened_Testhandles = 0;
+
 sub _open_testhandles {
     my $self = shift;
 
-    return if $self->{Opened_Testhandles};
+    return if $Opened_Testhandles;
 
     # We dup STDOUT and STDERR so people can change them in their
     # test suites while still getting normal test output.
@@ -1071,7 +995,7 @@ sub _open_testhandles {
     #    $self->_copy_io_layers( \*STDOUT, $Testout );
     #    $self->_copy_io_layers( \*STDERR, $Testerr );
 
-    $self->{Opened_Testhandles} = 1;
+    $Opened_Testhandles = 1;
 
     return;
 }
@@ -1091,7 +1015,7 @@ sub _copy_io_layers {
     return;
 }
 
-#line 1631
+#line 1496
 
 sub reset_outputs {
     my $self = shift;
@@ -1103,7 +1027,7 @@ sub reset_outputs {
     return;
 }
 
-#line 1657
+#line 1522
 
 sub _message_at_caller {
     my $self = shift;
@@ -1123,14 +1047,27 @@ sub croak {
     return die $self->_message_at_caller(@_);
 }
 
+sub _plan_check {
+    my $self = shift;
 
-#line 1697
+    unless( $self->{Have_Plan} ) {
+        local $Level = $Level + 2;
+        $self->croak("You tried to run a test without a plan");
+    }
+
+    return;
+}
+
+#line 1572
 
 sub current_test {
     my( $self, $num ) = @_;
 
     lock( $self->{Curr_Test} );
     if( defined $num ) {
+        $self->croak("Can't change the current test number without a plan!")
+          unless $self->{Have_Plan};
+
         $self->{Curr_Test} = $num;
 
         # If the test counter is being pushed forward fill in the details.
@@ -1157,7 +1094,7 @@ sub current_test {
     return $self->{Curr_Test};
 }
 
-#line 1739
+#line 1617
 
 sub summary {
     my($self) = shift;
@@ -1165,14 +1102,14 @@ sub summary {
     return map { $_->{'ok'} } @{ $self->{Test_Results} };
 }
 
-#line 1794
+#line 1672
 
 sub details {
     my $self = shift;
     return @{ $self->{Test_Results} };
 }
 
-#line 1823
+#line 1701
 
 sub todo {
     my( $self, $pack ) = @_;
@@ -1186,7 +1123,7 @@ sub todo {
     return '';
 }
 
-#line 1845
+#line 1723
 
 sub find_TODO {
     my( $self, $pack ) = @_;
@@ -1198,7 +1135,7 @@ sub find_TODO {
     return ${ $pack . '::TODO' };
 }
 
-#line 1863
+#line 1741
 
 sub in_todo {
     my $self = shift;
@@ -1207,7 +1144,7 @@ sub in_todo {
     return( defined $self->{Todo} || $self->find_TODO ) ? 1 : 0;
 }
 
-#line 1913
+#line 1791
 
 sub todo_start {
     my $self = shift;
@@ -1222,7 +1159,7 @@ sub todo_start {
     return;
 }
 
-#line 1935
+#line 1813
 
 sub todo_end {
     my $self = shift;
@@ -1243,7 +1180,7 @@ sub todo_end {
     return;
 }
 
-#line 1968
+#line 1846
 
 sub caller {    ## no critic (Subroutines::ProhibitBuiltinHomonyms)
     my( $self, $height ) = @_;
@@ -1258,22 +1195,24 @@ sub caller {    ## no critic (Subroutines::ProhibitBuiltinHomonyms)
     return wantarray ? @caller : $caller[0];
 }
 
-#line 1985
+#line 1863
 
-#line 1999
+#line 1877
 
 #'#
 sub _sanity_check {
     my $self = shift;
 
     $self->_whoa( $self->{Curr_Test} < 0, 'Says here you ran a negative number of tests!' );
+    $self->_whoa( !$self->{Have_Plan} and $self->{Curr_Test},
+        'Somehow your tests ran without a plan!' );
     $self->_whoa( $self->{Curr_Test} != @{ $self->{Test_Results} },
         'Somehow you got a different number of results than tests ran!' );
 
     return;
 }
 
-#line 2020
+#line 1900
 
 sub _whoa {
     my( $self, $check, $desc ) = @_;
@@ -1288,7 +1227,7 @@ WHOA
     return;
 }
 
-#line 2044
+#line 1924
 
 sub _my_exit {
     $? = $_[0];    ## no critic (Variables::RequireLocalizedPunctuationVars)
@@ -1296,22 +1235,18 @@ sub _my_exit {
     return 1;
 }
 
-#line 2056
+#line 1936
 
 sub _ending {
     my $self = shift;
 
     my $real_exit_code = $?;
+    $self->_sanity_check();
 
     # Don't bother with an ending if this is a forked copy.  Only the parent
     # should do the ending.
     if( $self->{Original_Pid} != $$ ) {
         return;
-    }
-
-    # Ran tests but never declared a plan or hit done_testing
-    if( !$self->{Have_Plan} and $self->{Curr_Test} ) {
-        $self->diag("Tests were run but no plan was declared and done_testing() was not seen.");
     }
 
     # Exit if plan() was never called.  This is so "require Test::Simple"
@@ -1330,7 +1265,7 @@ sub _ending {
     if(@$test_results) {
         # The plan?  We have no plan.
         if( $self->{No_Plan} ) {
-            $self->_output_plan($self->{Curr_Test}) unless $self->no_header;
+            $self->_print("1..$self->{Curr_Test}\n") unless $self->no_header;
             $self->{Expected_Tests} = $self->{Curr_Test};
         }
 
@@ -1407,7 +1342,7 @@ END {
     $Test->_ending if defined $Test and !$Test->no_ending;
 }
 
-#line 2236
+#line 2098
 
 1;
 
