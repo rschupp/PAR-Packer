@@ -33,7 +33,7 @@ As a last resort, you can manually install it. Download the tarball, untar it,
 then build it:
   
   perl Makefile.PL
-  make                # or 'dmake' on Win32
+  make
   make test
   make install
 
@@ -89,19 +89,6 @@ apply any more.)
 
 Please consult the documentation of 'pp' for more information.
 
-* Source Repository
-
-You can check out the most recent revision from PAR's Subversion repository:
-
-    https://www.openfoundry.org/svn/par/PAR-Packer/trunk
-
-Same applies to the main PAR distribution:
-
-    https://www.openfoundry.org/svn/par/trunk
-
-There is anonymous access to all. Commit access is handed out liberally;
-contact the mailing list for details.
-
 * Contact
 
 You can write to the mailing list at <par@perl.org>, or send an empty mail to
@@ -116,4 +103,4 @@ Copyright 2002-2010 by Audrey Tang <cpan@audreyt.org>.
 All rights reserved.  You can redistribute and/or modify
 this bundle under the same terms as Perl itself.
 
-See <http://www.perl.com/perl/misc/Artistic.html>.
+See <http://dev.perl.org/licenses/artistic.html>

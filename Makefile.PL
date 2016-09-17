@@ -41,7 +41,7 @@ no_index            directory => 'contrib';
 auto_provides;
 
 license     'perl';
-repository  'https://www.openfoundry.org/svn/par/PAR-Packer/trunk';
+repository  'https://github.com/rschupp/PAR-Packer';
 
 par_base 'SMUELLER';
 
