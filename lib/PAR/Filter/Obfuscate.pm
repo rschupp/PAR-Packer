@@ -55,7 +55,7 @@ You can write
 to the mailing list at E<lt>par@perl.orgE<gt>, or send an empty mail to
 E<lt>par-subscribe@perl.orgE<gt> to participate in the discussion.
 
-Please submit bug reports to E<lt>bug-par@rt.cpan.orgE<gt>.
+Please submit bug reports to E<lt>bug-par-packer@rt.cpan.orgE<gt>.
 
 =head1 COPYRIGHT
 
