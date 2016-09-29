@@ -40,7 +40,8 @@ for ($^O)
         {
             chomp(my $system_root = qx( cygpath --unix '$ENV{SYSTEMROOT}' ));
             print STDERR "### SystemRoot (as Unix path) = $system_root\n";
-            *is_system_lib = sub { shift =~ m{^/usr/bin/|^\Q$system_root\E/}i };
+            *is_system_lib = sub { shift =~ m{^/usr/bin/(?!cygcrypt\b)|^\Q$system_root\E/}i }; 
+            # NOTE: cygcrypt-0.dll is not (anymore) in the set of default Cygwin packages
         }
         else
         {
