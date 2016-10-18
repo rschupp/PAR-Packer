@@ -156,7 +156,7 @@ followed by a 8-bytes magic string: "C<\012PAR.pm\012>".
 
 =cut
 
-my ($par_temp, $progname, @tmpfile);
+my ($par_temp, $progname);
 END { if ($ENV{PAR_CLEAN}) {
     require File::Temp;
     require File::Basename;
@@ -713,6 +713,8 @@ if ($out) {
 }
 # }}}
 
+DONE:
+
 # If there's no main.pl to run, show usage {{{
 unless ($PAR::LibCache{$progname}) {
     die << "." unless @ARGV;
@@ -856,7 +858,6 @@ sub _tempfile {
 
     if ($ENV{PAR_CLEAN}) {
         unlink $filename if -e $filename;
-        push @tmpfile, $filename;
     }
     else {
         return (undef, $filename) if (-r $filename);
