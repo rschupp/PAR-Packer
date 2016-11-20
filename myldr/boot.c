@@ -38,35 +38,37 @@ int extract_embedded_file(embedded_file_t *emb_file, const char* ext_name, const
     int fd;
     chunk_t *chunk;
     struct stat statbuf;
+    int len = strlen(stmpdir) + 1 + strlen(ext_name);
+    char *tmp_path;
 
-    *ext_path = malloc(strlen(stmpdir) + 1 + strlen(ext_name) + 1);
+    *ext_path = malloc(len + 1);
     sprintf(*ext_path, "%s/%s", stmpdir, ext_name);
 
-    fd = open(*ext_path, O_CREAT | O_EXCL | O_WRONLY | OPEN_O_BINARY, 0755);
-    if ( fd == -1 ) {
-        if ( errno != EEXIST ) return EXTRACT_FAIL;
+    if (par_lstat(*ext_path, &statbuf) == 0 && statbuf.st_size == emb_file->size )
+        return EXTRACT_ALREADY; /* file already exists and has the expected size */
 
-        if (par_lstat(*ext_path, &statbuf) == 0 
-            && statbuf.st_size == emb_file->size )
-            /* file already exists and has the expected size */
-            return EXTRACT_ALREADY;           
+    tmp_path = malloc(len + 1 + 16 + 1);
+    sprintf(tmp_path, "%s.%lx", *ext_path, (unsigned long)getpid());
 
-        /* corrupted file? re-try writing it */
-        fd = open(*ext_path, O_CREAT | O_WRONLY | OPEN_O_BINARY, 0755);
-        if ( fd == -1 ) return EXTRACT_FAIL;
-    }
+    fd = open(tmp_path, O_CREAT | O_WRONLY | OPEN_O_BINARY, 0755);
+    if ( fd == -1 ) 
+        return EXTRACT_FAIL;
 
     chunk = emb_file->chunks;
     while (chunk->len) {
-        if ( write(fd, chunk->buf, chunk->len) != chunk->len ) {
-            return 0;
-        }
+        if ( write(fd, chunk->buf, chunk->len) != chunk->len ) 
+            return EXTRACT_FAIL;
         chunk++;
     }
     if (close(fd) == -1)
         return EXTRACT_FAIL;
 
-    chmod(*ext_path, 0750);
+    chmod(tmp_path, 0750);
+    if (rename(tmp_path, *ext_path) == -1) {
+        unlink(tmp_path);
+        return EXTRACT_FAIL;
+    }
+
     return EXTRACT_OK;
 }
 
