@@ -81,7 +81,7 @@ chdir $test_dir;
         "--par_location"  => File::Spec->catfile($cwd, qw(blib script par.pl)),
         (defined($ENV{TEST_VERBOSE}) && $ENV{TEST_VERBOSE} > 1) ? ("--verbose") : ()
     );
-    do "automated_pp_test.pl";
+    do "./automated_pp_test.pl";
 }
 
 sub can_run {

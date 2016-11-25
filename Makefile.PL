@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 use 5.008001;
 use strict;
+use lib ".";
 use inc::Module::Install 0.92;
 
 name        'PAR-Packer';
