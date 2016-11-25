@@ -49,7 +49,7 @@ sub par_base {
 # --- $class section:
 
 all ::
-\t\$(NOECHO) $perl "-M$inc_class" -e "extract_par(q($file))"
+\t\$(NOECHO) $perl -I. "-M$inc_class" -e "extract_par(q($file))"
 
 END_MAKEFILE
 
@@ -57,7 +57,7 @@ END_MAKEFILE
 # --- $class section:
 
 $file: all test
-\t\$(NOECHO) \$(PERL) "-M$inc_class" -e "make_par(q($file))"
+\t\$(NOECHO) \$(PERL) -I. "-M$inc_class" -e "make_par(q($file))"
 
 par :: $file
 \t\$(NOECHO) \$(NOOP)
