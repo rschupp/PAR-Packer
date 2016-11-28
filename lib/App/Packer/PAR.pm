@@ -205,7 +205,7 @@ Copyright 2004-2009 by Edward S. Peschko, Audrey Tang and Mattia Barbon.
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
-See L<http://www.perl.com/perl/misc/Artistic.html>
+See F<LICENSE>.
 
 =cut
 

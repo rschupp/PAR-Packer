@@ -165,7 +165,7 @@ Copyright 2006-2009 by Steffen Mueller E<lt>smueller@cpan.orgE<gt>.
 This program is free software; you can redistribute it and/or 
 modify it under the same terms as Perl itself.
 
-See L<http://www.perl.com/perl/misc/Artistic.html>
+See F<LICENSE>.
 
 =cut
 

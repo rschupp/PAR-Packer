@@ -159,6 +159,6 @@ Copyright 2003-2009 by Audrey Tang E<lt>cpan@audreyt.orgE<gt>.
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
-See L<http://www.perl.com/perl/misc/Artistic.html>
+See F<LICENSE>.
 
 =cut
