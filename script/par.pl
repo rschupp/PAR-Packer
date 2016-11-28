@@ -156,7 +156,7 @@ followed by a 8-bytes magic string: "C<\012PAR.pm\012>".
 
 =cut
 
-my ($par_temp, $progname);
+my ($par_temp, $progname, @tmpfile);
 END { if ($ENV{PAR_CLEAN}) {
     require File::Temp;
     require File::Basename;
@@ -284,24 +284,13 @@ my ($start_pos, $data_pos);
         read _FH, $buf, unpack("N", $buf);
 
         if (defined($ext) and $ext !~ /\.(?:pm|pl|ix|al)$/i) {
-            my ($out, $filename) = _tempfile($ext, $crc);
-            if ($out) {
-                binmode($out);
-                print $out $buf;
-                close $out;
-                chmod 0755, $filename;
-            }
+            my $filename = _tempfile("$crc$ext", $buf, 0755);
             $PAR::Heavy::FullCache{$fullname} = $filename;
             $PAR::Heavy::FullCache{$filename} = $fullname;
         }
         elsif ( $fullname =~ m|^/?shlib/| and defined $ENV{PAR_TEMP} ) {
-            # should be moved to _tempfile()
-            my $filename = "$ENV{PAR_TEMP}/$basename$ext";
+            my $filename = _tempfile("$basename$ext", $buf, 0755);
             outs("SHLIB: $filename\n");
-            open my $out, '>', $filename or die $!;
-            binmode($out);
-            print $out $buf;
-            close $out;
         }
         else {
             $require_list{$fullname} =
@@ -339,13 +328,9 @@ my ($start_pos, $data_pos);
             return $fh;
         }
         else {
-            my ($out, $name) = _tempfile('.pm', $filename->{crc});
-            if ($out) {
-                binmode($out);
-                print $out $filename->{buf};
-                close $out;
-            }
-            open my $fh, '<', $name or die $!;
+            my $filename = _tempfile("$filename->{crc}.pm", $filename->{buf});
+
+            open my $fh, '<', $filename or die "can't read $filename: $!";
             binmode($fh);
             return $fh;
         }
@@ -713,8 +698,6 @@ if ($out) {
 }
 # }}}
 
-DONE:
-
 # If there's no main.pl to run, show usage {{{
 unless ($PAR::LibCache{$progname}) {
     die << "." unless @ARGV;
@@ -850,22 +833,33 @@ sub _set_par_temp {
     $par_temp = $1 if $ENV{PAR_TEMP} and $ENV{PAR_TEMP} =~ /(.+)/;
 }
 
+
+# check if $name (relative to $par_temp) already exists;
+# if not, create a file with a unique temporary name, 
+# fill it with $contents, set its file mode to $mode if present;
+# finaly rename it to $name; 
+# in any case return the absolute filename
 sub _tempfile {
-    my ($ext, $crc) = @_;
-    my ($fh, $filename);
+    my ($name, $contents, $mode) = @_;
 
-    $filename = "$par_temp/$crc$ext";
+    my $fullname = "$par_temp/$name";
+    unless (-e $fullname) {
+        my $tempname = "$fullname.$$";
 
-    if ($ENV{PAR_CLEAN}) {
-        unlink $filename if -e $filename;
+        open my $fh, '>', $tempname or die "can't write $tempname: $!";
+        binmode $fh;
+        print $fh $contents;
+        close $fh;
+        chmod $mode, $tempname if defined $mode;
+
+        rename($tempname, $fullname) or unlink($tempname);
+        # NOTE: The rename() error presumably is something like ETXTBSY 
+        # (scenario: another process was faster at extraction $fullname
+        # than us and is already using it in some way); anyway, 
+        # let's assume $fullname is "good" and clean up our copy.
     }
-    else {
-        return (undef, $filename) if (-r $filename);
-    }
 
-    open $fh, '>', $filename or die $!;
-    binmode($fh);
-    return($fh, $filename);
+    return $fullname;
 }
 
 # same code lives in PAR::SetupProgname::set_progname

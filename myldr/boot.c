@@ -47,8 +47,8 @@ int extract_embedded_file(embedded_file_t *emb_file, const char* ext_name, const
     if (par_lstat(*ext_path, &statbuf) == 0 && statbuf.st_size == emb_file->size )
         return EXTRACT_ALREADY; /* file already exists and has the expected size */
 
-    tmp_path = malloc(len + 1 + 16 + 1);
-    sprintf(tmp_path, "%s.%lx", *ext_path, (unsigned long)getpid());
+    tmp_path = malloc(len + 1 + 20 + 1); /* 20 decimal digits should be enough to hold up to 2^64-1 */
+    sprintf(tmp_path, "%s.%lu", *ext_path, (unsigned long)getpid());
 
     fd = open(tmp_path, O_CREAT | O_WRONLY | OPEN_O_BINARY, 0755);
     if ( fd == -1 ) 
@@ -64,10 +64,13 @@ int extract_embedded_file(embedded_file_t *emb_file, const char* ext_name, const
         return EXTRACT_FAIL;
 
     chmod(tmp_path, 0750);
-    if (rename(tmp_path, *ext_path) == -1) {
+    if (rename(tmp_path, *ext_path) == -1)
         unlink(tmp_path);
-        return EXTRACT_FAIL;
-    }
+        /* NOTE: The error presumably is something like ETXTBSY (scenario:
+         * another process was faster at extraction *ext_path than us and is
+         * already using it in some way); anyway, let's assume *ext_path
+         * is "good" and clean up our copy.
+         */
 
     return EXTRACT_OK;
 }
