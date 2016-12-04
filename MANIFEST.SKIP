@@ -30,7 +30,7 @@
 ^blibdirs
 \B\.svn\b
 \B\.git\b
-^\.gitignore
+\B\.gitignore\b
 ^a\.out$
 .*\.swp$
 .*\.o$
