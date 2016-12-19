@@ -38,7 +38,6 @@ recommends 'Digest::SHA'         => 0;
 recommends 'Module::Signature'   => 0;
 
 include_deps        'Test::More';
-no_index            directory => 'contrib';
 auto_provides;
 
 license     'perl';
@@ -114,6 +113,9 @@ sub par_prehook {
           ) : (),
         ],
         NEEDS_LINKING	        => 1,
+        META_MERGE              => {
+            no_index            => { directory => [ 'contrib' ] },
+        },
         test => { TESTS => join(" ", sort keys %tests) },
     );
 }
