@@ -35,10 +35,10 @@ plan tests => 2 * (keys %expected);
 $ENV{PAR_TMPDIR} = tempdir(TMPDIR => 1, CLEANUP => 1);
 
 my $EXE = catfile($ENV{PAR_TMPDIR},"packed$Config{_exe}");
-my $PP = abs_path(catfile(qw( blib script pp )));
 
 while (my ($M, $exp) = each %expected) {
-    system $^X, $PP, -o => $EXE, -I => "t", -M => $M,
+    system $^X, catfile(qw( blib script pp )),
+           -o => $EXE, -I => "t", -M => $M,
                      -e => q[print qq[testing 'pp -M Foo::\n]];
     ok( $? == 0 && -f $EXE, qq[successfully packed "$EXE"] ) 
         or die qq[couldn't pack "$EXE"];

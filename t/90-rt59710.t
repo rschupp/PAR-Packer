@@ -14,10 +14,9 @@ plan tests => 3; # FIXME
 
 $ENV{PAR_TMPDIR} = File::Temp::tempdir(TMPDIR => 1, CLEANUP => 1);
 
-my $EXE = File::Spec->catfile($ENV{PAR_TMPDIR},"rt59710$Config{_exe}");
-my $PP = File::Spec->catfile(qw( blib script pp ));
+my $EXE = catfile($ENV{PAR_TMPDIR},"rt59710$Config{_exe}");
 
-system $^X, $PP, 
+system $^X, catfile(qw( blib script pp )),
     -o => $EXE, 
     -e => 'use Unicode::UCD qw(charinfo); my $i = charinfo(0x42); print $i->{name};';
 ok( $? == 0 && -f $EXE, qq[successfully packed "$EXE"] ) 

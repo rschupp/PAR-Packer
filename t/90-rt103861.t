@@ -12,9 +12,8 @@ plan tests => 3;
 $ENV{PAR_TMPDIR} = tempdir(TMPDIR => 1, CLEANUP => 1);
 
 my $EXE = catfile($ENV{PAR_TMPDIR},"packed$Config{_exe}");
-my $PP = catfile(qw( blib script pp ));
 
-system $^X, $PP, 
+system $^X, catfile(qw( blib script pp )),
     -o => $EXE, 
     -e => q[use lib 'foo'; use lib 'bar'; print qq[$_\n] foreach @INC];
 ok( $? == 0 && -f $EXE, qq[successfully packed "$EXE"] ) 

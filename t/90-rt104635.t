@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Config;
 use File::Spec::Functions;
-use Cwd qw( abs_path );
+use Cwd;
 use File::Temp qw( tempdir );
 use Archive::Zip qw( :ERROR_CODES );
 
@@ -16,13 +16,13 @@ plan tests => @expected + 2;
 $ENV{PAR_TMPDIR} = tempdir(TMPDIR => 1, CLEANUP => 1);
 
 my $EXE = catfile($ENV{PAR_TMPDIR},"packed$Config{_exe}");
-my $PP = abs_path(catfile(qw( blib script pp )));
+
+my $cwd = getcwd();
 
 chdir(catdir(qw( t 90-rt104635 ))) or die "can't chdir to t/90-rt104635: $!";
 
-system $^X, $PP, 
-    -o => $EXE, 
-    catfile(qw( eg foo ));
+system $^X, catfile($cwd, qw( blib script pp )),
+       -o => $EXE, -I => '.', catfile(qw( eg foo ));
 ok( $? == 0 && -f $EXE, qq[successfully packed "$EXE"] ) 
     or die qq[couldn't pack "$EXE"];
 

@@ -1,6 +1,7 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 use strict;
+use warnings;
 use Config;
 use File::Spec::Functions;
 use File::Temp ();
@@ -12,12 +13,11 @@ plan tests => 3;
 
 $ENV{PAR_TMPDIR} = File::Temp::tempdir(TMPDIR => 1, CLEANUP => 1);
 
-my $EXE = File::Spec->catfile($ENV{PAR_TMPDIR},"rt101800$Config{_exe}");
-my $PP = File::Spec->catfile(qw( blib script pp ));
+my $EXE = catfile($ENV{PAR_TMPDIR},"rt101800$Config{_exe}");
 
-my $tmpfile1 = File::Spec->catfile($ENV{PAR_TMPDIR}, 'check1.txt');
-my $tmpdir1  = File::Spec->catdir($ENV{PAR_TMPDIR}, 'checkdir1');
-my $tmpfile2 = File::Spec->catfile($tmpdir1,  'check2.txt');
+my $tmpfile1 = catfile($ENV{PAR_TMPDIR}, 'check1.txt');
+my $tmpdir1  = catdir($ENV{PAR_TMPDIR}, 'checkdir1');
+my $tmpfile2 = catfile($tmpdir1,  'check2.txt');
 
 mkdir $tmpdir1;
 foreach my $file ($tmpfile1, $tmpfile2) {
@@ -26,7 +26,7 @@ foreach my $file ($tmpfile1, $tmpfile2) {
     close $fh;
 }
 
-system $^X, $PP, 
+system $^X, catfile(qw( blib script pp )),
     -o => $EXE, 
     -a => "$tmpfile1;check1.txt",
     -a => "$tmpdir1;checkdir1",

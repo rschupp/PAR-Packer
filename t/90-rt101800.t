@@ -24,13 +24,12 @@ else
 $ENV{PAR_TMPDIR} = tempdir(TMPDIR => 1, CLEANUP => 1);
 
 my $EXE = catfile($ENV{PAR_TMPDIR},"packed$Config{_exe}");
-my $PP = catfile(qw( blib script pp ));
 my $data = "AUTHORS";
 
 # Note: there's nothing special about IPC::Open3 here - any module that
 # (1) we know to be installed and (2) is not one of the "bundled" modules
 # will do.
-system $^X, $PP, 
+system $^X, catfile(qw( blib script pp )),
     -o => $EXE, 
     -a => $data,
     -e => q[use IPC::Open3; print qq[PAR_TEMP=$ENV{PAR_TEMP}\n];];
