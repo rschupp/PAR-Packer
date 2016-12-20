@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use 5.008001;
 use strict;
-use lib ".";
+BEGIN { push @INC, '.' unless $INC[-1] eq '.' }
 use inc::Module::Install 0.92;
 
 name        'PAR-Packer';
@@ -37,13 +37,14 @@ recommends 'Digest'              => 0;
 recommends 'Digest::SHA'         => 0;
 recommends 'Module::Signature'   => 0;
 
-include_deps        'Test::More';
 auto_provides;
+no_index    directory           => 'contrib';
 
-license     'perl';
-repository  'https://github.com/rschupp/PAR-Packer';
+license     'perl_5';
+resources   repository          => 'https://github.com/rschupp/PAR-Packer',
+            MailingList         => 'par@perl.org';
 
-par_base 'SMUELLER';
+par_base    'SMUELLER';
 
 if ($] == 5.010000) {
     # 5.10.0 breaks how PAR intercepts loading of shared libraries
@@ -66,7 +67,6 @@ if (defined($ENV{PERL5LIB}) || defined($ENV{PERLLIB})) {
 }
 
 par_prehook();
-#WriteAll sign => 1;
 WriteAll sign => 0;
 
 my %no_parl  = ();
@@ -113,9 +113,6 @@ sub par_prehook {
           ) : (),
         ],
         NEEDS_LINKING	        => 1,
-        META_MERGE              => {
-            no_index            => { directory => [ 'contrib' ] },
-        },
         test => { TESTS => join(" ", sort keys %tests) },
     );
 }
