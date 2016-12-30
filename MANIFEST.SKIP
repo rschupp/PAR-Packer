@@ -1,6 +1,7 @@
 #defaults
 ^\..*\.swp$
 ^contrib/automated_pp_test/pp_switch_tests
+^inc/\.author/\.keep
 ^myldr/Makefile$
 ^myldr/Makefile\.old$
 ^myldr/MYMETA\.
