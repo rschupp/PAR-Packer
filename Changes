@@ -1,3 +1,27 @@
+1.036  2016-12-29
+
+- Fix RT#118094: Race condition exists when building cache for pp built executables
+  - guard against concurrent extraction attempts
+  - bump "requires" on PAR to a version with additional guards
+
+- Fix RT#118903: Does not install when '.' is not in @INC
+  - apply patch from Graham Ollis (PLICEASE), thanks!
+  - make the Module::Install stuff work in the "author" case
+    NOTE: "use lib '.'" does *not* work in this case
+
+- Move to GitHub. Thanks, OpenFoundry, for years of service.
+  - add Perl_5 LICENSE file, make "repository" point to GitHub
+  - always refer to the included LICENSE file
+  - point bug reports to bug-par-packer@rt.cpan.org
+  - add an empty file "inc/.author/.keep" as Git doesn't track empty
+    directories
+
+- Fix RT #118053: Problem with packed perl archive for biber on 64-bit Cygwin
+  - embed cygcrypt-0.dll since it isn't (anymore) in the set of
+    default Cygwin packages
+
+- Upgrade to Module::Install 1.17
+
 1.035  2016-07-23
 
 - Fix RT#116254: Compilation error under strawberry perl 5.24 x64
