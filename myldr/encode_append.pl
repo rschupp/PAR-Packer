@@ -28,7 +28,18 @@ open my $in, '<', $infile or die $!;
 binmode $in;
 my $contents = <$in>;
 close $in;
+
 $contents =~ s/^__DATA__\r?\n.*\z//ms;
+
+# cf. Config.pm
+$contents .= sprintf <<'...', ($^V) x 2;
+$^V eq %vd 
+    or die sprintf "Perl (%%s) version (%%vd) doesn't match the version (%%vd) ".
+                   "that PAR::Packer was built with; please rebuild PAR::Packer", $^X, $^V;
+
+1;
+...
+
 
 open my $enc, '<', $encfile or die $!;
 binmode $enc;
