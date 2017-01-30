@@ -726,12 +726,13 @@ sub pack_manifest_hash {
     unshift(@INC, @{ $opt->{I} || [] });
     unshift(@SharedLibs, map $self->_find_shlib($_), @{ $opt->{l} || [] });
 
-    my %skip = map { Module::ScanDeps::_find_in_inc($_), 1 } @exclude;
+    # Note: _find_in_inc() may return ()
+    my %skip = map { $_ => 1 } grep { defined } map { Module::ScanDeps::_find_in_inc($_) } @exclude;
     if ($^O eq 'MSWin32') {
-        %skip = (%skip, map { s{\\}{/}g; lc($_), 1 } @SharedLibs);
+        %skip = (%skip, map { s{\\}{/}g; lc($_) => 1 } @SharedLibs);
     }
     else {
-        %skip = (%skip, map { $_, 1 } @SharedLibs);
+        %skip = (%skip, map { $_ => 1 } @SharedLibs);
     }
 
     my $add_deps = $self->_obj_function($fe, 'add_deps');
@@ -780,8 +781,9 @@ sub pack_manifest_hash {
         ),
     );
 
-    %skip = map { Module::ScanDeps::_find_in_inc($_), 1 } @exclude;
-    %skip = (%skip, map { $_, 1 } @SharedLibs);
+    # Note: _find_in_inc() may return ()
+    %skip = map { $_ => 1 } grep { defined } map { Module::ScanDeps::_find_in_inc($_) } @exclude;
+    %skip = (%skip, map { $_ => 1 } @SharedLibs);
 
     $add_deps->(
         rv      => \%map,
