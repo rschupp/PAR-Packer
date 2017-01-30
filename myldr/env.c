@@ -94,6 +94,14 @@ par_setenv(name, value)
 	const char *name;
 	register const char *value;
 {
+#ifdef WIN32
+	char* p = (char*)malloc((size_t)(strlen(name) + strlen(value) + 2));
+	if (!p)
+		return (-1);
+	sprintf(p, "%s=%s", name, value);
+	_putenv(p);
+	return (0);
+#else
 	extern char **environ;
 	static int alloced = 0;         /* if allocated space before */
 	register char *c;
@@ -137,6 +145,7 @@ par_setenv(name, value)
 	for (c = environ[offset]; (*c = *name++) && *c != '='; ++c);
 	for (*c++ = '='; (*c++ = *value++););
 	return (0);
+#endif
 }
 
 /*
