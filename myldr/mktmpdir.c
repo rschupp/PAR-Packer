@@ -52,28 +52,20 @@ void par_setup_libpath( const char * stmpdir )
 {
     const char *key = NULL , *val = NULL;
     int i;
+    char *ld_path = LDLIBPTHNAME;
     char *ld_path_env = NULL;
 
-    /* NOTE: array is NULL terminated */
-    const char *ld_path_keys[] = {       
-        "LD_LIBRARY_PATH", "LIBPATH", "LIBRARY_PATH",
-        "PATH", "DYLD_LIBRARY_PATH", "SHLIB_PATH", NULL
-    };
-
-    /* parentheses around the "for" condition are there to shut up compiler warnings */
-    for ( i = 0 ; (key = ld_path_keys[i]); i++ ) {
-        if ( (val = par_getenv(key)) == NULL || strlen(val) == 0 ) {
-            par_setenv(key, stmpdir);
-        }
-        else if ( !strstr(val, stmpdir) ) {
-            /* prepend stmpdir to (value of) environment variable */
-            ld_path_env = malloc( 
-		strlen(stmpdir) + strlen(path_sep) + strlen(val) + 1);
-            sprintf(
-                ld_path_env, "%s%s%s",
-                stmpdir, path_sep, val);
-            par_setenv(key, ld_path_env);
-        }
+    if ( (val = par_getenv(ld_path)) == NULL || strlen(val) == 0 ) {
+        par_setenv(ld_path, stmpdir);
+    }
+    else if ( !strstr(val, stmpdir) ) {
+        /* prepend stmpdir to (value of) environment variable */
+        ld_path_env = malloc( 
+            strlen(stmpdir) + strlen(path_sep) + strlen(val) + 1);
+        sprintf(
+            ld_path_env, "%s%s%s",
+            stmpdir, path_sep, val);
+        par_setenv(ld_path, ld_path_env);
     }
 }
 
