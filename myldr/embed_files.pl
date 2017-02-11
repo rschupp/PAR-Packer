@@ -15,6 +15,7 @@ use File::Spec::Functions ':ALL';
 use Cwd 'realpath';
 use Getopt::Long;
 use IO::Compress::Gzip qw(gzip $GzipError);
+use DynaLoader;
 use Config;
 
 my $chunk_size = 32768;
@@ -188,26 +189,14 @@ sub _objdump
     {
         next if $dlls->{$dll};
 
-        my $path = _find_dll($dll) or next;
-        $dlls->{$dll} = $path;
+        my ($file) = DynaLoader::dl_findfile($dll) or next;
+        $dlls->{$dll} = $file;
 
-        next if $seen->{$path};
-        _objdump($path, "$level  ", $seen, $dlls) 
-            unless is_system_lib($path);
-        $seen->{lc $path} = 1;
+        next if $seen->{$file};
+        _objdump($file, "$level  ", $seen, $dlls) 
+            unless is_system_lib($file);
+        $seen->{lc $file} = 1;
     }
-}
-
-sub _find_dll
-{
-    my ($name) = @_;
-
-    foreach (path())
-    {
-        my $path = catfile($_, $name);
-        return realpath($path) if -r $path;
-    }
-    return;
 }
 
 sub file2c
