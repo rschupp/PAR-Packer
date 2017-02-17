@@ -156,6 +156,9 @@ static void
 par_unsetenv(name)
 	const char *name;
 {
+#ifdef WIN32
+	par_setenv(name, "");
+#else
 	extern char **environ;
 	register char **p;
 	int offset;
@@ -164,4 +167,5 @@ par_unsetenv(name)
 		for (p = &environ[offset];; ++p)
 			if (!(*p = *(p + 1)))
 				break;
+#endif
 }
