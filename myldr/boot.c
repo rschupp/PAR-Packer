@@ -126,6 +126,7 @@ int main ( int argc, char **argv, char **env )
     char *my_prog;
     char buf[20];	/* must be large enough to hold "PAR_ARGV_###" */
 #ifdef WIN32
+    const char **my_argv;
 typedef BOOL (WINAPI *pALLOW)(DWORD);
     HINSTANCE hinstLib;
     pALLOW ProcAdd;
@@ -223,7 +224,13 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     }
 
     par_setenv("PAR_SPAWNED", "1");
-    rc = spawnvpe(P_WAIT, my_perl, (char* const*)argv, (char* const*)environ);
+    my_argv = (char**)malloc((argc + 2) * sizeof(char**));
+    my_argv[0] = my_perl;
+    for (i = 0; i < argc; i++) {
+        my_argv[i + 1] = argv[i];
+    }
+    my_argv[argc + 1] = NULL;
+    rc = spawnvp(P_WAIT, my_perl, (const char* const*)my_argv);
 
     par_cleanup(stmpdir);
     exit(rc);
