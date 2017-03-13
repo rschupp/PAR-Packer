@@ -4,8 +4,8 @@ use strict;
 use Cwd;
 use Config;
 use FindBin;
-use File::Spec;
-use File::Temp ();
+use File::Spec::Functions qw( :ALL );
+use File::Temp qw( tempdir );
 use ExtUtils::MakeMaker;
 
 $ENV{PAR_TMPDIR} = File::Temp::tempdir(TMPDIR => 1, CLEANUP => 1);
@@ -28,12 +28,12 @@ sub samefiles {
     return 1;
 }
 
-chdir File::Spec->catdir($FindBin::Bin, File::Spec->updir);
+chdir catdir($FindBin::Bin, updir());
 
 my $cwd = getcwd();
-my $test_dir = File::Spec->catdir($cwd, 'contrib', 'automated_pp_test');
+my $test_dir = catdir($cwd, 'contrib', 'automated_pp_test');
 
-my $parl = File::Spec->catfile($cwd, 'blib', 'script', "parl$Config{_exe}");
+my $parl = catfile($cwd, 'blib', 'script', "parl$Config{_exe}");
 my $startperl = $Config{startperl};
 $startperl =~ s/^#!//;
 
@@ -69,7 +69,7 @@ $ENV{PAR_GLOBAL_CLEAN} = 1;
 $ENV{PERL5LIB} = join(
     $Config{path_sep},
     grep length,
-        File::Spec->catdir($cwd, 'blib', 'lib'),
+        catdir($cwd, 'blib', 'lib'),
         $test_dir,
         $ENV{PERL5LIB},
 );
@@ -77,8 +77,8 @@ $ENV{PERL5LIB} = join(
 chdir $test_dir;
 {
     local @ARGV = (
-        "--pp_location"   => File::Spec->catfile($cwd, qw(blib script pp)),
-        "--par_location"  => File::Spec->catfile($cwd, qw(blib script par.pl)),
+        "--pp_location"   => catfile($cwd, qw(blib script pp)),
+        "--par_location"  => catfile($cwd, qw(blib script par.pl)),
         (defined($ENV{TEST_VERBOSE}) && $ENV{TEST_VERBOSE} > 1) ? ("--verbose") : ()
     );
     do "./automated_pp_test.pl";
@@ -91,7 +91,7 @@ sub can_run {
     return $_cmd if (-x $_cmd or $_cmd = MM->maybe_command($_cmd));
 
     for my $dir ((split /$Config::Config{path_sep}/, $ENV{PATH}), '.') {
-        my $abs = File::Spec->catfile($dir, $_[1]);
+        my $abs = catfile($dir, $_[1]);
         return $abs if (-x $abs or $abs = MM->maybe_command($abs));
     }
 
