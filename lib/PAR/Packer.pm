@@ -28,6 +28,7 @@ use Config;
 use Archive::Zip ();
 use ExtUtils::MakeMaker (); # just for maybe_command()
 use Cwd ();
+use Cwd 'abs_path';
 use File::Basename ();
 use File::Find ();
 use File::Spec ();
@@ -1457,7 +1458,7 @@ sub _check_par {
 sub _chase_lib {
    my ($self, $file) = @_;
 
-   return $self->_chase_lib_darwin($file) if $^O eq q/darwin/;
+   return abs_path($file) if $^O eq q/darwin/;
 
    while ($Config::Config{d_symlink} and -l $file) {
        if ($file =~ /^(.*?\.\Q$Config{dlext}\E\.\d+)\..*/) {
@@ -1480,34 +1481,6 @@ sub _chase_lib {
 
    return $file;
 }
-
-sub _chase_lib_darwin {
-   my ($self, $file) = @_;
-
-   while (-l $file) {
-       if ($file =~ /^(.*?\.\d+)(\.\d+)*\.dylib$/) {
-           my $name = $1 . q/.dylib/;
-           return $name if -e $name;
-       }
-
-       return $file if $file =~ /\D\.\d+\.dylib$/;
-
-       my $dir = File::Basename::dirname($file);
-       $file = readlink($file);
-
-       unless (File::Spec->file_name_is_absolute($file)) {
-           $file = File::Spec->rel2abs($file, $dir);
-       }
-   }
-
-   if ($file =~ /^(.*?\.\d+)(\.\d+)*\.dylib$/) {
-       my $name = $1 . q/.dylib/;
-       return $name if -e $name;
-   }
-
-   return $file;
-}
-
 
 sub _find_shlib {
     my ($self, $file) = @_;
