@@ -12,7 +12,7 @@ use lib "$FindBin::Bin/../lib";
 use File::Basename;
 use File::Glob;
 use File::Spec::Functions ':ALL';
-use Cwd 'realpath';
+use Cwd 'abs_path';
 use Getopt::Long;
 use IO::Compress::Gzip qw(gzip $GzipError);
 use DynaLoader;
@@ -79,8 +79,8 @@ for ($^O)
     if (/mswin32/i && (qx(objdump --version), $? == 0))
     {
         print STDERR qq[# using "objdump" recusrively to find DLLs needed by $par\n];
-        my $system_root = realpath($ENV{SystemRoot});
-        *is_system_lib = sub { realpath(shift) =~ m{^\Q$system_root\E/}i };
+        my $system_root = abs_path($ENV{SystemRoot});
+        *is_system_lib = sub { abs_path(shift) =~ m{^\Q$system_root\E/}i };
 
         $dlls = objdump($par);
         last;
@@ -167,7 +167,7 @@ sub objdump
     my ($path) = @_;
 
     my %dlls;;
-    _objdump($path, "", { lc realpath($path) => 1 }, \%dlls);
+    _objdump($path, "", { lc abs_path($path) => 1 }, \%dlls);
 
     # weed out system libraries
     while (my ($name, $path) = each %dlls)
