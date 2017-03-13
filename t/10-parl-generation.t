@@ -3,13 +3,13 @@ use strict;
 use constant TEST_NO => 31;
 use Test::More tests => TEST_NO;
 
-use File::Spec;
-use File::Temp ();
+use File::Spec::Functions qw( :ALL );
+use File::Temp qw( tempdir tempfile );
 use FindBin ();
 use Config qw/%Config/;
 use vars qw/@INC %INC/;
 
-$ENV{PAR_TMPDIR} = File::Temp::tempdir(TMPDIR => 1, CLEANUP => 1);
+$ENV{PAR_TMPDIR} = tempdir(TMPDIR => 1, CLEANUP => 1);
 
 unshift @INC, ($FindBin::Bin);
 use_ok('PAR');
@@ -17,12 +17,12 @@ use_ok('PAR::StrippedPARL::Static');
 use_ok('PAR::StrippedPARL::Dynamic');
 
 # define all the file locations
-my $builddir = File::Spec->catdir($FindBin::Bin, File::Spec->updir());
-my $myldr    = File::Spec->catdir($builddir, 'myldr');
-my $boot     = File::Spec->catfile($myldr, 'boot' . $Config{_exe});
-my $dynamic  = File::Spec->catfile($myldr, 'par' . $Config{_exe});
-my $parl     = File::Spec->catfile($myldr, 'parl' . $Config{_exe});
-my $parldyn  = File::Spec->catfile($myldr, 'parldyn' . $Config{_exe});
+my $builddir = catdir($FindBin::Bin, updir());
+my $myldr    = catdir($builddir, 'myldr');
+my $boot     = catfile($myldr, 'boot' . $Config{_exe});
+my $dynamic  = catfile($myldr, 'par' . $Config{_exe});
+my $parl     = catfile($myldr, 'parl' . $Config{_exe});
+my $parldyn  = catfile($myldr, 'parldyn' . $Config{_exe});
 
 # static(.exe), parl(.exe) must exist
 ok(-f $boot, 'Found the static build of parl in myldr');
@@ -68,9 +68,7 @@ is(
 my $static_tmp_file;
 {
     my $tfh;
-    ($tfh, $static_tmp_file) = File::Temp::tempfile(
-        'partestXXXXXX', OPEN => 1, DIR => File::Spec->tmpdir()
-    );
+    ($tfh, $static_tmp_file) = tempfile( 'partestXXXXXX', OPEN => 1, TMPDIR => 1 );
 }
 
 {
@@ -105,9 +103,7 @@ is(
 my $parl_tmp_file;
 {
     my $tfh;
-    ($tfh, $parl_tmp_file) = File::Temp::tempfile(
-        'partest2XXXXXX', OPEN => 1, DIR => File::Spec->tmpdir()
-    );
+    ($tfh, $parl_tmp_file) = tempfile( 'partest2XXXXXX', OPEN => 1, TMPDIR => 1 );
 }
 
 
@@ -165,9 +161,7 @@ SKIP: {
     # check that write_raw() writes the same as myldr/par(.exe)
     {
         my $tfh;
-        ($tfh, $dyn_tmp_file) = File::Temp::tempfile(
-            'partestXXXXXX', OPEN => 1, DIR => File::Spec->tmpdir()
-        );
+        ($tfh, $dyn_tmp_file) = tempfile( 'partestXXXXXX', OPEN => 1, TMPDIR => 1 );
     }
     
     {
@@ -200,9 +194,7 @@ SKIP: {
     # check that write_parl() writes the same as myldr/parldyn(.exe)
     {
         my $tfh;
-        ($tfh, $parldyn_tmp_file) = File::Temp::tempfile(
-            'partest2XXXXXX', OPEN => 1, DIR => File::Spec->tmpdir()
-        );
+        ($tfh, $parldyn_tmp_file) = tempfile( 'partest2XXXXXX', OPEN => 1, TMPDIR => 1 );
     }
 
     {
