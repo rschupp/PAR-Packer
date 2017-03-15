@@ -1512,43 +1512,35 @@ sub _chase_lib_darwin {
 sub _find_shlib {
     my ($self, $file) = @_;
 
-    if ($^O eq 'MSWin32') {
-        if ($file !~ /^[a-z]:/i) {
-            my $cwd = Cwd::cwd().'/';
-            $cwd =~ s{/.*}{} if $file =~ m{^[\\/]};
-            $file = $cwd.$file;
-        }
-    }
+    return $self->_chase_lib(abs_path($file)) if -e $file;
 
-    return $self->_chase_lib($file) if -e $file;
+    $self->_die("Shared library (option -l) doesn't exist: $file")
+        if $file =~ /[\/\\]/;
 
-    my $libpthname;
+    my @libpath;
     if ($^O eq 'MSWin32') {
-        $libpthname = exists $ENV{PATH} ? $ENV{PATH} : undef;
+        @libpath = (path(), '.');       # cwd() is always implicitly searched
     }
     else {
-        $libpthname = exists $ENV{ $Config{ldlibpthname} }
-                           ? $ENV{ $Config{ldlibpthname} } : undef;
-    }
-    if (not defined $libpthname) {
-        $self->_die(sprintf(
-                "Don't know how to find shared library (option -l) %s: ".
-                "environment variable %s is not set.",
-                $file, $^O eq 'MSWin32' ? 'PATH' : $Config{ldlibpthname}));
-        return;
+        # NOTE: libpth is actually supposed to be the path searched
+        # by the linker (ld) and *not* the path searched by the runtime
+        # loader (ld.so). But it's the best guess we've got.
+        @libpath = split(' ', $Config{libpth});
+
+        # add $ENV{LD_LIBRARY_PATH} (or equivalent) if defined 
+        my $ldlibpath = $ENV{ $Config{ldlibpthname} };
+        unshift @libpath, split(/\Q$Config{path_sep}\E/, $ldlibpath)
+            if defined $ldlibpath;
     }
 
-    $file = File::Basename::basename($file);
-    my @path = (File::Basename::dirname($0), split(/\Q$Config{path_sep}\E/, $libpthname));
-
-    my $lib = $self->_find_shlib_in_path($file, @path);
+    my $lib = $self->_find_shlib_in_path($file, @libpath);
     return $lib if $lib;
 
     $self->_die("Can't find shared library (option -l): $file")
         if $^O eq 'MSWin32' || $file =~ /^lib/;
 
     # be extra magical and prepend "lib" to the filename
-    $lib = $self->_find_shlib_in_path("lib$file", @path);
+    $lib = $self->_find_shlib_in_path("lib$file", @libpath);
     return $lib if $lib;
 
     $self->_die("Can't find shared library (option -l): $file (also tried lib$file)");
