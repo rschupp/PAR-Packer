@@ -27,11 +27,11 @@ have a C compiler.
 use Config;
 use Archive::Zip ();
 use ExtUtils::MakeMaker (); # just for maybe_command()
-use Cwd ();
-use File::Basename ();
+use Cwd qw( abs_path );
+use File::Basename;
 use File::Find ();
-use File::Spec ();
-use File::Temp ();
+use File::Spec::Functions qw( :ALL );
+use File::Temp qw( tempfile );
 use Module::ScanDeps ();
 use PAR ();
 use PAR::Filter ();
@@ -306,7 +306,7 @@ sub _parse_opts {
         $self->_warn("Using -e 'code' as input file, ignoring @$args\n")
           if (@$args and !$opt->{r});
 
-        my ($fh, $fake_input) = File::Temp::tempfile(
+        my ($fh, $fake_input) = tempfile(
 	    "ppXXXXX", SUFFIX => ".pl", TMPDIR => 1, UNLINK => 1);
 
         print $fh $opt->{e};
@@ -436,8 +436,8 @@ sub run_pack {
     my $output = $self->{output};
     my $args   = $self->{args};
 
-    if (!File::Spec->file_name_is_absolute($output)) {
-	$output = File::Spec->catfile(".", $output);
+    if (!file_name_is_absolute($output)) {
+	$output = catfile(".", $output);
     }
 
     my @loader = ();
@@ -631,7 +631,7 @@ sub get_par_file {
         # Don't need to keep it, be safe with a tempfile.
 
         $self->{pack_attrib}{lose} = 1;
-        ($cfh, $par_file) = File::Temp::tempfile(
+        ($cfh, $par_file) = tempfile(
 	    "ppXXXXX", SUFFIX => ".par", TMPDIR => 1, UNLINK => 1);
         close $cfh;    # See comment just below
     }
@@ -854,7 +854,7 @@ sub pack_manifest_hash {
 
     my $in;
     foreach my $in (@$input) {
-        my $name = File::Basename::basename($in);
+        my $name = basename($in);
 
         if ($script_filter) {
             my $string = $script_filter->apply($in, $name);
@@ -875,7 +875,7 @@ sub pack_manifest_hash {
 
     foreach my $in (@SharedLibs) {
         next unless -e $in;
-        my $name = File::Basename::basename($in);
+        my $name = basename($in);
 
         $dep_manifest->{"$shlib/$name"}  = [ file => $in ];
         $full_manifest->{"$shlib/$name"} = [ file => $in ];
@@ -893,7 +893,7 @@ sub pack_manifest_hash {
     if (@$input and (@$input == 1 or !$opt->{p})) {
         my $string =
           (@$input == 1)
-          ? $self->_main_pl_single("script/" . File::Basename::basename($input->[0]))
+          ? $self->_main_pl_single("script/" . basename($input->[0]))
           : $self->_main_pl_multi();
 
         $full_manifest->{"script/main.pl"} = [ string => $string ];
@@ -1291,7 +1291,7 @@ sub _extract_parl {
       if not $class->can('write_parl');
 
     $self->_vprint(0, "Generating a fresh 'parl'.");
-    my ($fh, $filename) = File::Temp::tempfile(
+    my ($fh, $filename) = tempfile(
         "parlXXXXXXX", SUFFIX => $Config{_exe}, TMPDIR => 1, UNLINK => 1);
     close $fh;
     
@@ -1312,7 +1312,7 @@ sub _move_parl {
 
     my $cfh;
     my $fh = $self->_open($self->{parl});
-    ($cfh, $self->{parl}) = File::Temp::tempfile(
+    ($cfh, $self->{parl}) = tempfile(
         "parlXXXX", SUFFIX => ".exe", TMPDIR => 1, UNLINK => 1);
     binmode($cfh);
 
@@ -1349,9 +1349,9 @@ sub _generate_output {
 
     # Make sure the parl is callable. Prepend ./ if it's just a file name.
     my $parl = $self->{parl};
-    my ($volume, $path, $file) = File::Spec->splitpath($parl);
+    my ($volume, $path, $file) = splitpath($parl);
     if (not defined $path or $path eq '') {
-        $parl = File::Spec->catfile(File::Spec->curdir(), $parl);
+        $parl = catfile(curdir(), $parl);
     }
 
     system($parl, @args);
@@ -1466,11 +1466,11 @@ sub _chase_lib {
 
        return $file if $file =~ /\.\Q$Config{dlext}\E\.\d+$/;
 
-       my $dir = File::Basename::dirname($file);
+       my $dir = dirname($file);
        $file = readlink($file);
 
-       unless (File::Spec->file_name_is_absolute($file)) {
-           $file = File::Spec->rel2abs($file, $dir);
+       unless (file_name_is_absolute($file)) {
+           $file = rel2abs($file, $dir);
        }
    }
 
@@ -1492,11 +1492,11 @@ sub _chase_lib_darwin {
 
        return $file if $file =~ /\D\.\d+\.dylib$/;
 
-       my $dir = File::Basename::dirname($file);
+       my $dir = dirname($file);
        $file = readlink($file);
 
-       unless (File::Spec->file_name_is_absolute($file)) {
-           $file = File::Spec->rel2abs($file, $dir);
+       unless (file_name_is_absolute($file)) {
+           $file = rel2abs($file, $dir);
        }
    }
 
@@ -1561,9 +1561,11 @@ sub _find_shlib_in_path
     my $dlext = $^O eq 'darwin' ? 'dylib' : $Config{dlext};
     for my $dir (@path)
     {
-        my $abs = File::Spec->catfile($dir, $file);
-        $abs = File::Spec->catfile($dir, "$file.$dlext") unless -e $abs;
-        return $self->_chase_lib($abs) if -e $abs;
+        $dir = '.' if $dir eq '';      
+        foreach my $p (catfile($dir, $file), catfile($dir, "$file.$dlext"))
+        {
+            return $self->_chase_lib(abs_path($p)) if -e $p;
+        }
     }
     return;
 }
@@ -1571,10 +1573,10 @@ sub _find_shlib_in_path
 sub _can_run {
     my ($self, $command, $no_exec) = @_;
 
-    for my $dir (File::Basename::dirname($0),
+    for my $dir (dirname($0),
         split(/\Q$Config{path_sep}\E/, $ENV{PATH}))
     {
-        my $abs = File::Spec->catfile($dir, $command);
+        my $abs = catfile($dir, $command);
         return $abs if $no_exec or $abs = MM->maybe_command($abs);
     }
     return;
