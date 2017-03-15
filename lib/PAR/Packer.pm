@@ -875,7 +875,33 @@ sub pack_manifest_hash {
 
     foreach my $in (@SharedLibs) {
         next unless -e $in;
-        my $name = basename($in);
+
+        my $name;
+
+        # try to find the name the runtime loader will be looking for
+        if ($^O =~ /linux|solaris|freebsd|openbsd/i) {
+            # try "objdump" to extract SONAME
+            my $od = qx( objdump -p $in );
+            if ($? == 0 && $od =~ /^\s* SONAME \s+ (\S+)/mx) {
+                $name = $1;
+                $self->_vprint(1, "... objdump: library $in has SONAME $name");
+            }
+        }
+        elsif ($^O eq 'darwin') {
+            # try "otool -D $file", expect output like "$file:\nname\n"
+            chomp(my @ot = qx( otool -D $in ));
+            if ($? == 0) {
+                $name = $ot[1];
+                $self->_vprint(1, "... otool: library $in has install name $name");
+            }
+            else {
+                # fallback to old "chasing symlinks" method
+                $name = basename($self->_chase_lib_darwin($in));
+            }
+        }
+
+        # fallback to old "chasing symlinks" method if nothing else worked
+        $name = basename($self->_chase_lib($in)) unless defined $name;
 
         $dep_manifest->{"$shlib/$name"}  = [ file => $in ];
         $full_manifest->{"$shlib/$name"} = [ file => $in ];
@@ -1457,7 +1483,7 @@ sub _check_par {
 sub _chase_lib {
    my ($self, $file) = @_;
 
-   return $self->_chase_lib_darwin($file) if $^O eq q/darwin/;
+   $file = abs_path($file);
 
    while ($Config::Config{d_symlink} and -l $file) {
        if ($file =~ /^(.*?\.\Q$Config{dlext}\E\.\d+)\..*/) {
@@ -1483,6 +1509,8 @@ sub _chase_lib {
 
 sub _chase_lib_darwin {
    my ($self, $file) = @_;
+
+   $file = abs_path($file);
 
    while (-l $file) {
        if ($file =~ /^(.*?\.\d+)(\.\d+)*\.dylib$/) {
@@ -1512,7 +1540,11 @@ sub _chase_lib_darwin {
 sub _find_shlib {
     my ($self, $file) = @_;
 
-    return $self->_chase_lib(abs_path($file)) if -e $file;
+    if (-e $file) {
+        my $abs_file = abs_path($file);
+        $self->_vprint(1, "... found library $file: $abs_file");
+        return $abs_file;
+    }
 
     $self->_die("Shared library (option -l) doesn't exist: $file")
         if $file =~ /[\/\\]/;
@@ -1533,15 +1565,19 @@ sub _find_shlib {
             if defined $ldlibpath;
     }
 
-    my $lib = $self->_find_shlib_in_path($file, @libpath);
-    return $lib if $lib;
+    if (my $lib = $self->_find_shlib_in_path($file, @libpath)) {
+        $self->_vprint(1, "... found library $file: $lib");
+        return $lib;
+    }
 
     $self->_die("Can't find shared library (option -l): $file")
         if $^O eq 'MSWin32' || $file =~ /^lib/;
 
     # be extra magical and prepend "lib" to the filename
-    $lib = $self->_find_shlib_in_path("lib$file", @libpath);
-    return $lib if $lib;
+    if (my $lib = $self->_find_shlib_in_path("lib$file", @libpath)) {
+        $self->_vprint(1, "... found library $file: $lib");
+        return $lib;
+    }
 
     $self->_die("Can't find shared library (option -l): $file (also tried lib$file)");
 }
@@ -1556,7 +1592,7 @@ sub _find_shlib_in_path
         $dir = '.' if $dir eq '';      
         foreach my $p (catfile($dir, $file), catfile($dir, "$file.$dlext"))
         {
-            return $self->_chase_lib(abs_path($p)) if -e $p;
+            return abs_path($p) if -e $p;
         }
     }
     return;
