@@ -1,3 +1,53 @@
+1.036_001  2017-03-22
+
+- Rewrite the library search (for "pp --link ...")
+  - start with $Config{libpth} which is *not* the runtime loader (e.g.
+    ld.so on Linux) search path, but rather the linker (ld) search path -
+    but it's the best guess without having to grok /etc/ld.so.conf
+  - augment that with $ENV{LD_LIBRARY_PATH} or similar
+
+- Rework how we determine the name under which a library should be installed
+  - use objdump (on Linux and other ELF-based OS) and otool on Darwin
+  - fall back to "chasing symlinks" otherwise
+
+- Fix RT#120038: [PATCH] Fix build for VS2015 (VC++ 14)
+  and merge pull request from Steve Hay (shay@cpan.org)
+  - makes PAR::Packer work with VisualStudio 2015. Thanks, Steve!
+
+- Fix RT#120041: --exclude gets confused by missing modules
+    - guard against Module::ScanDeps::_find_in_inc() returning ()
+
+- Remove PAR_ARGV_*, PAR_ARGC stuff from script/par.pl and myldr/boot.c.
+  - Dunno what problem this obscure way of passing the command line arguments
+    from a packed executable to the custom Perl interpreter was intended
+    to fix, but arguments pass just fine through execvp (or spawnvp) 
+    to perl_parse.
+
+- Only set the environment variable for the shared library search path 
+  (e.g. LD_LIBRARY_PATH) that is relevant for the operating system
+  that we're running on
+
+- Use DynaLoader::dl_findfile to locate DLLs instead of homegrown stuff.
+
+- Fail early when packing with a version of Perl
+  that's different frome the one PAR::Packer was built with.
+  
+  Scenario: User has built and installed PAR::Packer (or got it
+  pre-packaged), then installs a newer version of Perl, then does
+  
+    pp -o foo.exe foo.pl
+  
+  But running foo.exe then fails with
+  
+    foo.exe
+  
+    C:\Users\jon\AppData\Local\Temp\parlzcPb.exe: Perl lib version (5.24.1) doesn't match executable 'perl.exe' version (5.24.0) at C:/Perl64/lib/Config.pm line 62.
+    Compilation failed in require at C:/Perl64/lib/Errno.pm line 10.
+    ...
+    C:\Perl64\site\bin/pp: Failed to extract a parl from 'PAR::StrippedPARL::Static' to file 'C:\Users\jon\AppData\Local\Temp\parl3swwQJc.exe' at C:/Perl64/site/lib/PAR/Packer.pm line 1184, <DATA> line 1.
+  
+  Now, pp will fail and with a more useful message.
+
 1.036  2016-12-29
 
 - Fix RT#118094: Race condition exists when building cache for pp built executables
