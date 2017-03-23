@@ -202,6 +202,7 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     }
 
     /* finally spawn the custom Perl interpreter */
+    argv[0] = my_perl;
 #ifdef WIN32
     hinstLib = LoadLibrary("user32");
     if (hinstLib != NULL) {
