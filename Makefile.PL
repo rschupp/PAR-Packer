@@ -44,8 +44,6 @@ license     'perl_5';
 resources   repository          => 'https://github.com/rschupp/PAR-Packer',
             MailingList         => 'par@perl.org';
 
-par_base    'SMUELLER';
-
 if ($] == 5.010000) {
     # 5.10.0 breaks how PAR intercepts loading of shared libraries
     warn <<'...';
