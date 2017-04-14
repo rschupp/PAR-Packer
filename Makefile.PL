@@ -1,6 +1,7 @@
 #!/usr/bin/perl
-use 5.008001;
 use strict;
+use warnings;
+
 BEGIN { push @INC, '.' unless $INC[-1] eq '.' }
 use inc::Module::Install 0.92;
 
@@ -8,8 +9,14 @@ name        'PAR-Packer';
 abstract    'PAR Packager';
 all_from    'lib/PAR/Packer.pm';
 
-perl_version '5.008001';
+perl_version '5.008009';
+
 configure_requires 'ExtUtils::Embed';
+configure_requires 'DynaLoader';
+configure_requires 'File::Basename';
+configure_requires 'File::Glob';
+configure_requires 'File::Spec::Functions';
+
 requires    'File::Temp'         => '0.05';
 requires    'Compress::Zlib'     => ($^O eq 'MSWin32') ? '1.16' : '1.30';
 requires    'IO::Compress::Gzip' => 0;
@@ -20,17 +27,15 @@ requires    'PAR'                => '1.014';
 requires    'Text::ParseWords'   => 0;
 requires    'Getopt::ArgvFile'   => '1.07';
 
-if ($^O eq 'MSWin32') {
-    requires  'Parse::Binary'    => '0.04';
-    requires  'Win32::Exe'       => '0.17';
-    requires  'Win32::Process'   => 0;
-}
+test_requires  'Test::More'      => 0;
+test_requires  'Win32::Exe'      => '0.17' if $^O eq 'MSWin32';
 
 # for tkpp
 recommends  'Tk'                 => 0;
 recommends  'Tk::ColoredButton'  => 0;
 recommends  'Tk::EntryCheck'     => 0;
 recommends  'Tk::Getopt'         => 0;
+recommends  'Win32::Process'     => 0 if $^O eq 'MSWin32';
 
 # for digital signature support
 recommends 'Digest'              => 0;
@@ -53,50 +58,22 @@ if ($] == 5.010000) {
     exit 0;
 }
 
-if (defined($ENV{PERL5LIB}) || defined($ENV{PERLLIB})) {
-    warn <<'...';
-*** You have extra Perl library paths set in your environment.
-    Please note that these paths (set with PERL5LIB or PERLLIB)
-    are not honored by perl when running under taint mode, which
-    may lead to problems. This is a limitation (by design) of
-    Perl, not of PAR::Packer; but some of the problems may
-    manifest here during installation.
-...
-}
 
-par_prehook();
-WriteAll sign => 0;
+{
+    my $cc = can_cc;
 
-my %no_parl  = ();
-
-use strict; use warnings;
-sub par_prehook {
-    my $bork = $no_parl{$^O};
-    my $cc;
-    $cc = can_cc unless $bork;
-    my $par;
-    $par = fetch_par('', '', !$cc) unless ($cc or $bork);
     my $exe  = $Config::Config{_exe};
-    my $dynperl = $Config::Config{useshrplib} && ($Config::Config{useshrplib} ne 'false');
-
-    if ($bork) {
-        warn "Binary loading known to fail on $^O; won't generate 'script/parl$exe'!\n";
-    }
-    elsif (!$par and !$cc) {
+    unless ($cc) {
         warn "No compiler found, won't generate 'script/parl$exe'!\n";
     }
 
-
-    # Do not run 10parl-generation tests in case of a pre built .par (doesn't work)
-    my %tests = map { $_ => 1 } <t/*.t>;
-    delete $tests{'t/10-parl-generation.t'} unless (!$par and $cc);
 
     makemaker_args(
         MAN1PODS		=> {
             'script/par.pl'	=> 'blib/man1/par.pl.1',
             'script/pp'	        => 'blib/man1/pp.1',
             'script/tkpp'       => 'blib/man1/tkpp.1',
-          ($par or $cc) ? (
+          $cc ? (
             'script/parl.pod'   => 'blib/man1/parl.1',
           ) : (),
         },
@@ -106,14 +83,13 @@ sub par_prehook {
             'script/tkpp',
         ],
         DIR                     => [
-          (!$par and $cc) ? (
+          $cc ? (
             'myldr'
           ) : (),
         ],
-        NEEDS_LINKING	        => 1,
-        test => { TESTS => join(" ", sort keys %tests) },
+        NEEDS_LINKING	        => $cc,
     );
 }
 
+WriteAll sign => 0;
 
-1;

@@ -104,10 +104,6 @@ if ($os =~ m/^Win/i) {
    eval {
     require Win32::Exe;
     Win32::Exe->import();
-
-    require Win32::Exe::IconFile;
-    Win32::Exe::IconFile->import;
-
   };
 
  $no_win32_exe = $@; # EVAL_ERROR
