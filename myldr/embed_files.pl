@@ -82,7 +82,7 @@ for ($^O)
         my $system_root = abs_path($ENV{SystemRoot});
         *is_system_lib = sub { abs_path(shift) =~ m{^\Q$system_root\E/}i };
 
-        $dlls = objdump($par);
+        $dlls = objdump_win32($par, dirname($^X));
         last;
     }
 
@@ -162,12 +162,31 @@ sub otool
     return { map { basename($_) => $_ } $out =~ /^ \s+ (\S+) /gmx };
 }
 
-sub objdump
+sub objdump_win32
 {
-    my ($path) = @_;
+    my ($path, @search_first_in) = @_;
 
-    my %dlls;;
-    _objdump($path, "", { lc abs_path($path) => 1 }, \%dlls);
+    my %dlls;
+    my %seen = ( lc abs_path($path) => 1 );
+    my $walker;
+    $walker = sub 
+    {
+        my ($obj) = @_;
+
+        my $out = qx(objdump -ax "$obj");
+        die "objdump failed: $!\n" unless $? == 0;
+
+        foreach my $dll ($out =~ /^\s*DLL Name:\s*(\S+)/gm)
+        {
+            next if $dlls{lc $dll};
+
+            my ($file) = DynaLoader::dl_findfile(@search_first_in, $dll) or next;
+            $dlls{lc $dll} = $file;
+            next if $seen{lc $file}++ || is_system_lib($file);
+            $walker->($file);   # recurse
+        }
+    };
+    $walker->($path);
 
     # weed out system libraries
     while (my ($name, $path) = each %dlls)
@@ -176,27 +195,6 @@ sub objdump
     }
         
     return \%dlls;
-}
-
-sub _objdump
-{
-    my ($path, $level, $seen, $dlls) = @_;
-
-    my $out = qx(objdump -ax "$path");
-    die "objdump failed: $!\n" unless $? == 0;
-    
-    foreach my $dll ($out =~ /^\s*DLL Name:\s*(\S+)/gm)
-    {
-        next if $dlls->{$dll};
-
-        my ($file) = DynaLoader::dl_findfile($dll) or next;
-        $dlls->{$dll} = $file;
-
-        next if $seen->{$file};
-        _objdump($file, "$level  ", $seen, $dlls) 
-            unless is_system_lib($file);
-        $seen->{lc $file} = 1;
-    }
 }
 
 sub file2c
