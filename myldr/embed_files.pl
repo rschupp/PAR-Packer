@@ -166,27 +166,38 @@ sub objdump_win32
 {
     my ($path, @search_first_in) = @_;
 
+    # NOTE: Looks like Perl on Windows (e.g. Strawberry) doesn't set 
+    # $Config{ldlibpthname} - one could argue that its value should be "PATH".
+    # But even where it is defined (e.g. "LD_LIBRARY_PATH" on Linux)
+    # DynaLoader *appends* (an appropriately split)
+    # $ENV{$Config{ldlibpthname}} to its search path, @dl_library_path, 
+    # which is wrong in our context as we want it to be searched first.
+    # Hence, provide our own value for @dl_library_path.
+    local @DynaLoader::dl_library_path = (@search_first_in, path());
+
     my %dlls;
-    my %seen = ( lc abs_path($path) => 1 );
+    my %seen;
     my $walker;
     $walker = sub 
     {
         my ($obj) = @_;
+        return if $seen{lc $obj}++;
 
         my $out = qx(objdump -ax "$obj");
         die "objdump failed: $!\n" unless $? == 0;
 
         foreach my $dll ($out =~ /^\s*DLL Name:\s*(\S+)/gm)
         {
-            next if $dlls{lc $dll};
+            next if $dlls{lc $dll};             # already found
 
-            my ($file) = DynaLoader::dl_findfile(@search_first_in, $dll) or next;
+            my ($file) = DynaLoader::dl_findfile($dll) or next;
             $dlls{lc $dll} = $file;
-            next if $seen{lc $file}++ || is_system_lib($file);
-            $walker->($file);   # recurse
+
+            next if is_system_lib($file);       # no need to recurse on a system library
+            $walker->($file);                   # recurse
         }
     };
-    $walker->($path);
+    $walker->(abs_path($path));
 
     # weed out system libraries
     while (my ($name, $path) = each %dlls)
