@@ -21,16 +21,6 @@ warn "No compiler found, won't generate 'script/parl$Config::Config{_exe}!\n"
     unless $have_cc;
 
 WriteMakefile1(
-    META_MERGE => {
-        resources => {
-            repository => {
-                type => 'git',
-                url => 'https://rschupp:a2c1d087425be8be5eaf4e8130628a190b7f640e@github.com/rschupp/PAR-Packer.git',
-                web => '',
-            },
-        },
-    },
-
 
     NAME                      => 'PAR::Packer',
     VERSION_FROM              => 'lib/PAR/Packer.pm',
@@ -112,9 +102,6 @@ WriteMakefile1(
       },
     },
 );
-
-
-
 
 
 sub WriteMakefile1 {  #Compatibility code for old versions of EU::MM. Written by Alexandr Ciornii, version 2. Added by eumm-upgrade.
