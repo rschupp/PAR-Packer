@@ -1,4 +1,36 @@
-1.036_001  2017-03-22
+1.037  2017-05-28
+
+- Fix RT#121268 for PAR-Packer: error installing PAR-Packer on windows10 ( 64Bit )
+  - on Windows, make dl_findfile() search first in the directory containing
+    the perl executable (to avoid erroneous hits in other members of PATH)
+
+- Fix RT#120038: [PATCH] Fix build for VS2015 (VC++ 14)
+  and merge pull request from Steve Hay (shay@cpan.org)
+  - makes PAR::Packer work with VisualStudio 2015. Thanks, Steve!
+
+- Fix RT#120041: --exclude gets confused by missing modules
+  - guard against Module::ScanDeps::_find_in_inc() returning ()
+
+- Fail early when packing with a version of Perl
+  that's different frome the one PAR::Packer was built with.
+
+  Scenario: User has built and installed PAR::Packer (or got it
+  pre-packaged), then installs a newer version of Perl, then does
+
+    pp -o foo.exe foo.pl
+
+  But running foo.exe then fails with
+
+    foo.exe
+
+    C:\Users\jon\AppData\Local\Temp\parlzcPb.exe: Perl lib version (5.24.1) doesn't match executable 'perl.exe' version (5.24.0) at C:/Perl64/lib/Config.pm line 62.
+    Compilation failed in require at C:/Perl64/lib/Errno.pm line 10.
+    ...
+    C:\Perl64\site\bin/pp: Failed to extract a parl from 'PAR::StrippedPARL::Static' to file 'C:\Users\jon\AppData\Local\Temp\parl3swwQJc.exe' at C:/Perl64/site/lib/PAR/Packer.pm line 1184, <DATA> line 1.
+
+  Now, pp will fail and with a more useful message.
+
+- Switch from Module::Install to ExtUtils::MakeMaker
 
 - Rewrite the library search (for "pp --link ...")
   - start with $Config{libpth} which is *not* the runtime loader (e.g.
@@ -10,43 +42,19 @@
   - use objdump (on Linux and other ELF-based OS) and otool on Darwin
   - fall back to "chasing symlinks" otherwise
 
-- Fix RT#120038: [PATCH] Fix build for VS2015 (VC++ 14)
-  and merge pull request from Steve Hay (shay@cpan.org)
-  - makes PAR::Packer work with VisualStudio 2015. Thanks, Steve!
-
-- Fix RT#120041: --exclude gets confused by missing modules
-    - guard against Module::ScanDeps::_find_in_inc() returning ()
-
 - Remove PAR_ARGV_*, PAR_ARGC stuff from script/par.pl and myldr/boot.c.
   - Dunno what problem this obscure way of passing the command line arguments
     from a packed executable to the custom Perl interpreter was intended
-    to fix, but arguments pass just fine through execvp (or spawnvp) 
+    to fix, but arguments pass just fine through execvp (or spawnvp)
     to perl_parse.
 
-- Only set the environment variable for the shared library search path 
+- Only set the environment variable for the shared library search path
   (e.g. LD_LIBRARY_PATH) that is relevant for the operating system
   that we're running on
 
 - Use DynaLoader::dl_findfile to locate DLLs instead of homegrown stuff.
 
-- Fail early when packing with a version of Perl
-  that's different frome the one PAR::Packer was built with.
-  
-  Scenario: User has built and installed PAR::Packer (or got it
-  pre-packaged), then installs a newer version of Perl, then does
-  
-    pp -o foo.exe foo.pl
-  
-  But running foo.exe then fails with
-  
-    foo.exe
-  
-    C:\Users\jon\AppData\Local\Temp\parlzcPb.exe: Perl lib version (5.24.1) doesn't match executable 'perl.exe' version (5.24.0) at C:/Perl64/lib/Config.pm line 62.
-    Compilation failed in require at C:/Perl64/lib/Errno.pm line 10.
-    ...
-    C:\Perl64\site\bin/pp: Failed to extract a parl from 'PAR::StrippedPARL::Static' to file 'C:\Users\jon\AppData\Local\Temp\parl3swwQJc.exe' at C:/Perl64/site/lib/PAR/Packer.pm line 1184, <DATA> line 1.
-  
-  Now, pp will fail and with a more useful message.
+- Remove "par_base" - prebuilt .par's haven't been available for ages
 
 1.036  2016-12-29
 
@@ -86,21 +94,21 @@
   - fix elision of "-l<perl lib>" from $static_ldflags
   - add $static_ldflags back to $boot_ldflags
 
-- Add information to packed executable about which version 
+- Add information to packed executable about which version
   of PAR::Packer was used to build it (suggested by Johan Vromans):
   - accessible from the packaged Perl script as $PAR::Packer::VERSION
-  - by looking for the string "Packed by PAR::Packer ..." in the executable 
+  - by looking for the string "Packed by PAR::Packer ..." in the executable
     itself (using "strings exe | grep ..." or the like)
 
 - Use ldd on cygwin, too
-  - NOTE: a "system lib" on cygwin is either in /usr/bin 
+  - NOTE: a "system lib" on cygwin is either in /usr/bin
     or a Windows "system lib"
 
 1.033  2016-05-19
 
 - Fix RT#114229: v1.32 still won't install on strawberry perl v5.22.2
- 
-  This is actually a problem caused by (some) newer versions of 
+
+  This is actually a problem caused by (some) newer versions of
   ExtUtils::MakeMaker.
 
 - Drop the "re-exec myself" in myldr/internals.c, may cause problems
@@ -108,14 +116,14 @@
   is unknown and it's only relevant for standalone invocations of parl,
   anyway (ie. NOT when running a packed executable)
 
-- Really suppress generation of myldr/MYMETA.* and don't install 
+- Really suppress generation of myldr/MYMETA.* and don't install
   man pages for myldr/{Dynamic,Static}.pm (nothing there to see anyway).
 
 1.032  2016-05-07
 
 - Unbreak PAR::Packer for Perl 5.23.9 and higher:
-  Perl 5.23.9 removed the keys starting with "_<" from %:: 
-  script/par.pl used to glean the DLLs loaded via require_modules() 
+  Perl 5.23.9 removed the keys starting with "_<" from %::
+  script/par.pl used to glean the DLLs loaded via require_modules()
   from these keys; replace them with @DynaLoader::dl_shared_objects.
 
 - Fix RT#114155: Makefile.PL error - not loading ExtUtils::MakeMaker
@@ -192,7 +200,7 @@
 - Add option -M Foo::Bar:: to pp (note the trailing double colon):
   it adds Foo/Bar.pm and anything below Foo/Bar.
 
-  Bump required Module::ScanDeps version for 
+  Bump required Module::ScanDeps version for
   Module::ScanDeps::add_preload_rule() to implement this.
 
 - Fix RT#109110: Incompatible with Module::ScanDeps 1.20
@@ -229,7 +237,7 @@
 
   - Bump requirement on PAR (for the fix for RT #103861), add a test.
 
-  - Update tkpp ito 1.5: 
+  - Update tkpp ito 1.5:
     - using -M will now work (the current directory added in @INC)
     - tkpp delete and test building file.
 
@@ -258,7 +266,7 @@
 1.023  2014-11-02
 
   - Fix RT #99231: Problem with PAR::Packer 1.022 on Perl 5.20.1 and earlier.
-    Add libwinpthreads*.dll to embedded files (used on recent 
+    Add libwinpthreads*.dll to embedded files (used on recent
     Strawberry builds). Patch by sergio.fanchiotti@standardandpoors.com, thanks!
 
   - Fix RT #63939: The behaviour of "pp --link ..." is subtly different between OSX and Linux.
@@ -271,7 +279,7 @@
 
   - Add a patch rule so that Mozilla::CA finds its (extracted) cacert.pem file.
 
-  - Rename ChangeLog file to Changes and reformat it 
+  - Rename ChangeLog file to Changes and reformat it
     according to CPAN::Changes::Spec.
 
   - Upgrade to Module::Install 1.14.
@@ -315,14 +323,14 @@
         RT #97018 (Issue while upgrading PAR::Packer )
 
     Don't "use File::Glob ':bsd_glob'":
-    - this remaps CORE::glob() to File::Glob::bsd_glob() globally, but some 
+    - this remaps CORE::glob() to File::Glob::bsd_glob() globally, but some
       versions of ExtUtils::MakeMaker rely on CORE::glob() legacy behaviour
     - the tag :bsd_glob isn't exported in Perl <= 14.2
     - explicitly call File::Glob::bsd_glob() instead of glob()
 
   - Fix RT #59224 (make error with version 1.006 on aix 5.3)
 
-    The string contents of myldr/my_par_pl.c (generated from 
+    The string contents of myldr/my_par_pl.c (generated from
     script/par.pl by myldr/par_pl2c.pl) is passed in argv[]
     during the build. This is too large for the default limit (24k)
     that AIX 5.3 has for passing argv+env in execve().
@@ -333,13 +341,13 @@
 
 1.018  2014-05-18
 
-  - [DJIBEL] tkpp 1.4 : Since PAR::Packer 1.015, tkpp doesn't work. 
+  - [DJIBEL] tkpp 1.4 : Since PAR::Packer 1.015, tkpp doesn't work.
     I Removed --icon and --info options. Now tkpp work.
 
   - Bug fixes:
 
     Use bsd_glob() instead of glob() to avoid problems with patterns that
-    contain whitespace, e.g. "C:\\Program Files\..." on Windows. 
+    contain whitespace, e.g. "C:\\Program Files\..." on Windows.
     Found by Victor Wheeler <vaw_info999@comcast.net>.
 
     Fix RT #93008: install failure with ubuntu / puppet
@@ -353,7 +361,7 @@
         RT #90198: PAR::Packer fails to compile in Mac OS X 10.9 Mavericks,
         RT #91086: PAR-Packer-1.016 fails to install on OSX)
 
-    - clang on OSX pretends to be gcc, but doesn't implement gcc's option "-static-libgcc" 
+    - clang on OSX pretends to be gcc, but doesn't implement gcc's option "-static-libgcc"
     - use this option only on Windows (when using the MingW toolchain).
 
   - Drop a test that was using Inline::C just to wrap native execvp().
@@ -378,23 +386,23 @@
     - apply (slightly modified) patch from shutton@pobox.com, thanks!
 
   - Fix RT #88297 (-M crashes pp if option contains backslashes)
-    - _add_file(): do _not_ use $zip->memberNamed(...) to refer to the just added 
+    - _add_file(): do _not_ use $zip->memberNamed(...) to refer to the just added
       Archive::Zip::Member; instead use the return value of $zip->addFile or
-      $zip->addString 
+      $zip->addString
 
   - don't modify embedded files after initial extraction
     - fixes bug (on Windows) reported by Ken Tuchman <tuchman@t-online.de>
-    
+
   - minor changes
-    - use File::Spec::Functions, get rid of ugly File::Spec->... calls 
+    - use File::Spec::Functions, get rid of ugly File::Spec->... calls
     - set $pre_res using catfile() instead of hardcoding a backslash;
       this might help on Cygwin
     - fix -Mblib option for run_with_inc.pl: we want the blib in the top level directory
 
 1.014  2012-12-21
 
-  - tkpp 1.3 : --addfile option in GUI updated : 
-    - now it is possible to set a new filename or dirname in package 
+  - tkpp 1.3 : --addfile option in GUI updated :
+    - now it is possible to set a new filename or dirname in package
       using (old;new).
 
   - Bug fixes, etc.
@@ -406,11 +414,11 @@
         this renders any packed executable non-portable to machines
         that don't have (this version of) libgcc*.dll installed
         (problem reported by chandrashekaran_kannan@hotmail.com);
-        to fix add '-static-libgcc' to the command for linking 
+        to fix add '-static-libgcc' to the command for linking
         boot.exe (when using the GCC toolchain)
       - This also uncovered the following problem:
         on some platforms (e.g. ActiveState + MingW) ldopts()
-        may contain a spurious trailing newline; 
+        may contain a spurious trailing newline;
         chomp ldopts() and ccopts() for sanity
 
       - Recent versions od Strawberry perl (5.16.x) link their perl*.dll
@@ -423,11 +431,11 @@
         Unicode::UCD from Perl 5.17 to avoid test failures
 
       - PAR 1.007 caused several tests to fail (t/20-pp.t, tests 8-9, 12).
-        IMHO these are bogus (depend on unspecified behaviour) and previously 
+        IMHO these are bogus (depend on unspecified behaviour) and previously
         succeeded only by accident; removed the offending sub tests
 
       - RT #75750: PAR::Filter::Bleach is broken
-        - NOTE: original code works as intended due to the funny way 
+        - NOTE: original code works as intended due to the funny way
   	pack 'b' is implemented, but apply patch just for sanity
 
       - RT #78396: [manifypods] Error 255
@@ -447,13 +455,13 @@
       - RT #74302: Win32 executable additional information (--info) not updated
         - finally apply patches from Mark Dootson (MDOOTSON) - thanks, Mark:
           rework resource handling for Win32 executables
-        - BIG FAT WARNING: 
+        - BIG FAT WARNING:
           --info still doesn't work, so I disabled this option for now;
-          at least on some platforms, "pp --info ..." results in a corrupted 
+          at least on some platforms, "pp --info ..." results in a corrupted
   	executable that Windows refuses to execute
   	
-      - fix a problem with "pp --gui": the copy of par.exe extracted 
-        to the cache area (but with the same name as the packed executable) 
+      - fix a problem with "pp --gui": the copy of par.exe extracted
+        to the cache area (but with the same name as the packed executable)
         still used a console window though packed with "pp --gui ..."
         (bug reported in private communication)
 
@@ -465,7 +473,7 @@
 
       - RT #75193 [PATCH] Fix build on Win32/VC++
 
-      - bump dependency on PAR to 1.005 
+      - bump dependency on PAR to 1.005
       - require latest version of Win32::Exe
       - run run_with_inc.pl using a nonce PAR_TMPDIR, too
 
@@ -489,7 +497,7 @@
          - it's mode 0700
          - it's owned by USER
 
-    - depend on PAR 1.004 (which contains the other half of the 
+    - depend on PAR 1.004 (which contains the other half of the
       fix for CVE-2011-4114)
 
     - bump Perl version requirement to 5.8.1 (Schwern: The End Of 5.6 Is Nigh!)
@@ -500,7 +508,7 @@
   - Bug fixes, etc.
 
     - Adapt for changes in XSloader.pm (>= 0.14)
-      The old rule in PatchContent.pm no longer works with this version; 
+      The old rule in PatchContent.pm no longer works with this version;
       this effectively disables how PAR::Packer intercepts loading of DLLs.
       Add a new rule for the code in recent XSloader.pm.
       NOTE: This problem affected all users of Perl >= 5.14.0 as this
@@ -515,7 +523,7 @@
     - RT #67681: can'r wrtie file
       During packing several temp files are created in the user's
       working directory - this will fail if the working directory is read-only.
-      Fix up all calls to File::Temp::tempfile with TMPDIR => 1 
+      Fix up all calls to File::Temp::tempfile with TMPDIR => 1
       and drop the bogus check whether cwd is writable.
 
      -RT #68916: Solaris with Sun Workshop: heavy cosmetic issue
@@ -527,7 +535,7 @@
       on 64-bit Windows using the MingW tool chain
       We simply don't link myldr/boot.exe with win32.coff in this environment.
 
-      NOTE: test 32 of t/20-pp.t may fail. I have received conflicting reports 
+      NOTE: test 32 of t/20-pp.t may fail. I have received conflicting reports
       about this, but just to want to make a release to get wider coverage.
 
 1.009  2011-03-26
@@ -539,19 +547,19 @@
       - add SHLIB_PATH to ld_path_keys in myldr/mktmpdir.c
       - call "chatr +s enable ..." on the extracted custom perl
 
-    - RT #65535: Unable to run perl script packaged with pp under cygwin 
+    - RT #65535: Unable to run perl script packaged with pp under cygwin
       on another Windows XP installation
 
-      - lib/PAR/Filter/PatchContent.pm: patch AutoLoader.pm to add "cygwin" 
-      to the list of "is_dosish" $^O identifiers; otherwise 
+      - lib/PAR/Filter/PatchContent.pm: patch AutoLoader.pm to add "cygwin"
+      to the list of "is_dosish" $^O identifiers; otherwise
       AutoLoader::find_filename() will mangle filenames that start with
-      a drive letter 
-      - script/par.pl: use PAR::Filter::PatchContent to patch any modules 
-      embedded in the packed excutable; this supersedes the ad hoc 
+      a drive letter
+      - script/par.pl: use PAR::Filter::PatchContent to patch any modules
+      embedded in the packed excutable; this supersedes the ad hoc
       patching of XSLoader.pm and will now also patch AutoLoader.pm
-      - myldr/Makefile.PL: when generating $parl_exe or $parldy_exe make 
-      sure that we use the PAR::* modules (e.g PAR::Filter::PatchContent) 
-      from the build environment rather than a possibly 
+      - myldr/Makefile.PL: when generating $parl_exe or $parldy_exe make
+      sure that we use the PAR::* modules (e.g PAR::Filter::PatchContent)
+      from the build environment rather than a possibly
       installed older version
 
     - "Fix" #64485: pp PodStrip module included
@@ -571,7 +579,7 @@
 
     - add "configure_requires" for ExtUtils::Embed
 
-    - pick up some POD spelling fixes from Debian 
+    - pick up some POD spelling fixes from Debian
       (thanks, Jonathan Yu <jawnsy@cpan.org>)
 
 1.008  2010-11-21
@@ -582,7 +590,7 @@
       (Windows) relax heuristic to check whether the configured C compiler
       is actually gcc (Ed Zagar)
     - RT #61874: Windows: Packed executable handles wildcards different from script
-      myldr/static.c: turn off automatic globbing of process arguments when 
+      myldr/static.c: turn off automatic globbing of process arguments when
       building with MingW (Roderich)
     - RT #62357: .cgi extension not taken as script
       call into Module::ScanDeps with $Module::ScanDeps::ScanFileRE
@@ -591,7 +599,7 @@
       (Roderich)
     - RT #63083: pp: Undefined subroutine &DynaLoader::bootstrap called in pp-compiled bianry
       fix the name where the shared perl DSO ($libperl in myldr/Makefile.PL)
-      is extracted to so that it matches the reference the linker wrote into 
+      is extracted to so that it matches the reference the linker wrote into
       $par_exe; heuristic currently only available for Linux (assuming
       we have GNU binutils installed), but might work on other ELF-based
       systems, too (Roderich)
@@ -613,7 +621,7 @@
       we run the actual packed script) canonicalize $ENV{PAR_TEMP}
       before we use it to match elements of @INC.
       This works around non-canonicalized values (e.g. a trailing slash)
-      for $ENV{TMPDIR} or P_tmpdir (as #define'd in <stdio.h>) 
+      for $ENV{TMPDIR} or P_tmpdir (as #define'd in <stdio.h>)
       (the latter seen on FreeBSD and OSX) (Roderich)
     - RT #56020: PAR::Packer and PDF::API2 Unicode::UCD: failed to find UnicodeData.txt
       that's actually a bug in Module::ScanDeps);
@@ -641,11 +649,11 @@
   - Bug fixes, etc.
     - RT #57494: add attributes.pm to list of always required modules
       (Roderich)
-    - RT #55994: fix "Can't call method "remove" on an undefined value 
+    - RT #55994: fix "Can't call method "remove" on an undefined value
       at .../Win32/Exe.pm" (patch from DJIBEL)
-    - RT #57948: pp-generated executable and a missing dependency 
+    - RT #57948: pp-generated executable and a missing dependency
       on libgcc_s_sjlj-1.dll (Roderich)
-    - RT #58095: test fails on OS X (when building in a directory 
+    - RT #58095: test fails on OS X (when building in a directory
       with blanks in its pathname); NOTE: adds a test_requires
       on IPC::Run3 (Roderich)
     - spring cleaning in myldr directory (Roderich)
@@ -832,7 +840,7 @@ o0.980  2008-05-14
         case, the extraction is skipped. This should fix an issue with
         overwriting DLLs on Windows, see
         http://www.nntp.perl.org/group/perl.par/3325 (Scott Stanton)
-      - When re-building the distribution because of a change in 
+      - When re-building the distribution because of a change in
         e.g. script/par.pl, the DATA sections of
         blib\PAR\StrippedPARL\{Dynamic,Static}.pm were not updated accordingly.
 
@@ -858,7 +866,7 @@ o0.980  2008-05-14
         See RT #29784.
       - Included PWD fix. See RT #29050.
       - Added deletion of 'orig_parl' on Win32 in PAR::Packer.
-      
+
 0.976  2007-07-29
 
   - New features
@@ -1148,7 +1156,7 @@ o0.980  2008-05-14
   - Bug Fixes
 
       - Applied Alan Stewart's patch which fixes @ARGV pollution in
-        daughter programs. See also 
+        daughter programs. See also
         http://www.nntp.perl.org/group/perl.par/2152
       - Now mentioning the ENV var "PAR_VERBATIM" in the documentation.
         See also http://www.nntp.perl.org/group/perl.par/2196
@@ -1440,7 +1448,7 @@ o0.980  2008-05-14
       - OOified "pp" in contrib/object_oriented_pp/; not installed by default.
 
   - Bug Fixes
-      
+
       - "pp -d" (--dependent) prevented "pp -C" (--clean) from working.
 
       - The "pp -m" (--multiarch) option was implemented incorrectly
@@ -1504,7 +1512,7 @@ o0.980  2008-05-14
 
       - New "pp -c" and "pp -x" (--compile/--execute) options run the
         script with "perl -c" to check for dependencies.
-        
+
       - Also, the new "pp -n" (--noscan) command skips the default
         static scanning altogether.
 
@@ -1571,14 +1579,14 @@ o0.980  2008-05-14
 
       - Perl 5.8.1 has an off-by-one bug that prevents "parl" to
         function properly.  We have now provided a workaround;
-        this bug should also be fixed in Perl 5.8.2. 
+        this bug should also be fixed in Perl 5.8.2.
 
       - Fixed https support for LWP via the new Module::ScapDeps.
 
 0.75  2003-09-21
 
   - New Features
-      
+
       - "pp -o file.exe file.par" now packs file.par into file.exe;
         this means you can hand-tweak PAR files generated by "pp -p"
         before packing it into an executable.
@@ -1943,7 +1951,7 @@ o0.980  2008-05-14
 
       - Building on Win32 in directory names that contain spaces
         did not work.
-        
+
 0.63  2003-02-06
 
   - Bug Fixes
