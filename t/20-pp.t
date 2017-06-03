@@ -74,7 +74,8 @@ $ENV{PERL5LIB} = join(
         $ENV{PERL5LIB},
 );
 
-chdir $test_dir;
+chdir $test_dir or die "can't chdir to $test_dir: $!";
+push @INC, $test_dir;
 {
     local @ARGV = (
         "--pp_location"   => catfile($cwd, qw(blib script pp)),
