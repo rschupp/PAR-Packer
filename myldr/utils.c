@@ -239,6 +239,8 @@ void par_init_env () {
     par_unsetenv("PAR_DEBUG");
     par_unsetenv("PAR_CACHE");
     par_unsetenv("PAR_PROGNAME");
+    par_unsetenv("PAR_ARGC");
+    par_unsetenv("PAR_ARGV_0");
 
     if ( (buf = par_getenv("PAR_GLOBAL_DEBUG")) != NULL ) {
         par_setenv("PAR_DEBUG", buf);

@@ -210,6 +210,16 @@ BEGIN {
 
 _par_init_env();
 
+if (exists $ENV{PAR_ARGV_0} and $ENV{PAR_ARGV_0} ) {
+    @ARGV = map $ENV{"PAR_ARGV_$_"}, (1 .. $ENV{PAR_ARGC} - 1);
+    $0 = $ENV{PAR_ARGV_0};
+}
+else {
+    for (keys %ENV) {
+        delete $ENV{$_} if /^PAR_ARGV_/;
+    }
+}
+
 my $quiet = !$ENV{PAR_DEBUG};
 
 # fix $progname if invoked from PATH
