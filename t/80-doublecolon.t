@@ -2,13 +2,12 @@
 
 use strict;
 use warnings;
-use Config;
-use File::Spec::Functions;
-use Cwd qw( abs_path );
-use File::Temp qw( tempdir );
+
 use Archive::Zip qw( :ERROR_CODES );
 
 use Test::More;
+require "t/utils.pl";
+
 my %expected = (
     "Double::Colon" => [qw(
             lib/Double/Colon.pm
@@ -32,19 +31,14 @@ my %expected = (
 
 plan tests => 2 * (keys %expected);
 
-$ENV{PAR_TMPDIR} = tempdir(TMPDIR => 1, CLEANUP => 1);
 
-my $EXE = catfile($ENV{PAR_TMPDIR},"packed$Config{_exe}");
-
-while (my ($M, $exp) = each %expected) {
-    system $^X, catfile(qw( blib script pp )),
-           -o => $EXE, -I => "t", -M => $M,
-                     -e => q[print qq[testing 'pp -M Foo::\n]];
-    ok( $? == 0 && -f $EXE, qq[successfully packed "$EXE"] ) 
-        or die qq[couldn't pack "$EXE"];
+while (my ($M, $exp) = each %expected) 
+{
+    my $exe = pp_ok(-I => "t", -M => $M,
+                    -e => q[print qq[testing 'pp -M Foo::\n]]);
 
     my $zip = Archive::Zip->new();
-    $zip->read($EXE) == AZ_OK or die "can't read $EXE as a zip file";
+    $zip->read($exe) == AZ_OK or die "can't read $exe as a zip file";
 
     my @double_colons = sort grep { m{Double/Colon} } 
                                   map { $_->fileName() }
