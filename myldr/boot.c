@@ -112,6 +112,51 @@ void seek_to_subsystem( int fd ) {
 
     lseek(fd, off + 4 + 20 + 68, SEEK_SET);          // CHECK != -1
 }
+
+/* algorithm stolen from Win32::ShellQuote, in particular quote_literal() */
+char* shell_quote(const char *src)
+{
+    /* some characters from src may be replaced with two chars,
+     * add enclosing quotes and trailing \0 */
+    char *dst = malloc(2 * strlen(src) + 3);
+
+    char *p = src;
+    char *q = dst;
+    char c;
+
+    *q++ = '"';                         /* opening quote */
+
+    while (c = *p)
+    {
+        if (c == '\\') 
+        {
+            char *bs = p;               /* span of backslashes */
+            int n = strspn(bs, "\\");
+
+            memcpy(q, bs, n);           /* copy the span */
+            q += n;
+
+            if (bs[n] == '\0' || bs[n] == '"')
+            {
+                memcpy(q, bs, n);       /* copy the span once more */
+                q += n;
+            }
+
+            p += n;
+            continue;
+        }
+
+        if (c == '"')
+            *q++ = '\\';                /* escape the following quote */
+        *q++ = c;
+        p++;
+    }
+
+    *q++ = '"';                         /* closing quote */
+    *q++ = '\0';
+
+    return dst;
+}
 #endif
 
 char pp_version_info[] = "@(#) Packed by PAR::Packer " PAR_PACKER_VERSION;
@@ -214,6 +259,19 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     }
 
     par_setenv("PAR_SPAWNED", "1");
+
+    /* quote argv strings if necessary, cf. Win32::ShellQuote */
+    for (char **argp = argv; *argp; argp++)
+    {
+        int len = strlen(*argp);
+        if ( len == 0 
+             || (*argp)[len-1] == '\\'
+             || strpbrk(*argp, " \t\n\r\v\"") )
+        {
+            *argp = shell_quote(*argp);
+        }
+    }
+
     rc = spawnvp(P_WAIT, my_perl, (char* const*)argv);
 
     par_cleanup(stmpdir);
