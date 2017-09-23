@@ -6,6 +6,7 @@ our $VERSION = '0.975';
 
 use File::Temp ();
 use File::Spec;
+use Cwd;
 use Config ();
 
 =head1 NAME
@@ -48,21 +49,20 @@ sub write_parl {
     my $file = shift;
     if (not defined $file) {
         warn "${class}->write_parl() needs a file name as argument";
-        return();
+        return;
     }
 
     # write out to a temporary file first
     my ($fh, $tfile) = File::Temp::tempfile(
-        "parlXXXX", SUFFIX => $Config::Config{_exe}||'', TMPDIR => 1);
+        "parlXXXX", SUFFIX => $Config::Config{_exe}||'', TMPDIR => 1, UNLINK => 1);
     close $fh;
-    # File::Temp, you suck!
 
     if (not $class->write_raw($tfile)) {
         unlink($tfile);
         warn "Could not write temporary parl (class $class) to file '$tfile'";
-        return();
+        return;
     }
-    chmod(oct('755'), $tfile);
+    chmod(0755, $tfile);
 
     # Use this to generate a real parl
     my @libs = ();
@@ -71,19 +71,12 @@ sub write_parl {
         $ilib =~ s/\\$/\\\\/;
         push(@libs, qq(-I$ilib) );
     }
-    my @args = (@libs, qw/-q -B/);
 
-    # prepend ./ if applicable
-    my $execute = $tfile;
-    my @dirs = File::Spec->splitdir(
-        (File::Spec->splitpath($execute))[1] # directory part only
-    );
-    $execute = File::Spec->catfile(File::Spec->curdir(), $tfile) if not @dirs;
-    system($execute, @args, "-O$file") and unlink($tfile), return();
-    
-    # clean up
-    unlink($tfile);
-
+    system(Cwd::abs_path($tfile), @libs, qw( -q -B ), "-O$file");
+    unless ($? == 0) {
+        warn "Failed to execute temporary parl (class $class) in file '$tfile': $!";
+        return;
+    }
     return 1;
 }
 
