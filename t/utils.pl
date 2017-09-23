@@ -16,7 +16,7 @@ my $pp = catfile(getcwd(), qw( blib script pp ));
 # runs 1 test
 sub pp_ok
 {
-    $ENV{PAR_TMPDIR} //= tempdir(TMPDIR => 1, CLEANUP => 1);
+    $ENV{PAR_TMPDIR} ||= tempdir(TMPDIR => 1, CLEANUP => 1);
     my $exe = catfile($ENV{PAR_TMPDIR},"packed$Config{_exe}");
     unlink($exe);
 
