@@ -1,3 +1,15 @@
+1.038  2017-09-27
+
+- Fix "RT#122949: PAR-Packer-1.37 executables split arguments containing whitespace"
+  - on Windows, quote elements of argv array passed to spawnvp();
+    algorithm stolen from Win32::ShellQuote.
+
+- introduce helper t/utils.pl to streamline tests 
+
+- require IPC::Run3 for test
+
+- make test work with "dot-less" perl and PERL_USE_UNSAFE_INC=0
+
 1.037  2017-05-28
 
 - Fix RT#121268 for PAR-Packer: error installing PAR-Packer on windows10 ( 64Bit )
