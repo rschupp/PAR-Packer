@@ -1,11 +1,10 @@
-META.yml
+META.*
 MYMETA.*
 Makefile
 Makefile.old
-MANIFEST
-MANIFEST.bak
 blib/
 pm_to_blib
 *.tar.gz
+*.bak
 
 a.out

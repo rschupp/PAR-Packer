@@ -22,9 +22,9 @@
 ^package/parl-.*$
 ^script/parl(?:\.(?!pod).+)?$
 ^script/parldyn(?:\.(?!pod).+)?$
-^MANIFEST.bak$
 ^Makefile$
 ^Makefile.old$
+^META\.
 ^MYMETA\.
 ^blib/
 ^pm_to_blib
@@ -33,6 +33,7 @@
 \B\.git\b
 \B\.gitignore\b
 ^a\.out$
+.*\.bak$
 .*\.swp$
 .*\.o$
 .*\.obj$
