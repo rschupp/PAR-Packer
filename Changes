@@ -1,3 +1,7 @@
+1.039  2017-09-28
+
+- Brown paper bag: add missing t/utils.pl
+
 1.038  2017-09-27
 
 - Fix "RT#122949: PAR-Packer-1.37 executables split arguments containing whitespace"
