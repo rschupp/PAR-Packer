@@ -78,7 +78,7 @@ for ($^O)
     # Windows with Mingw toolchain: use "objdump" recursively
     if (/mswin32/i && (qx(objdump --version), $? == 0))
     {
-        print STDERR qq[# using "objdump" recusrively to find DLLs needed by $par\n];
+        print STDERR qq[# using "objdump" recursively to find DLLs needed by $par\n];
         my $system_root = abs_path($ENV{SystemRoot});
         *is_system_lib = sub { abs_path(shift) =~ m{^\Q$system_root\E/}i };
 
