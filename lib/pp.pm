@@ -298,7 +298,7 @@ Show basic usage information.
 
 =item B<-I>, B<--lib>=I<DIR>
 
-Add the given directory to the perl library file search path.  May
+Add the given directory to the perl module search path.  May
 be specified multiple times.
 
 =item B<-l>, B<--link>=I<FILE>|I<LIBRARY>
