@@ -8,12 +8,10 @@ use warnings;
 use Test::More;
 require "./t/utils.pl";
 
-my $foo_pl = create_temp_file("foo.pl", <<'...');
-print "hello from foo"
-...
-my $bar_pl = create_temp_file("bar.pl", <<'...');
-print "hello from bar"
-...
+my %files = create_temp_files(
+    "foo.pl" => 'print "hello from foo";',
+    "bar.pl" => 'print "hello from bar";',
+);
 
 my $out;
 
@@ -21,7 +19,7 @@ my $out;
 # (file should reside in a temp directory)
 my $foo_exe = pp_ok(
     -o "foo$Config{_exe}", 
-    $foo_pl, $bar_pl);
+    @files{qw( foo.pl bar.pl )});
 
 ($out) = run_ok($foo_exe);
 is(out, "hello from foo");
