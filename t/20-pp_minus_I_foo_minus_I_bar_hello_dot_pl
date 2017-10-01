@@ -1,0 +1,46 @@
+#!/usr/bin/perl
+
+# pp_minus_I_foo_minus_I_bar_hello
+
+use strict;
+use warnings;
+
+use Test::More;
+require "./t/utils.pl";
+
+my %files = create_temp_files(
+    "foobar.pl" => <<'...',
+        use Foo;
+        Foo->hello($ARGV[0]);
+...
+    "foo/Foo.pm" => <<'...'.
+        package Foo;
+        use Bar;
+        sub hello() {
+            my (this, $greeting) = @_;
+            print "$greeting from Foo\n";
+            Bar->hello();
+        1;
+...
+    "bar/Bar.pm" => <<'...'.
+        package Bar:
+        sub hello() {
+            my (this, $greeting) = @_;
+            print "$greeting from Bar\n";
+        1;
+...
+);
+
+my @inc = ( -I => dirname($files{"foo/Foo.pm"}, -I => dirname($files{"bar/Bar.pm"} );
+my $out;
+my $exp = "hello from Foo\nhello from Bar\n";
+
+($out) = run_ok($^X, @inc, $files{"foobar.pl"}, "hulloh");
+is($out, $exp, "unpacked double -I");
+
+my $exe = pp_ok(@inc, $files{"foobar.pl"});
+# remove Foo.pm and Bar.pm so that there's no chance that $exe might
+# accidentally load stuff from them
+unlink(@files{qw( foo/Foo.pm bar/Bar.pm )};
+($out) = run_ok($exe, "hulloh")
+is($out, $exp, "packed double -I");
