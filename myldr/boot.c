@@ -173,6 +173,7 @@ int main ( int argc, char **argv, char **env )
 typedef BOOL (WINAPI *pALLOW)(DWORD);
     HINSTANCE hinstLib;
     pALLOW ProcAdd;
+    char **argp;
 #ifndef ASFW_ANY
 #define ASFW_ANY -1
 #endif
@@ -261,7 +262,7 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     par_setenv("PAR_SPAWNED", "1");
 
     /* quote argv strings if necessary, cf. Win32::ShellQuote */
-    for (char **argp = argv; *argp; argp++)
+    for (argp = argv; *argp; argp++)
     {
         int len = strlen(*argp);
         if ( len == 0 
