@@ -8,7 +8,7 @@ use Cwd;
 use Archive::Zip qw( :ERROR_CODES );
 
 use Test::More;
-require "t/utils.pl";
+require "./t/utils.pl";
 
 my @expected = qw( lib/Foo.pm lib/Foo/Bar.pm script/foo );
 plan tests => @expected + 2;

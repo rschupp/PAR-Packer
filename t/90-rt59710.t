@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use Test::More;
-require "t/utils.pl";
+require "./t/utils.pl";
 
 # Unicode::UCD appeared first in perl 5.8.0
 plan skip_all => "Unicode::UCD not installed"

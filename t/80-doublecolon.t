@@ -6,7 +6,7 @@ use warnings;
 use Archive::Zip qw( :ERROR_CODES );
 
 use Test::More;
-require "t/utils.pl";
+require "./t/utils.pl";
 
 my %expected = (
     "Double::Colon" => [qw(

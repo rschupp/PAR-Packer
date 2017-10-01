@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use Test::More;
-require "t/utils.pl";
+require "./t/utils.pl";
 
 plan tests => 3;
 

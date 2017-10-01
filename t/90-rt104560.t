@@ -8,7 +8,7 @@ use File::Temp qw( tempdir );
 use Archive::Zip qw( :ERROR_CODES :CONSTANTS );;
 
 use Test::More;
-require "t/utils.pl";
+require "./t/utils.pl";
 
 plan tests => 3;
 

@@ -4,7 +4,7 @@ use strict;
 use Data::Dumper;
 
 use Test::More;
-require "t/utils.pl";
+require "./t/utils.pl";
 
 my @tests = (
   [ qw[foo bar quux] ],

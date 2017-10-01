@@ -10,7 +10,7 @@ use File::stat;
 use PAR::SetupTemp;     # for $PAR::SetupTemp::Canary
 
 use Test::More;
-require "t/utils.pl";
+require "./t/utils.pl";
 
 if (eval { require Archive::Unzip::Burst; 1; })
 {
