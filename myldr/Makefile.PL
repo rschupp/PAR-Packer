@@ -12,7 +12,6 @@ use ExtUtils::Embed;
 use ExtUtils::MakeMaker;
 use DynaLoader;
 use File::Basename;
-use File::Glob;
 
 xsinit(undef);
 
@@ -143,60 +142,32 @@ my $static_ldflags = $ldflags;
 
 my $libperl;
 
-if ($dynperl and $^O eq 'os2') {
-    $libperl = OS2::DLLname();
-}
-elsif ($dynperl) {
-    my $file = $Config{libperl};
-    my $so = $Config{so} || 'so';
-    $file = "libperl.$so" if $file eq 'libper'; # workaround Red Hat bug
-
-    $file =~ s/\.(?!\d)[^.]*$/.$Config{so}/;
-    $file =~ s/^lib// if $^O eq 'MSWin32';
-
-    $libperl = find_file($file);
-    if (not -e $libperl) {
-        $file =~ s/\.(?!\d)[^.]*$/.a/;
-        $libperl = find_file($file);
+if ($dynperl) {
+    if ($^O eq 'os2') {
+        $libperl = OS2::DLLname();
     }
+    else {
+        my $file = $Config{libperl};
+        my $so = $Config{so} || 'so';
+        $file = "libperl.$so" if $file eq 'libper'; # workaround Red Hat bug
 
-    # die "Can't find $file in (@paths) -- please contact the author!"
-    # 	unless -e $libperl;
-    undef $dynperl if !-e $libperl;
+        $file =~ s/\.(?!\d)[^.]*$/.$Config{so}/;
+        $file =~ s/^lib// if $^O eq 'MSWin32';
+
+        $libperl = find_file($file);
+        if (not -e $libperl) {
+            $file =~ s/\.(?!\d)[^.]*$/.a/;
+            $libperl = find_file($file);
+        }
+
+        $dynperl = 0 if !-e $libperl;
+    }
 }
 
 $static_ldflags =~ s/(^|\s)-l\S*perl\S*(\s|$)/ /g;
 $boot_ldflags .= " $static_ldflags";
 
-# In the $dynperl case, we've already found the $libperl DSO.
-# The only problem is: when the linker links $par_exe against $libperl
-# we don't know what name is used to refer to $libperl in the executable
-# (e.g. on an ELF based system the DT_NEEDED tag). This is the name
-# the dynamic loader is looking for when $par_exe is executed.
-#
-# So we better make sure that $libperl is extracted using this name
-# during bootstrap of a packed executable. If we use the wrong name for
-# extraction, $libperl won't be considered by the dynamic loader.
-# This may cause the bootstrap to fail. Or the dynamic loader 
-# might find a libperl DSO (e.g in /usr/lib using the built-in library
-# search path) from a Perl installation with the expected name.
-# However, this libperl may be ABI incompatible with $par_exe,
-# leading to hard to diagnose errors.
-#
-# Below we make a feeble attempt to determine this "link name" for some
-# well-known platforms. The fallback is always the basename of $libperl.
-# For ELF based systems the linker uses the DSO's DT_SONAME tag
-# as the link name if present. If the system uses the GNU binutils
-# toolchain we can use the objdump tool to find the DSO's soname.
-
-my $extract_libperl_as;
 if ($dynperl) {
-    $extract_libperl_as = basename($libperl);
-    if ($^O =~ /linux/i) 
-    {
-        my ($soname) = qx(objdump -ax $libperl) =~ /^\s*SONAME\s+(\S+)/m;
-        $extract_libperl_as = $soname if $? == 0 && defined $soname;
-    }
     # on Debian derived distros make sure that the Debian package "libperl-dev"
     # is installed (which contains the /usr/lib/libperl.so symlink)
     die qq[You need to install the distro (Debian, Ubuntu etc) package "libperl-dev"\n] 
@@ -215,51 +186,6 @@ if ($dynperl) {
 }
 
 my $par = (($dynperl && $^O ne 'os2') ? $boot_exe : $par_exe);
-
-
-# If on Windows and Perl was built with GCC 4.x, then libperl*.dll
-# may depend on some libgcc_*.dll (e.g. Strawberry Perl 5.12).
-# This libgcc_*.dll has to be included into with any packed executable 
-# in the same way as libperl*.dll itself, otherwise a packed executable
-# won't run when libgcc_*.dll isn't installed.
-# The same holds for libstdc++*.dll (e.g. Strawberry Perl 5.16).
-
-sub find_dll
-{
-    my ($dll_glob) = @_;
-
-    # look for $dll_glob
-    # - in the same directory as the perl executable itself
-    # - in the same directory as gcc (only useful if it's an absolute path)
-    # - in PATH
-    my ($dll_path) = map { File::Glob::bsd_glob(catfile($_, $dll_glob)) }
-                         dirname($^X),
-                         dirname($cc),
-                         path();
-    return $dll_path;
-}
-
-
-my ($libgcc, $libstdcpp, $libwinpthread);
-if ($dynperl and $^O eq 'MSWin32'
-    and defined $Config{gccversion}             # gcc version >= 4.x was used
-    and $Config{gccversion} =~ m{\A(\d+)}ms && $1 >= 4) {
-    $libgcc = find_dll("libgcc_*.$Config{so}");
-    $libwinpthread = find_dll("libwinpthread*.$Config{so}");
-}
-if ($ld =~ /(\b|-)g\+\+(-.*)?(\.exe)?$/) {      # g++ was used to link
-    $libstdcpp = find_dll("libstdc++*.$Config{so}");
-}
-
-# enclose the filenames in double quotes
-# NOTE: This quoting is not perfect (e.g. won't protect dollar signs
-# or double quotes in filenames), but should work in all reasonable
-# scenarios on both *nix and Windows).
-my @fallback_embedded_files = map{ qq["$_"] } grep { defined } 
-    $libperl,
-    $libgcc,
-    $libwinpthread,
-    $libstdcpp;
 
 my @strippedparl = qw( Static.pm );
 push @strippedparl, qw( Dynamic.pm ) if $dynperl;
@@ -354,7 +280,39 @@ static::
 test::
 EOT
 
-    $make_frag .= <<"EOT" if $dynperl;
+    if ($dynperl)
+    {
+        my $method;
+        for ($^O)
+        {
+            if (/linux|solaris|freebsd|openbsd|cygwin/i) 
+            {
+                # sane platforms: use "ldd"
+                print STDERR qq[# using "ldd" to find shared libraries needed by $par_exe\n];
+                $method = "ldd";
+                last;
+            }
+            if (/darwin/i && (qx(otool -h $par_exe), $? == 0)) 
+            {
+                # Max OS X: use "otool -L" if available
+                print STDERR qq[# using "otool -L" to find shared libraries needed by $par_exe\n];
+                $method = "otool";
+                last;
+            }
+            if (/mswin32/i && (qx(objdump --version), $? == 0))
+            {
+                # Windows with Mingw toolchain: use "objdump" recursively
+                print STDERR qq[# using "objdump" recursively to find DLLs needed by $par_exe\n];
+                $method = "recursive_objdump";
+                last;
+            }
+
+            # fallback
+            print STDERR qq[# guessing what DLLs are needed by $par_exe\n];
+            $method = "guess";
+        }
+
+        $make_frag .= <<"EOT";
 
 pure_all:: $parldyn_exe Dynamic.pm
 
@@ -368,11 +326,12 @@ $boot_exe: boot$o
 	$mt_cmd
 
 boot_embedded_files.c: $par_exe
-	\$(PERLRUN) embed_files.pl -c $chunk_size $par_exe @fallback_embedded_files > \$@
+	\$(PERLRUN) embed_files.pl -c $chunk_size $par_exe $method "$libperl" > \$@
 
 Dynamic.pm: Dynamic.in $par_exe
 	\$(PERLRUN) encode_append.pl Dynamic.in $par_exe Dynamic.pm
 EOT
+    }
 
     return $make_frag;
 }
