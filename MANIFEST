@@ -36,6 +36,10 @@ myldr/Dynamic.in
 myldr/embed_files.pl
 myldr/encode_append.pl
 myldr/env.c
+myldr/find_files_to_embed/guess.pl
+myldr/find_files_to_embed/ldd.pl
+myldr/find_files_to_embed/otool.pl
+myldr/find_files_to_embed/recursive_objdump.pl
 myldr/internals.c
 myldr/main.c
 myldr/Makefile.PL
