@@ -5,7 +5,7 @@ use warnings;
 use Config;
 use File::Glob;
 use File::Basename;
-use File::Spec::Functions ':ALL';
+use File::Spec;
 
 my $ld = $Config{ld} || (($^O eq 'MSWin32') ? 'link.exe' : $Config{cc});
 $ld = $Config{cc} if ($^O =~ /^(?:dec_osf|aix|hpux)$/);
@@ -43,10 +43,10 @@ sub find_dll
     # - in the same directory as the perl executable itself
     # - in the same directory as gcc (only useful if it's an absolute path)
     # - in PATH
-    my ($dll_path) = map { File::Glob::bsd_glob(catfile($_, $dll_glob)) }
+    my ($dll_path) = map { File::Glob::bsd_glob(File::Spec->catfile($_, $dll_glob)) }
                          dirname($^X),
                          dirname($Config{cc}),
-                         path();
+                         File::Spec->path();
     return $dll_path;
 }
 

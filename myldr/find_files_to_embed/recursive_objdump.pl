@@ -3,12 +3,13 @@
 use strict;
 use warnings;
 use File::Basename;
-use Cwd 'abs_path';
+use Cwd;
+use File::Spec;
 use DynaLoader;
 
-my $system_root = abs_path($ENV{SystemRoot});
+my $system_root = Cwd::abs_path($ENV{SystemRoot});
 
-sub is_system_lib { abs_path(shift) =~ m{^\Q$system_root\E/}i }
+sub is_system_lib { Cwd::abs_path(shift) =~ m{^\Q$system_root\E/}i }
 
 sub find_files_to_embed
 {
@@ -28,7 +29,7 @@ sub recursive_objdump
     # $ENV{$Config{ldlibpthname}} to its search path, @dl_library_path, 
     # which is wrong in our context as we want it to be searched first.
     # Hence, provide our own value for @dl_library_path.
-    local @DynaLoader::dl_library_path = (@search_first_in, path());
+    local @DynaLoader::dl_library_path = (@search_first_in, File::Spec->path());
 
     my %dlls;
     my %seen;
@@ -52,7 +53,7 @@ sub recursive_objdump
             $walker->($file);                   # recurse
         }
     };
-    $walker->(abs_path($path));
+    $walker->(Cwd::abs_path($path));
 
     # weed out system libraries
     while (my ($name, $path) = each %dlls)
