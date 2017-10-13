@@ -285,23 +285,25 @@ EOT
         my $method;
         for ($^O)
         {
+            # sane platforms: use "ldd"
             if (/linux|solaris|freebsd|openbsd|cygwin/i) 
             {
-                # sane platforms: use "ldd"
                 print STDERR qq[# using "ldd" to find shared libraries needed by $par_exe\n];
                 $method = "ldd";
                 last;
             }
-            if (/darwin/i && (qx(otool -h $par_exe), $? == 0)) 
+            # Mac OS X: use "otool -L" if available
+            # Note: old versions of otool don't accept --version
+            if (/darwin/i && (qx(otool --version 2>&1)   
+                              || qx(otool -h /bin/ls 2>&1), $? == 0)) 
             {
-                # Max OS X: use "otool -L" if available
                 print STDERR qq[# using "otool -L" to find shared libraries needed by $par_exe\n];
                 $method = "otool";
                 last;
             }
+            # Windows with Mingw toolchain: use "objdump" recursively
             if (/mswin32/i && (qx(objdump --version), $? == 0))
             {
-                # Windows with Mingw toolchain: use "objdump" recursively
                 print STDERR qq[# using "objdump" recursively to find DLLs needed by $par_exe\n];
                 $method = "recursive_objdump";
                 last;
