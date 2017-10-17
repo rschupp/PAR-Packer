@@ -8,7 +8,7 @@ use Config;
 use File::Spec::Functions;
 use File::Temp qw( tempdir );
 use Cwd;
-use Capture::Tiny qw( capture );
+use IPC::Run3;
 
 # use an absolute pathname in case a test chdir()s
 my $pp = catfile(getcwd(), qw( blib script pp ));
@@ -32,7 +32,8 @@ sub run_ok
 {
     my @cmd = @_;
 
-    my ($out, $err) = capture { system(@cmd) };
+    my ($out, $err);
+    run3(\@cmd, \undef, \$out, \$err);
     ok( $? == 0, qq[successfully ran "@cmd"] );
 
     return ($out, $err);
