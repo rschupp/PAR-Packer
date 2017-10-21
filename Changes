@@ -1,3 +1,16 @@
+1.040  2017-10-21
+
+- no changes to modules and scripts, only fixes for configure, build and test
+
+- require a version of IPC::Run3 that gets shell quoting on Windows right
+
+- restructure how we find the files to embed into boot.c
+
+- avoid an error with newer gcc: "error: 'for' loop initial declarations 
+  are only allowed in C99 or C11 mode"
+
+- fix tests when running without "." in @INC even (even in tests)
+
 1.039  2017-09-28
 
 - Brown paper bag: add missing t/utils.pl

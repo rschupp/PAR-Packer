@@ -39,4 +39,5 @@
 .*\.obj$
 .*\.exe$
 ^nohup.out
+^typescript
 ^PAR-Packer-.*
