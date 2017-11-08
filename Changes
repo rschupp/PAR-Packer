@@ -1,3 +1,13 @@
+1.041  2017-11-08
+
+- Fix problem with --link libraries on MacOS
+  - libraries where packed into the wrong location in the zip
+  - hence they were not extracted into the cache area where they could
+    be found via DYLD_LIBRARY_PATH
+  - hence the packed executable either couldn't find them or found incompatible
+    versions outside the cache area
+  - reported by Phil Kime
+
 1.040  2017-10-21
 
 - no changes to modules and scripts, only fixes for configure, build and test
