@@ -888,10 +888,14 @@ sub pack_manifest_hash {
             }
         }
         elsif ($^O eq 'darwin') {
-            # try "otool -D $file", expect output like "$file:\nname\n"
+            # try "otool -D $file", expect itwo lines of output like 
+            #   $file:
+            #   path
+            # Note: some versions of otool report just a name in the
+            # second line, others report a pathname
             chomp(my @ot = qx( otool -D $in ));
             if ($? == 0) {
-                $name = $ot[1];
+                $name = basename($ot[1]);
                 $self->_vprint(1, "... otool: library $in has install name $name");
             }
             else {
