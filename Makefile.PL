@@ -104,6 +104,8 @@ WriteMakefile1(
     },
 );
 
+# parallel make: install modules into blib *before* recursing into "myldr"
+sub MY::postamble { return "subdirs :: pm_to_blib\n" }
 
 sub WriteMakefile1 {  #Compatibility code for old versions of EU::MM. Written by Alexandr Ciornii, version 2. Added by eumm-upgrade.
     my %params=@_;
