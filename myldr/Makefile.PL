@@ -91,7 +91,7 @@ if( $cc =~ m/^cl\b/i ) {
     my $machinearch = $Config{ptrsize} == 8 ? 'AMD64' : 'X86';
     $res = 'ppresource.obj';
     $res_section = <<"...";
-$res:
+$res: winres\\pp.rc winres\\pp.manifest
 	rc winres\\pp.rc
 	cvtres /NOLOGO /MACHINE:$machinearch /OUT:$res winres\\pp.res
 ...
@@ -115,7 +115,7 @@ $res:
         # cygwin shell, so backslashes in pathnames might be a problem.
         # Instead use forward slashes which work on Windows as well.
         $res_section = <<"...";
-$res:
+$res: winres/pp.rc winres/pp.manifest
 	windres -i winres/pp.rc -o $res --input-format=rc --output-format=coff --target=$target
 ...
     }
