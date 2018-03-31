@@ -99,11 +99,6 @@ int main ( int argc, char **argv, char **env )
     PL_exit_flags |= PERL_EXIT_EXPECTED;
 #endif /* PERL_EXIT_EXPECTED */
 
-#if (defined(CSH) && defined(PL_cshname))
-    if (!PL_cshlen)
-      PL_cshlen = strlen(PL_cshname);
-#endif
-
 #ifdef PERL_PROFILING
 #define PROFILING_OPTION 1
 #else
