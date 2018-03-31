@@ -52,6 +52,11 @@ S_procself_val(pTHX_ SV *sv, char *arg0)
 #include "mktmpdir.c"
 #include "internals.c"
 
+/* turn off automatic globbing of process arguments when using MingW */
+#if defined(WIN32) && defined(__MINGW32__)
+int _CRT_glob = 0;
+#endif
+
 int main ( int argc, char **argv, char **env )
 {
     int exitstatus;
