@@ -66,6 +66,7 @@ t/20-pp.t
 t/30-current_exec.t
 t/40-packer_cd_option.t
 t/80-doublecolon.t
+t/85-crt-glob.t
 t/90-rt101800.t
 t/90-rt103861.t
 t/90-rt104560.t

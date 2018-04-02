@@ -1,3 +1,20 @@
+1.042  2018-04-02
+
+- Fix PAR-Packer#5 "unintended glob expansion on strawberry win32?"
+   
+  On Windows using Mingw set _CRT_glob=0 also in parl (the custom
+  Perl interpreter).
+
+- Fix RT #124445 "Par-Packer 'falsifies' PerlTk server() and Win32 GetOSName() and GetOSVersion() output on Windows 10"
+   
+  Add <compatibility> section to pp.manifest
+  (cf. https://msdn.microsoft.com/en-us/library/windows/desktop/dn481241(v=vs.85).aspx)
+  to make par.exe "Windows 10 aware".
+
+- Add dependencies on stuff in myldr/winres to myldr/Makefile
+
+- Fix parallel make: install modules into blib *before* recursing into "myldr"
+
 1.041  2017-11-08
 
 - Fix problem with --link libraries on MacOS
