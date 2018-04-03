@@ -120,7 +120,7 @@ char* shell_quote(const char *src)
      * add enclosing quotes and trailing \0 */
     char *dst = malloc(2 * strlen(src) + 3);
 
-    char *p = src;
+    const char *p = src;
     char *q = dst;
     char c;
 
@@ -130,19 +130,18 @@ char* shell_quote(const char *src)
     {
         if (c == '\\') 
         {
-            char *bs = p;               /* span of backslashes */
-            int n = strspn(bs, "\\");
+            int n = strspn(p, "\\");    /* span of backslashes starting at p */
 
-            memcpy(q, bs, n);           /* copy the span */
+            memcpy(q, p, n);            /* copy the span */
             q += n;
 
-            if (bs[n] == '\0' || bs[n] == '"')
+            if (p[n] == '\0' || p[n] == '"') /* span ends in quote or NUL */
             {
-                memcpy(q, bs, n);       /* copy the span once more */
+                memcpy(q, p, n);        /* copy the span once more */
                 q += n;
             }
 
-            p += n;
+            p += n;                     /* advance over the span */
             continue;
         }
 
