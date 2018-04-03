@@ -35,7 +35,7 @@ plan tests => 2 * (keys %expected);
 while (my ($M, $exp) = each %expected) 
 {
     my $exe = pp_ok(-I => "t", -M => $M,
-                    -e => q[print qq[testing 'pp -M Foo::\n]]);
+                    -e => q[print qq[testing 'pp -M Foo::' and variants\n]]);
 
     my $zip = Archive::Zip->new();
     $zip->read($exe) == AZ_OK or die "can't read $exe as a zip file";
