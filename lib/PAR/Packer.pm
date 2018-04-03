@@ -3,7 +3,7 @@ use 5.008001;
 use strict;
 use warnings;
 
-our $VERSION = '1.043';
+our $VERSION = '1.044';
 
 =head1 NAME
 
