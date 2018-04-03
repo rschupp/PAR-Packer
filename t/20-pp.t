@@ -34,34 +34,21 @@ my $cwd = getcwd();
 my $test_dir = catdir($cwd, 'contrib', 'automated_pp_test');
 
 my $parl = catfile($cwd, 'blib', 'script', "parl$Config{_exe}");
-my $startperl = $Config{startperl};
-$startperl =~ s/^#!//;
 
 my $orig_X = $^X;
-my $orig_startperl = $startperl;
 
 if (!-e $parl) {
     print "1..0 # Skip 'parl' not found\n";
     exit;
 }
-elsif (!($^X = main->can_run($^X))) {
+if (!($^X = main->can_run($^X))) {
     print "1..0 # Skip '$orig_X' not found\n";
-    exit;
-}
-elsif (!($startperl = main->can_run($startperl))) {
-    print "1..0 # Skip '$orig_startperl' not found\n";
     exit;
 }
 
 # NOTE: Win32::GetShortPathName exists on cygwin, too
 if ($^O eq 'MSWin32' && defined &Win32::GetShortPathName) {
     $^X = lc(Win32::GetShortPathName($^X));
-    $startperl = lc(Win32::GetShortPathName($startperl));
-}
-
-if (!samefiles($startperl, $^X)) {
-    print "1..0 # Skip '$^X' is not the same as '$startperl'\n";
-    exit;
 }
 
 $ENV{PAR_GLOBAL_CLEAN} = 1;
