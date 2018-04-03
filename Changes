@@ -1,3 +1,7 @@
+1.043  2018-04-03
+
+- Fix test failures on Windows
+
 1.042  2018-04-02
 
 - Fix PAR-Packer#5 "unintended glob expansion on strawberry win32?"
