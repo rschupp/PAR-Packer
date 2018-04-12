@@ -91,12 +91,13 @@ char *par_findprog(char *prog, char *path) {
     /* NOTE: This code is #include'd both from a plain C program (static.c)
      * and our custom Perl interpreter (main.c). In the latter case,
      * lstat() or stat() may be #define'd as calls into PerlIO and
-     * expect &PL_statbuf as second parameter, rather than a pointer
+     * expect pointer to a Stat_t as second parameter, rather than a pointer
      * to a struct stat. Try to distinguish these cases by checking
-     * whether PL_statbuf is defined. */
-#ifndef PL_statbuf
-struct stat PL_statbuf;
+     * whether Stat_t is defined. */
+#ifndef Stat_t
+#define Stat_t struct stat
 #endif
+    Stat_t statbuf;
 
 #ifdef WIN32
     if ( GetModuleFileName(0, filename, MAXPATHLEN) ) {
@@ -157,7 +158,7 @@ struct stat PL_statbuf;
         }
 
         sprintf(filename, "%s%s%s", p, dir_sep, prog);
-        if ((stat(filename, &PL_statbuf) == 0) && S_ISREG(PL_statbuf.st_mode) &&
+        if ((stat(filename, &statbuf) == 0) && S_ISREG(statbuf.st_mode) &&
             access(filename, X_OK) == 0) {
                 par_setenv("PAR_PROGNAME", filename);
                 return(strdup(filename));

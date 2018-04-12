@@ -12,20 +12,22 @@
 #define P_tmpdir "/tmp"
 #endif
 
-/* NOTE: The code below is #include'd both from a plain C program (boot.c)
+/* NOTE: This code is #include'd both from a plain C program (static.c)
  * and our custom Perl interpreter (main.c). In the latter case,
  * lstat() or stat() may be #define'd as calls into PerlIO and
- * expect &PL_statbuf as second parameter, rather than a pointer
+ * expect pointer to a Stat_t as second parameter, rather than a pointer
  * to a struct stat. Try to distinguish these cases by checking
- * whether PL_statbuf is defined. */
-static int isWritableDir(const char* val)
-{
-#ifndef PL_statbuf
-    struct stat PL_statbuf;
+ * whether Stat_t is defined. */
+#ifndef Stat_t
+#define Stat_t struct stat
 #endif
 
-    return par_lstat(val, &PL_statbuf) == 0 && 
-           ( S_ISDIR(PL_statbuf.st_mode) || S_ISLNK(PL_statbuf.st_mode) ) &&
+static int isWritableDir(const char* val)
+{
+    Stat_t statbuf;
+
+    return par_lstat(val, &statbuf) == 0 && 
+           ( S_ISDIR(statbuf.st_mode) || S_ISLNK(statbuf.st_mode) ) &&
            access(val, W_OK) == 0;
 }
 
@@ -37,14 +39,12 @@ static int isWritableDir(const char* val)
  */
 static int isSafeDir(const char* val)
 {
-#ifndef PL_statbuf
-    struct stat PL_statbuf;
-#endif
+    Stat_t statbuf;
 
-    return par_lstat(val, &PL_statbuf) == 0 && 
-           S_ISDIR(PL_statbuf.st_mode) &&
-           PL_statbuf.st_uid == getuid() &&
-           (PL_statbuf.st_mode & 0777) == 0700;
+    return par_lstat(val, &statbuf) == 0 && 
+           S_ISDIR(statbuf.st_mode) &&
+           statbuf.st_uid == getuid() &&
+           (statbuf.st_mode & 0777) == 0700;
 }
 #endif
 
