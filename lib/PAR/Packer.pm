@@ -451,7 +451,6 @@ sub run_pack {
 sub _compile_par {
     my ($self) = @_;
 
-    my @SharedLibs;
     local (@INC) = @INC;
 
     my $lose = $self->{pack_attrib}{lose};
