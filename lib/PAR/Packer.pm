@@ -52,7 +52,7 @@ use constant OPTIONS => {
     'f|filter:s@'    => 'Input filters for scripts',
     'g|gui'          => 'No console window',
     'I|lib:s@'       => 'Include directories (for perl)',
-    'l|link:s@'      => 'Include additional shared libraries',
+    'l|link:s@'      => 'Additional shared libraries to pack',
     'L|log:s'        => 'Where to log packaging process information',
     'F|modfilter:s@' => 'Input filter for perl modules',
     'M|module|add:s@'=> 'Include modules',
@@ -1549,7 +1549,7 @@ sub _find_shlib {
         return $abs_file;
     }
 
-    $self->_die("Shared library (option -l) doesn't exist: $file")
+    $self->_die("Shared library (option --link) doesn't exist: $file")
         if $file =~ /[\/\\]/;
 
     my @libpath;
@@ -1573,7 +1573,7 @@ sub _find_shlib {
         return $lib;
     }
 
-    $self->_die("Can't find shared library (option -l): $file")
+    $self->_die("Can't find shared library (option --link): $file")
         if $^O eq 'MSWin32' || $file =~ /^lib/;
 
     # be extra magical and prepend "lib" to the filename
@@ -1582,7 +1582,7 @@ sub _find_shlib {
         return $lib;
     }
 
-    $self->_die("Can't find shared library (option -l): $file (also tried lib$file)");
+    $self->_die("Can't find shared library (option --link): $file (also tried lib$file)");
 }
 
 sub _find_shlib_in_path
