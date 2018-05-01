@@ -214,11 +214,6 @@ into the package:
 
         PAR environment:
         PAR_0=C:\temp\par-astewart\temp-1668\sXVehq3Yl0
-        PAR_ARGC=4
-        PAR_ARGV_0=demo.exe
-        PAR_ARGV_1=a
-        PAR_ARGV_2=b
-        PAR_ARGV_3=c
         PAR_CLEAN=1
         PAR_GLOBAL_CLEAN=1
         PAR_INITIALIZED=2
@@ -234,9 +229,8 @@ you look at the process list while demo.exe runs, you'll see two processes
 with the same name. In the previous example, there was only the second
 process.
 
-You can see the first process telling the second that is a child
-(PAR_SPAWNED=1) and passing the command line args as environment variables
-(PAR_ARGC and PAR_ARGV_x).
+You can see the first process telling the second that is a child 
+(PAR_SPAWNED=1).
 
 But what happened to the installed Perl lib paths in @INC ? This is a Windows
 effect. Because perl58.dll was bundled, extracted into temp and loaded from
@@ -368,11 +362,6 @@ of system values ?
 
         PAR environment:
         PAR_0=C:\Par\temp\d2f130a4.pl
-        PAR_ARGC=4
-        PAR_ARGV_0=demo.exe
-        PAR_ARGV_1=a
-        PAR_ARGV_2=b
-        PAR_ARGV_3=c
         PAR_GLOBAL_CLEAN=1
         PAR_GLOBAL_TEMP=c:\Par\temp
         PAR_INITIALIZED=2
