@@ -1,3 +1,16 @@
+1.044  2018-06-06
+
+- Cope with the fact that PL_statbuf is gone since Perl 5.27.x.
+  
+  This breaks PAR::Packer on systems where Perl's "Stat_t" is not
+  the same as "struct stat", notably Windows.
+
+- Extract-embedded.pl: list (but not extract) the embedded files 
+  if no directory is given
+
+- Use the long option name "--link" in messages (as "-l" may easily be
+  confused with "-I" when view in a sans serif font).
+
 1.043  2018-04-03
 
 - Fix test failures on Windows
