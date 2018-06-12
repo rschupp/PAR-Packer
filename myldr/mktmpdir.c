@@ -301,7 +301,7 @@ static void par_rmtmpdir ( char *stmpdir ) {
     int subsub_len;
     char *subsubdir;
     char *slashdot;
-    long hFile;
+    intptr_t hFile;
     int tries = 0;
     HMODULE dll;
 
@@ -347,7 +347,7 @@ static void par_rmtmpdir ( char *stmpdir ) {
     Direntry_t *dp;
     char *subsubdir = NULL;
     int  subsub_len;
-    struct stat stbuf;
+    Stat_t stbuf;
 
     /* remove temporary PAR directory */
     if (!stmpdir || !*stmpdir) return;
