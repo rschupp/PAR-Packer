@@ -88,7 +88,7 @@ char *par_findprog(char *prog, char *path) {
     int proglen, plen;
     char *par_temp = par_getenv("PAR_TEMP");
 
-    /* NOTE: This code is #include'd both from a plain C program (static.c)
+    /* NOTE: This code is #include'd both from a plain C program (boot.c)
      * and our custom Perl interpreter (main.c). In the latter case,
      * lstat() or stat() may be #define'd as calls into PerlIO and
      * expect pointer to a Stat_t as second parameter, rather than a pointer
