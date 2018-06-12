@@ -1,3 +1,9 @@
+1.045  2018-06-12
+
+- Fix RT#125503: Fix build with 64-bit perl-5.28.0
+    
+  Merged patch by Steve Hay, thanks!
+
 1.044  2018-06-06
 
 - Cope with the fact that PL_statbuf is gone since Perl 5.27.x.
