@@ -96,7 +96,8 @@ WriteMakefile1(
           url  => 'git://github.com/rschupp/PAR-Packer.git',
           web  => 'https://github.com/rschupp/PAR-Packer',
         },
-        MailingList => 'par@perl.org',
+        MailingList => 'mailto:par@perl.org',
+        bugtracker => { web => 'https://rt.cpan.org/Dist/Display.html?Queue=PAR-Packer' },
       },
       no_index => {
         directory => [ 'contrib' ],
