@@ -2,6 +2,7 @@
 
 use strict;
 use Data::Dumper;
+use Encode qw( encode );
 
 use Test::More;
 require "./t/utils.pl";
@@ -63,7 +64,12 @@ my @tests = (
   [ qq[a"b\nc] ],
   [ qq[a\fb] ],
   [ qq[a\x0bb] ],
-  [ qq[a\x{85}b] ],
+
+  # Unicode tests
+  [ encode("UTF-8", qq[a\x{85}b]) ], 
+  [ encode("UTF-8", qq[smiley \x{263A}]) ],
+  [ encode("UTF-8", qq[german umlaute \x{E4}\x{F6}\x{FC}]) ],
+  [ encode("UTF-8", qq[chinese zhongwen \x{4E2D}\x{6587}]) ],
 );
 
 plan skip_all => "Tests only relevant on Windows" unless $^O eq 'MSWin32';
