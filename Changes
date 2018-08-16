@@ -1,3 +1,15 @@
+1.046  2018-08-18
+
+- Fix RT#126280: 90-rt122949.t fails when "Use Unicode UTF-8 for worldwide language support" is enabled
+
+- Fix https://github.com/rschupp/PAR-Packer/issues/7 "Parallel build rules dependancy problem"
+  
+  Instead of fighting GNU make and EUMM, just punt and add a .NOTPARALLEL
+  target. Yeah, I know that this is specific to GNU make (though some
+  other make implementations support it, too).
+
+- Add bugtracker to META.yml
+
 1.045  2018-06-12
 
 - Fix RT#125503: Fix build with 64-bit perl-5.28.0
