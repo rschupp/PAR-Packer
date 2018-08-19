@@ -1,3 +1,9 @@
+1.047  2018-08-19
+
+Disable failing test cases in (Windows only) test t/90-rt122949.t
+
+Add .SEQUENTIAL to force non-parallel build when using dmake (e.g. on Windows)
+
 1.046  2018-08-18
 
 - Fix RT#126280: 90-rt122949.t fails when "Use Unicode UTF-8 for worldwide language support" is enabled

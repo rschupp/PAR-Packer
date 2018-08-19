@@ -108,7 +108,15 @@ WriteMakefile1(
 # inhibit parallel make as modules must be installed into blib *before*
 # recursing into myldr (i.e. target pm_to_blib must have finished
 # before subdirs is started)
-sub MY::postamble { return ".NOTPARALLEL:\n" }
+sub MY::postamble 
+{ 
+    return <<'...'
+# GNU make and others
+.NOTPARALLEL:
+# dmake
+.SEQUENTIAL:
+...
+}
 
 sub WriteMakefile1 {  #Compatibility code for old versions of EU::MM. Written by Alexandr Ciornii, version 2. Added by eumm-upgrade.
     my %params=@_;
