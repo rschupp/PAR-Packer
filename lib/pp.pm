@@ -341,7 +341,7 @@ The following variants may be used to add whole module namespaces:
 
 =item B<-M Foo::**>
 
-Add every module in the C<Foo> namespace except C<Foo> itself, i.e.
+Add every module in the C<Foo> namespace B<except> C<Foo> itself, i.e.
 add C<Foo::Bar>, C<Foo::Bar::Quux> etc up to any depth.
 
 =item B<-M Foo::*>
@@ -351,7 +351,7 @@ add C<Foo::Bar>, but B<neither> C<Foo::Bar::Quux> B<nor> C<Foo>.
 
 =item B<-M Foo::>
 
-Shorthand for C<-MFoo -MF:**>: every module in the C<Foo> namespace 
+Shorthand for C<-M Foo -M Foo:**>: every module in the C<Foo> namespace 
 including C<Foo> itself.
 
 =back
