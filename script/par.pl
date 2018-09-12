@@ -906,7 +906,7 @@ sub _par_init_env {
         $ENV{PAR_INITIALIZED} = 2;
     }
 
-    for (qw( SPAWNED TEMP CLEAN DEBUG CACHE PROGNAME ARGC ARGV_0 ) ) {
+    for (qw( SPAWNED TEMP CLEAN DEBUG CACHE PROGNAME ) ) {
         delete $ENV{'PAR_'.$_};
     }
     for (qw/ TMPDIR TEMP CLEAN DEBUG /) {
