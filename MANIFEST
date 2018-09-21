@@ -75,6 +75,7 @@ t/90-rt104635/eg/foo
 t/90-rt104635/Foo.pm
 t/90-rt104635/lib/Foo/Bar.pm
 t/90-rt122949.t
+t/90-rt127064.t
 t/90-rt59710.t
 t/Double/Colon.pm
 t/Double/Colon/Barnie.pm
