@@ -296,13 +296,13 @@ sub _parse_opts {
     $self->{logfh} = $self->_open('>>', $opt->{L})
       if length $opt->{L};
 
-    if ($opt->{E}) {
+    if (defined $opt->{E}) {
         $opt->{e} = "use $];\n#line 1\n$opt->{E}";
         # XXX This is how we should also include additional default modules in the future instead of in require_modules in par.pl!
         push @{ $opt->{M} ||= [] }, 'feature' if $] >= 5.009;
     }
 
-    if ($opt->{e}) {
+    if (defined $opt->{e}) {
         $self->_warn("Using -e 'code' as input file, ignoring @$args\n")
           if (@$args and !$opt->{r});
 
@@ -611,7 +611,7 @@ sub get_par_file {
     if ($opt->{S} or $opt->{p}) {
         # We need to keep it.
 
-        if ($opt->{e} or !@$input) {
+        if (defined $opt->{e} or !@$input) {
             $par_file = (defined $output ? $output : "a.par");
         }
         else {
