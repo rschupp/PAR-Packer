@@ -732,6 +732,7 @@ sub require_modules {
     require IO::File;
     require Compress::Zlib;
     require Archive::Zip;
+    require Digest::SHA;
     require PAR;
     require PAR::Heavy;
     require PAR::Dist;
