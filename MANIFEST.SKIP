@@ -15,7 +15,6 @@
 ^myldr/perlxsi.c$
 ^myldr/par(?:\.\w+)?$
 ^myldr/pm_to_blib
-^myldr/sha1.[co]$
 ^myldr/usernamefrompwuid.h$
 ^myldr/.*\.pdb$
 ^myldr/usernamefrompwuid\.h$

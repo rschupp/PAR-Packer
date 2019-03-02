@@ -1,4 +1,5 @@
 #include "mktmpdir.h"
+#include "sha1.h"
 
 #define PAR_TEMP "PAR_TEMP"
 
@@ -92,7 +93,7 @@ char *par_mktmpdir ( char **argv ) {
     char *stmpdir = NULL, *top_tmpdir = NULL;
     int f, j, k, stmp_len = 0;
     char sha1[41];
-    SHA_INFO sha_info;
+    SHA_INFO *sha_info;
     unsigned char buf[32768];
     unsigned char sha_data[20];
 
@@ -238,13 +239,13 @@ char *par_mktmpdir ( char **argv ) {
         else {
             /* "$TEMP/par-$USER/cache-$SHA1" */
 	    lseek(f, 0, 0);
-            sha_init( &sha_info );
+            sha_info = sha_init();
             while( ( j = read( f, buf, sizeof( buf ) ) ) > 0 )
             {
-                sha_update( &sha_info, buf, j );
+                sha_update( sha_info, buf, j );
             }
             close( f );
-            sha_final( sha_data, &sha_info );
+            sha_final( sha_data, sha_info );
             for( k = 0; k < 20; k++ )
             {
                 sprintf( sha1+k*2, "%02x", sha_data[k] );

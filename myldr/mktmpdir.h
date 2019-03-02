@@ -84,6 +84,5 @@ static const char *path_sep = ":";
 #endif
 
 #include "utils.c"
-#include "sha1.c"
 #include "usernamefrompwuid.c"
 

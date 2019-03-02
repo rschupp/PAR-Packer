@@ -47,7 +47,7 @@ myldr/mktmpdir.c
 myldr/mktmpdir.h
 myldr/par_pl2c.pl
 myldr/run_with_inc.pl
-myldr/sha1.c.PL
+myldr/sha1.c
 myldr/Static.in
 myldr/usernamefrompwuid.c
 myldr/utils.c

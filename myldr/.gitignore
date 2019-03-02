@@ -1,13 +1,12 @@
 Dynamic.pm
 Static.pm
 boot
-boot.o
 boot_embedded_files.c
-main.o
 my_par_pl.c
 par
 parl
 parldyn
 perlxsi.c
-sha1.c
 usernamefrompwuid.h
+*.o
+*.obj

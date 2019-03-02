@@ -232,8 +232,8 @@ LDFLAGS=$Config{ldflags}
 PERL_LDFLAGS=$ldflags
 STATIC_LDFLAGS=$static_ldflags
 
-OBJECTS=main$o $res
-MKTMP_STUFF=mktmpdir.c mktmpdir.h utils.c sha1.c
+OBJECTS=main$o sha1$o $res
+MKTMP_STUFF=mktmpdir.c mktmpdir.h utils.c sha1.h
 
 .c$o:
 	\$(CC) -c \$(CFLAGS) \$(OPTIMIZE) \$<
@@ -241,16 +241,13 @@ MKTMP_STUFF=mktmpdir.c mktmpdir.h utils.c sha1.c
 pure_all:: $parl_exe Static.pm
 
 main$o: main.c my_par_pl.c perlxsi.c internals.c \$(MKTMP_STUFF)
-
-sha1.c:
-	\$(PERLRUN) sha1.c.PL
+sha1$o: sha1.c sha1.h
 
 $res_section
 
 clean::
 	-\$(RM_F) boot_embedded_files.c my_par_pl.c
-	-\$(RM_F) main$o boot$o $res
-	-\$(RM_F) sha1.c
+	-\$(RM_F) $(OBJECTS)
 	-\$(RM_F) *.opt *.pdb perlxsi.c
 	-\$(RM_F) usernamefrompwuid.h
 	-\$(RM_F) $par_exe $boot_exe @parl_exes Dynamic.pm Static.pm
@@ -323,8 +320,8 @@ $parldyn_exe: $par_exe
 
 boot$o: \$(MKTMP_STUFF) boot_embedded_files.c
 
-$boot_exe: boot$o
-	\$(LD) boot$o $boot_ldflags $res $out$boot_exe_link
+$boot_exe: boot$o sha1$o
+	\$(LD) boot$o sha1$o $boot_ldflags $res $out$boot_exe_link
 	$mt_cmd
 
 boot_embedded_files.c: $par_exe
