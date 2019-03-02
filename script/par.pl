@@ -299,26 +299,19 @@ my ($start_pos, $data_pos);
 
         return if ref $module or !$module;
 
-        my $filename = delete $require_list{$module} || do {
-            my $key;
-            foreach (keys %require_list) {
-                next unless /\Q$module\E$/;
-                $key = $_; last;
-            }
-            delete $require_list{$key} if defined($key);
-        } or return;
+        my $info = delete $require_list{$module} or return;
 
-        $INC{$module} = "/loader/$filename/$module";
+        $INC{$module} = "/loader/$info/$module";
 
         if ($ENV{PAR_CLEAN} and defined(&IO::File::new)) {
             my $fh = IO::File->new_tmpfile or die $!;
             binmode($fh);
-            print $fh $filename->{buf};
+            print $fh $info->{buf};
             seek($fh, 0, 0);
             return $fh;
         }
         else {
-            my $filename = _tempfile("$filename->{crc}.pm", $filename->{buf});
+            my $filename = _tempfile("$info->{crc}.pm", $info->{buf});
 
             open my $fh, '<', $filename or die "can't read $filename: $!";
             binmode($fh);
