@@ -145,9 +145,7 @@ This is just a zip file beginning with the magic string "C<PK\003\004>".
 
 The pre-computed cache name.  A pack('Z40') string of the value of -T 
 (--tempcache) or the hash of the file, followed by C<\0CACHE>.  The hash
-of the file is calculated with L<Digest::SHA>, L<Digest::SHA1>, or 
-L<Digest::MD5>.  If none of those modules is available, the C<mtime> of
-the file is used.
+of the file is calculated with L<Digest::SHA>.
 
 A pack('N') number of the total length of FILE and PAR sections,
 followed by a 8-bytes magic string: "C<\012PAR.pm\012>".
@@ -440,6 +438,7 @@ if ($out) {
         #local $INC{'Cwd.pm'} = __FILE__ if $^O ne 'MSWin32';
         require IO::File;
         require Archive::Zip;
+        require Digest::SHA;
     }
 
     my $par = shift(@ARGV);
@@ -511,6 +510,7 @@ if ($out) {
     if ($bundle) {
         require PAR::Heavy;
         PAR::Heavy::_init_dynaloader();
+
         init_inc();
 
         require_modules();
@@ -595,24 +595,13 @@ if ($out) {
 
     $cache_name = substr $cache_name, 0, 40;
     if (!$cache_name and my $mtime = (stat($out))[9]) {
-        my $ctx = eval { require Digest::SHA; Digest::SHA->new(1) }
-            || eval { require Digest::SHA1; Digest::SHA1->new }
-            || eval { require Digest::MD5; Digest::MD5->new };
+        my $ctx = Digest::SHA->new(1);
+        open(my $fh, "<", $out);
+        binmode($fh);
+        $ctx->addfile($fh);
+        close($fh);
 
-        # Workaround for bug in Digest::SHA 5.38 and 5.39
-        my $sha_version = eval { $Digest::SHA::VERSION } || 0;
-        if ($sha_version eq '5.38' or $sha_version eq '5.39') {
-            $ctx->addfile($out, "b") if ($ctx);
-        }
-        else {
-            if ($ctx and open(my $fh, "<$out")) {
-                binmode($fh);
-                $ctx->addfile($fh);
-                close($fh);
-            }
-        }
-
-        $cache_name = $ctx ? $ctx->hexdigest : $mtime;
+        $cache_name = $ctx->hexdigest;
     }
     $cache_name .= "\0" x (41 - length $cache_name);
     $cache_name .= "CACHE";
@@ -783,24 +772,14 @@ sub _set_par_temp {
                 $stmpdir .= "$Config{_delim}cache-" . $buf;
             }
             else {
-                my $ctx = eval { require Digest::SHA; Digest::SHA->new(1) }
-                    || eval { require Digest::SHA1; Digest::SHA1->new }
-                    || eval { require Digest::MD5; Digest::MD5->new };
+                require Digest::SHA; 
+                my $ctx = Digest::SHA->new(1);
+                open(my $fh, "<", $progname);
+                binmode($fh);
+                $ctx->addfile($fh);
+                close($fh);
 
-                # Workaround for bug in Digest::SHA 5.38 and 5.39
-                my $sha_version = eval { $Digest::SHA::VERSION } || 0;
-                if ($sha_version eq '5.38' or $sha_version eq '5.39') {
-                    $ctx->addfile($progname, "b") if ($ctx);
-                }
-                else {
-                    if ($ctx and open(my $fh, "<$progname")) {
-                        binmode($fh);
-                        $ctx->addfile($fh);
-                        close($fh);
-                    }
-                }
-
-                $stmpdir .= "$Config{_delim}cache-" . ( $ctx ? $ctx->hexdigest : $mtime );
+                $stmpdir .= "$Config{_delim}cache-" . $ctx->hexdigest;
             }
             close($fh);
         }

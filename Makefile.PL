@@ -46,6 +46,7 @@ WriteMakefile1(
       'Module::ScanDeps'      => '1.21',
       'PAR::Dist'             => '0.22',
       'PAR'                   => '1.014',
+      'Digest::SHA'           => '5.40',
       'Text::ParseWords'      => 0,
       'Getopt::ArgvFile'      => '1.07',
     },
@@ -78,7 +79,6 @@ WriteMakefile1(
           recommends => {
             # for digital signature support
             'Digest'          => 0,
-            'Digest::SHA'     => 0,
             'Module::Signature' => 0,
             # for tkpp
             'Tk'              => 0,
