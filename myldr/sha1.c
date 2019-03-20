@@ -1,27 +1,24 @@
-#ifdef __cplusplus
-extern "C" {
-#endif
-#define PERL_NO_GET_CONTEXT     /* we want efficiency */
-#include "EXTERN.h"
-#include "perl.h"
-#include "XSUB.h"
-#ifdef __cplusplus
-}
-#endif
-
-#include "sha1.h"
-
+/* Borrowed by Alan Stewart in 2004 from SHA1.xs, part of Digest::SHA1 */
+ 
+/* Digest::SHA1 by Gisle Aas Copyright 1999-2003, Uwe Hollerbach Copyright 1997 */
+/* you can redistribute it and/or modify it under the same terms as Perl itself. */
+/* $Id: SHA1.xs,v 1.11 2003/10/13 07:14:04 gisle Exp $ */
+ 
 /* NIST Secure Hash Algorithm */
 /* heavily modified by Uwe Hollerbach <uh@alumni.caltech edu> */
 /* from Peter C. Gutmann's implementation as found in */
 /* Applied Cryptography by Bruce Schneier */
 /* Further modifications to include the "UNRAVEL" stuff, below */
-
+ 
 /* This code is in the public domain */
 
-/* Useful defines & typedefs */
+#include <stdlib.h>
+#include <string.h>
+#include "sha1.h"
 
-#if defined(U64TYPE) && (defined(USE_64_BIT_INT) || ((BYTEORDER != 0x1234) && (BYTEORDER != 0x4321)))
+/* Useful defines & typedefs */
+typedef unsigned char U8;
+#if defined(U64TYPE)
 typedef U64TYPE ULONGx;
 # if BYTEORDER == 0x1234
 #   undef BYTEORDER
