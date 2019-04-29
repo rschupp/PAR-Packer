@@ -632,6 +632,13 @@ if ($out) {
         require File::Find;
         require Archive::Zip;
     }
+
+    # increase the chunk size for Archive::Zip so that it will find the EOCD
+    # even if more stuff (OS-specific codesigning, for example) has been appended to the pp exe
+    # OSX codesign tool appends at least 180K to a binary and so make the ChunkSize generously
+    # greater than this
+    Archive::Zip::setChunkSize(256*1024);
+
     my $zip = Archive::Zip->new;
     my $fh = IO::File->new;
     $fh->fdopen(fileno(_FH), 'r') or die "$!: $@";
