@@ -241,7 +241,7 @@ my ($start_pos, $data_pos);
         my $nread = read _FH, $buf, $offset;
         die qq[read failed on "$progname": $!] unless $nread == $offset;
         $idx = rindex($buf, "\nPAR.pm\n");
-        last if $idx >= 0 || $offset == $size || $offset > 128 * 1024;
+        last if $idx >= 0 || $offset == $size || $offset > 256 * 1024;
         $offset *= 2;
     }
     last unless $idx >= 0;
