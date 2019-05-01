@@ -633,15 +633,35 @@ if ($out) {
         require Archive::Zip;
     }
 
-    # increase the chunk size for Archive::Zip so that it will find the EOCD
+    # Dynamically increase the chunk size for Archive::Zip so that it will find the EOCD
     # even if more stuff (OS-specific codesigning, for example) has been appended to the pp exe
-    # OSX codesign tool appends at least 180K to a binary and so make the ChunkSize generously
-    # greater than this
-    Archive::Zip::setChunkSize(256*1024);
-
-    my $zip = Archive::Zip->new;
+    # For example, the OSX codesign tool appends an amount of data to the binary proportional
+    # to its size (due to checksums) and so the ChunkSize has to be dynamically calculated.
+    # So, search for the "\nPAR.pm\n signature backward from the end of the file, find its
+    # position and make sure that the chunk size is at least as large this because
+    # the EOCD will be before this and the PAR sig will be before any amount of
+    # extra appended to the packed exe by OS-specific codesigning
+    my $buf;
+    my $size = -s $progname;
+    my $offset = 512;
+    my $idx = -1;
     my $fh = IO::File->new;
     $fh->fdopen(fileno(_FH), 'r') or die "$!: $@";
+    while (1)
+    {
+        $offset = $size if $offset > $size;
+        seek _FH, -$offset, 2 or die qq[seek failed on "$progname": $!];
+        my $nread = read _FH, $buf, $offset;
+        die qq[read failed on "$progname": $!] unless $nread == $offset;
+        $idx = rindex($buf, "\nPAR.pm\n");
+        last if $idx >= 0 || $offset == $size;
+        $offset *= 2;
+    }
+
+    # EOCD should always be within 128K of the PAR sig
+    Archive::Zip::setChunkSize($idx+(128*1024));
+
+    my $zip = Archive::Zip->new;
     $zip->readFromFileHandle($fh, $progname) == Archive::Zip::AZ_OK() or die "$!: $@";
 
     push @PAR::LibCache, $zip;
