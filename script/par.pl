@@ -779,14 +779,18 @@ sub _set_par_temp {
                 $stmpdir .= "$Config{_delim}cache-" . $buf;
             }
             else {
-                require Digest::SHA; 
-                my $ctx = Digest::SHA->new(1);
-                open(my $fh, "<", $progname);
-                binmode($fh);
-                $ctx->addfile($fh);
-                close($fh);
+                my $digest = eval 
+                {
+                    require Digest::SHA; 
+                    my $ctx = Digest::SHA->new(1);
+                    open(my $fh, "<", $progname);
+                    binmode($fh);
+                    $ctx->addfile($fh);
+                    close($fh);
+                    $ctx->hexdigest;
+                } // $mtime;
 
-                $stmpdir .= "$Config{_delim}cache-" . $ctx->hexdigest;
+                $stmpdir .= "$Config{_delim}cache-$digest"; 
             }
             close($fh);
         }
