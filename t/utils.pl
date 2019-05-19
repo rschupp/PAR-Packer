@@ -36,7 +36,7 @@ sub run_ok
 
     my ($out, $err);
     run3(\@cmd, \undef, \$out, \$err);
-    ok( $? == 0, qq[successfully ran "@cmd"] );
+    is( $?, 0, qq[successfully ran "@cmd"] );
 
     return ($out, $err);
 }

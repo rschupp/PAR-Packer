@@ -45,7 +45,7 @@ WriteMakefile1(
       'Archive::Zip'          => '1.02',
       'Module::ScanDeps'      => '1.21',
       'PAR::Dist'             => '0.22',
-      'PAR'                   => '1.014',
+      'PAR'                   => '1.016',
       'Digest::SHA'           => '5.40',
       'Text::ParseWords'      => 0,
       'Getopt::ArgvFile'      => '1.07',

@@ -154,7 +154,8 @@ followed by a 8-bytes magic string: "C<\012PAR.pm\012>".
 
 =cut
 
-my ($par_temp, $progname, @tmpfile);
+
+my ($PAR_MAGIC, $par_temp, $progname, @tmpfile);
 END { if ($ENV{PAR_CLEAN}) {
     require File::Temp;
     require File::Basename;
@@ -203,6 +204,7 @@ rm '" . $tmp->filename . "'
 
 BEGIN {
     Internals::PAR::BOOT() if defined &Internals::PAR::BOOT;
+    $PAR_MAGIC = "\nPAR.pm\n";
 
     eval {
 
@@ -232,33 +234,41 @@ my ($start_pos, $data_pos);
     # Search for the "\nPAR.pm\n signature backward from the end of the file
     my $buf;
     my $size = -s $progname;
-    my $offset = 512;
-    my $idx = -1;
-    while (1)
-    {
-        $offset = $size if $offset > $size;
-        seek _FH, -$offset, 2 or die qq[seek failed on "$progname": $!];
-        my $nread = read _FH, $buf, $offset;
-        die qq[read failed on "$progname": $!] unless $nread == $offset;
-        $idx = rindex($buf, "\nPAR.pm\n");
-        last if $idx >= 0 || $offset == $size || $offset > 256 * 1024;
-        $offset *= 2;
+    my $chunk_size = 64 * 1024;
+    my $magic_pos;
+
+    if ($size <= $chunk_size) {
+        $magic_pos = 0;
+    } elsif ((my $m = $size % $chunk_size) > 0) {
+        $magic_pos = $size - $m;
+    } else {
+        $magic_pos = $size - $chunk_size;
     }
-    last unless $idx >= 0;
+    # in any case, $magic_pos is a multiple of $chunk_size
+
+    while ($magic_pos >= 0) {
+        seek(_FH, $magic_pos, 0);
+        read(_FH, $buf, $chunk_size + length($PAR_MAGIC));
+        if ((my $i = rindex($buf, $PAR_MAGIC)) >= 0) {
+            $magic_pos += $i;
+            last;
+        }
+        $magic_pos -= $chunk_size;
+    }
+    last if $magic_pos < 0;
 
     # Seek 4 bytes backward from the signature to get the offset of the 
     # first embedded FILE, then seek to it
-    $offset -= $idx - 4;
-    seek _FH, -$offset, 2;
+    seek _FH, $magic_pos - 4, 0;
     read _FH, $buf, 4;
-    seek _FH, -$offset - unpack("N", $buf), 2;
-    read _FH, $buf, 4;
+    seek _FH, $magic_pos - 4 - unpack("N", $buf), 0;
+    $data_pos = tell _FH;
 
-    $data_pos = (tell _FH) - 4;
     # }}}
 
     # Extracting each file into memory {{{
     my %require_list;
+    read _FH, $buf, 4;                           # read the first "FILE"
     while ($buf eq "FILE") {
         read _FH, $buf, 4;
         read _FH, $buf, unpack("N", $buf);
@@ -350,7 +360,7 @@ my ($start_pos, $data_pos);
     # }}}
 
     last unless $buf eq "PK\003\004";
-    $start_pos = (tell _FH) - 4;
+    $start_pos = (tell _FH) - 4;                # start of zip
 }
 # }}}
 
@@ -446,10 +456,6 @@ if ($out) {
 
 
     if (defined $par) {
-        # increase the chunk size for Archive::Zip so that it will find the EOCD
-        # even if more stuff has been appended to the .par
-        Archive::Zip::setChunkSize(128*1024);
-
         open my $fh, '<', $par or die "Cannot find '$par': $!";
         binmode($fh);
         bless($fh, 'IO::File');
@@ -607,7 +613,7 @@ if ($out) {
     $cache_name .= "CACHE";
     $fh->print($cache_name);
     $fh->print(pack('N', $fh->tell - length($loader)));
-    $fh->print("\nPAR.pm\n");
+    $fh->print($PAR_MAGIC);
     $fh->close;
     chmod 0755, $out;
     # }}}
@@ -633,16 +639,15 @@ if ($out) {
         require Archive::Zip;
     }
 
-    # increase the chunk size for Archive::Zip so that it will find the EOCD
-    # even if more stuff (OS-specific codesigning, for example) has been appended to the pp exe
-    # OSX codesign tool appends at least 180K to a binary and so make the ChunkSize generously
-    # greater than this
-    Archive::Zip::setChunkSize(256*1024);
-
-    my $zip = Archive::Zip->new;
-    my $fh = IO::File->new;
+    my $fh = IO::File->new;                             # Archive::Zip operates on an IO::Handle
     $fh->fdopen(fileno(_FH), 'r') or die "$!: $@";
+
+    # Temporarily increase the chunk size for Archive::Zip so that it will find the EOCD
+    # even if lots of stuff has been appended to the pp'ed exe (e.g. by OSX codesign).
+    Archive::Zip::setChunkSize(-s _FH);
+    my $zip = Archive::Zip->new;
     $zip->readFromFileHandle($fh, $progname) == Archive::Zip::AZ_OK() or die "$!: $@";
+    Archive::Zip::setChunkSize(64 * 1024);
 
     push @PAR::LibCache, $zip;
     $PAR::LibCache{$progname} = $zip;
