@@ -1,3 +1,21 @@
+1.049  2019-05-xx
+
+- Fix RT#129312: Code signing for OSX
+  
+  Avoid Archive::Zip::Archive error "can't find EOCD signature" for pp'ed
+  executables with lots of stuff appended (e.g. by OSX codesign).
+  
+  Note: This requires the corresponding fix in PAR, 
+  hence bump its required version to 1.016.
+    
+- Fix issue GitHub#15 (dosen't build with a relocatable version of perl)
+  
+  If the perl used to build PAR::Packer is a relocatable perl,
+  i.e. it was build with -Duserelocatableinc, then myldr/par will
+  also be relocatable. Hence, the automagical default @INC for myldr/par
+  is something like ("myldr/../lib/5.x.y", 
+  "myldr/../lib/site_perl/5.x.y", ...) which won't find any modules.
+
 1.048  2019-04-29
 
 - Fix RT#129312: Code signing for OSX
