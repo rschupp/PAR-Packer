@@ -51,8 +51,7 @@ static int isSafeDir(const char* val)
 
 void par_setup_libpath( const char * stmpdir )
 {
-    const char *key = NULL , *val = NULL;
-    int i;
+    const char *val = NULL;
     char *ld_path = LDLIBPTHNAME;
     char *ld_path_env = NULL;
 

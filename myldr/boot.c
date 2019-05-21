@@ -162,7 +162,7 @@ char pp_version_info[] = "@(#) Packed by PAR::Packer " PAR_PACKER_VERSION;
 
 int main ( int argc, char **argv, char **env )
 {
-    int rc, i;
+    int rc;
     char *stmpdir;
     embedded_file_t *emb_file;
     char *my_file;
