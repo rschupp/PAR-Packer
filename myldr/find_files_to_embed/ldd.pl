@@ -48,7 +48,7 @@ sub ldd
 
     while (my ($name, $path) = each %dlls)
     {
-        unless (-r $path)
+        unless (-e $path)
         {
             warn qq[# ldd reported strange path: $path\n];
             delete $dlls{$name};
