@@ -13,7 +13,12 @@ require "./t/utils.pl";
 
 plan tests => 2;
 
-my $par = pp_ok(-p => -e => "use List::Util;");
+# Note: There may be a dual-life List::Util installed somewhere.
+# Make sure pp uses the core one by explicitly searching the core
+# installation directories first.
+my $par = pp_ok(-I => $Config{archlibexp},
+                -I => $Config{privlibexp},
+                -p => -e => "use List::Util;");
 
 my $zip = Archive::Zip->new();
 $zip->read($par) == AZ_OK 
