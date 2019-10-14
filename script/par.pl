@@ -793,7 +793,7 @@ sub _set_par_temp {
                     $ctx->addfile($fh);
                     close($fh);
                     $ctx->hexdigest;
-                } // $mtime;
+                } || $mtime;
 
                 $stmpdir .= "$Config{_delim}cache-$digest"; 
             }
