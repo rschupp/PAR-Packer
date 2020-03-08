@@ -9,7 +9,7 @@ use File::Spec::Functions;
 use Test::More;
 require "./t/utils.pl";
 
-plan tests => 4;
+plan tests => 6;
 
 my $exe = pp_ok(-I => "t", -e => <<'...');
 use Cwd;
@@ -32,5 +32,9 @@ our $data;
 eval($out);
 
 my $exp_file = catfile($data->{par_temp}, qw( inc lib Myfile.pm ));
-is($exp_file, $data->{from_file},   "source path from __FILE__");
-is($exp_file, $data->{from_caller}, "source path from (caller)[1]");
+$exp_file =~ s{\\}{/}g if $^O eq 'MSWin32';
+
+is($data->{from_file}, $exp_file, "expected source path from __FILE__");
+ok(-e $data->{from_file}, "file __FILE__ exists");
+is($data->{from_caller}, $exp_file, "expected source path from (caller)[1]");
+ok(-e $data->{from_caller}, "file (caller)[1] exists");
