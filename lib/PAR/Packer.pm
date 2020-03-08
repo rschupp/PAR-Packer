@@ -35,6 +35,7 @@ use File::Temp qw( tempfile );
 use Module::ScanDeps ();
 use PAR ();
 use PAR::Filter ();
+use PAR::Filter::PodStrip ();
 
 use constant OPTIONS => {
     'a|addfile:s@'   => 'Additional files to pack',
@@ -969,7 +970,6 @@ sub _generate_filter {
             filter => PAR::Filter->new($filter)
         };
     }
-    my $podstrip = PAR::Filter->new('PodStrip');
 
     my $filtersub = sub {
         my $ref = shift;
@@ -987,7 +987,7 @@ sub _generate_filter {
 
         # PodStrip by default, overridden by -F or $ENV{PAR_VERBATIM}
         if ($filtered == 1 and not $verbatim) {
-            $ref = $podstrip->apply($ref, $name);
+            $ref = PAR::Filter::PodStrip->apply($ref, '');
         }
         return $ref;
     };

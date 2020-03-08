@@ -26,14 +26,6 @@ sub PATCH_CONTENT () { +{
         '$is_dosish = ' =>
         '$is_dosish = $^O eq \'cygwin\' || ',
     ],
-    'MIME/Types.pm' => [
-        'File::Spec->catfile(dirname(__FILE__),' =>
-        'File::Spec->catfile($ENV{PAR_TEMP}, qw(inc lib MIME),',
-    ],
-    'Mozilla/CA.pm' => [
-        'File::Spec->catfile(dirname(__FILE__), "CA", "cacert.pem")' =>
-        'File::Spec->catfile($ENV{PAR_TEMP}, qw(inc lib Mozilla CA cacert.pem))',
-    ],
     'Pod/Usage.pm' => [
         ' = $0' =>
         ' = $ENV{PAR_0} || $0',

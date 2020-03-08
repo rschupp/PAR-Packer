@@ -497,7 +497,7 @@ if ($out) {
     my $loader = scalar <_FH>;
     if (!$ENV{PAR_VERBATIM} and $loader =~ /^(?:#!|\@rem)/) {
         require PAR::Filter::PodStrip;
-        PAR::Filter::PodStrip->new->apply(\$loader, $0)
+        PAR::Filter::PodStrip->apply(\$loader, $0);
     }
     foreach my $key (sort keys %env) {
         my $val = $env{$key} or next;
@@ -578,7 +578,7 @@ if ($out) {
                 $content = <FILE>;
                 close FILE;
 
-                PAR::Filter::PodStrip->new->apply(\$content, $file)
+                PAR::Filter::PodStrip->apply(\$content, "<embedded>/$name")
                     if !$ENV{PAR_VERBATIM} and $name =~ /\.(?:pm|ix|al)$/i;
 
                 PAR::Filter::PatchContent->new->apply(\$content, $file, $name);

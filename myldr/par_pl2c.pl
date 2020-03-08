@@ -10,7 +10,7 @@ my ($var) = @ARGV;
 
 my $slurp = do { local $/ = undef; <STDIN> };
 
-PAR::Filter::PodStrip->new->apply(\$slurp);
+PAR::Filter::PodStrip->apply(\$slurp, '');
 
 print "const char *$var =\n";
 foreach (split(/\n/, $slurp))

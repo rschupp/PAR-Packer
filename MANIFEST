@@ -69,6 +69,7 @@ t/30-current_exec.t
 t/40-packer_cd_option.t
 t/80-doublecolon.t
 t/85-crt-glob.t
+t/85-myfile.t
 t/90-rt101800.t
 t/90-rt103861.t
 t/90-rt104560.t
@@ -85,5 +86,6 @@ t/Double/Colon.pm
 t/Double/Colon/Barnie.pm
 t/Double/Colon/Foo/Bar/Quux.pm
 t/Double/Colon/Fred.pm
+t/Myfile.pm
 t/test-proc
 t/utils.pl
