@@ -822,7 +822,8 @@ sub pack_manifest_hash {
     # generate a selective set of filters from the options passed in via -F
     my $mod_filter = _generate_filter($opt, 'F');
 
-    my ($privlib, $archlib) = map { _maybe_relocate($_) } @Config{qw(privlib archlib)};
+    my ($privlib, $archlib) = map { (my $lib = $_) =~ s{\\}{/}g; $lib } 
+                                  @Config{qw(privlibexp archlibexp)};
 
     foreach my $pfile (sort grep length $map{$_}, keys %map) {
         next if !$opt->{B} and (
@@ -938,18 +939,6 @@ sub pack_manifest_hash {
     return ($dep_manifest);
 }
 
-
-sub _maybe_relocate {
-    my ($lib) = @_;
-
-    if ($Config{userelocatableinc})
-    {
-        $lib =~ s/^\.\.\./dirname($^X)/e;
-        $lib = abs_path($lib);
-    }
-    $lib =~ s{\\}{/}g;
-    return $lib;
-}
 
 sub _generate_filter {
     my $opt = shift; # options hash
