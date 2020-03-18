@@ -25,8 +25,6 @@ print Data::Dumper->new([$data], ['data'])->Useqq(1)->Dump;
 ...
 
 my ($out, $err) = run_ok($exe);
-diag("out = <<<$out>>>");  # FIXME
-diag("err = <<<$err>>>");  # FIXME
 
 our $data;
 eval($out);

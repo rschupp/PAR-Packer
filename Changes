@@ -1,3 +1,36 @@
+1.050  2020-03-18
+
+- Rethink use of Filter::PodStrip.
+  
+  Do not add directives 
+
+  #line 1 "file"
+
+  to packed modules except for "embdeded" files.
+  We still add these directives to "embedded" files as these are extracted 
+  with mangled names which makes it hard to make sense of warn() or die() messages
+  caused by them. These are all core modules and don't reference __FILE__.
+
+  This should make use of __FILE__ in packed modules work without
+  workarounds. __FILE__ is typically used to refer to installed non-module
+  resources, e.g.
+  
+    # MIME::Types
+    my $db = File::Spec->catfile(dirname(__FILE__), 'types.db');
+  
+    # Mozilla::CA
+    my $ca_file = File::Spec->catfile(dirname(__FILE__), "CA", "cacert.pem");
+  
+    # Mojo::File (__FILE__ used implicitly by caller())
+    sub curfile { __PACKAGE__->new(Cwd::realpath((caller)[1])) }
+  
+  Hence, remove known workarounds from Filter::PatchContent and add a test.
+  
+- Fix RT#130685: core module detection doesn't work with -Duserelocatableinc
+  
+  Original patch by Frank.Lichtenheld@Sophos.com, thanx!
+  Added a test for this.
+
 1.049  2019-05-31
 
 - Fix RT#129312: Code signing for OSX
