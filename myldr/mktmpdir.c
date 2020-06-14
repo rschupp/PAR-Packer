@@ -135,19 +135,6 @@ char *par_mktmpdir ( char **argv ) {
         }
     }
 
-#ifdef WIN32
-    /* Try the windows temp directory */
-    if ( tmpdir == NULL && (val = par_getenv("WinDir")) && strlen(val) ) {
-        char* buf = malloc(strlen(val) + 5 + 1);
-        sprintf(buf, "%s\\temp", val);
-        if (isWritableDir(buf)) {
-            tmpdir = buf;
-        } else {
-            free(buf);
-        }
-    }
-#endif
-
     /* Try default locations */
     for ( i = 0 ; tmpdir == NULL && (val = temp_dirs[i]) && strlen(val) ; i++ ) {
         if ( isWritableDir(val) ) {
