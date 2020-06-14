@@ -752,7 +752,7 @@ sub _set_par_temp {
 
     foreach my $path (
         (map $ENV{$_}, qw( PAR_TMPDIR TMPDIR TEMPDIR TEMP TMP )),
-        qw( C:\\TEMP /tmp . )
+        qw( /tmp . )
     ) {
         next unless defined $path and -d $path and -w $path;
         my $username;
