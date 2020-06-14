@@ -77,9 +77,6 @@ char *par_mktmpdir ( char **argv ) {
     /* NOTE: all arrays below are NULL terminated */
     const char *temp_dirs[] = { 
         P_tmpdir, 
-#ifdef WIN32
-        "C:\\TEMP", 
-#endif
         ".", NULL };
     const char *temp_keys[] = { "PAR_TMPDIR", "TMPDIR", "TEMPDIR", 
                                  "TEMP", "TMP", NULL };
