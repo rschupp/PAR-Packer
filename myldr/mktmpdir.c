@@ -78,7 +78,11 @@ char *par_mktmpdir ( char **argv ) {
     const char *temp_dirs[] = { 
         P_tmpdir, 
         ".", NULL };
-    const char *temp_keys[] = { "PAR_TMPDIR", "TMPDIR", "TEMPDIR", 
+    const char *temp_keys[] = { "PAR_TMPDIR",
+#ifdef WIN32
+                                "LOCALAPPDATA",
+#endif
+                                "TMPDIR", "TEMPDIR", 
                                  "TEMP", "TMP", NULL };
     const char *user_keys[] = { "USER", "USERNAME", NULL };
 
