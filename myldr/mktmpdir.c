@@ -154,14 +154,16 @@ char *par_mktmpdir ( char **argv ) {
         strlen(subdirbuf_suffix) + 1024;
 
     /* stmpdir is what we are going to return; 
-       top_tmpdir is the top $TEMP/par-$USER, needed to build stmpdir.  
+       top_tmpdir is the top $TEMP/par-$USER ($TEMP/pp on Windows),
+       needed to build stmpdir.  
        NOTE: We need 2 buffers because snprintf() can't write to a buffer
        it is also reading from. */
     top_tmpdir = malloc( stmp_len );
-    sprintf(top_tmpdir, "%s%s%s%s", tmpdir, dir_sep, subdirbuf_prefix, username);
 #ifdef WIN32
+    sprintf(top_tmpdir, "%s\\pp", tmpdir);
     _mkdir(top_tmpdir);         /* FIXME bail if error (other than EEXIST) */
 #else
+    sprintf(top_tmpdir, "%s%s%s%s", tmpdir, dir_sep, subdirbuf_prefix, username);
     {
         if (mkdir(top_tmpdir, 0700) == -1 && errno != EEXIST) {
             fprintf(stderr, "%s: creation of private subdirectory %s failed (errno=%i)\n", 
