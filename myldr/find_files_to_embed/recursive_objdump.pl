@@ -56,9 +56,9 @@ sub recursive_objdump
     $walker->(Cwd::abs_path($path));
 
     # weed out system libraries
-    while (my ($name, $path) = each %dlls)
+    foreach my $name (keys %dlls)
     {
-        delete $dlls{$name} if is_system_lib($path);
+        delete $dlls{$name} if is_system_lib($dlls{$name});
     }
         
     return \%dlls;

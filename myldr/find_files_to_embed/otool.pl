@@ -13,8 +13,9 @@ sub find_files_to_embed
     my $dlls = otool($par); 
 
     # weed out system libs (but exclude the shared perl lib)
-    while  (my ($name, $path) = each %$dlls)
+    foreach my $name (keys %$dlls)
     {
+        my $path = $dlls->{$name};
         delete $dlls->{$name} if is_system_lib($path) && basename($path) !~ /perl/;
     }
 

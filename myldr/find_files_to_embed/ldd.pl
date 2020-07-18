@@ -24,9 +24,9 @@ sub find_files_to_embed
     my $dlls = ldd($par); 
 
     # weed out system libs (but exclude the shared perl lib)
-    while  (my ($name, $path) = each %$dlls)
+    foreach my $name (keys %$dlls)
     {
-        delete $dlls->{$name} if is_system_lib($path) && $name !~ /perl/;
+        delete $dlls->{$name} if is_system_lib($dlls->{$name}) && $name !~ /perl/;
     }
 
     return $dlls;
@@ -46,8 +46,9 @@ sub ldd
     # while newer versions omit "=>" in this case.
     my %dlls = $out =~ /^ \s* (\S+) \s* => \s* ( \/ \S+ ) /gmx;
 
-    while (my ($name, $path) = each %dlls)
+    foreach my $name (keys %dlls)
     {
+        my $path = $dlls{$name};
         unless (-e $path)
         {
             warn qq[# ldd reported strange path: $path\n];
