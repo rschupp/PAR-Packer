@@ -143,7 +143,7 @@ This is just a zip file beginning with the magic string "C<PK\003\004>".
 
 =item * Ending section
 
-The pre-computed cache name.  A pack('Z40') string of the value of -T 
+The pre-computed cache name.  A pack('Z40') string of the value of -T
 (--tempcache) or the hash of the file, followed by C<\0CACHE>.  The hash
 of the file is calculated with L<Digest::SHA>.
 
@@ -257,7 +257,7 @@ my ($start_pos, $data_pos);
     }
     last if $magic_pos < 0;
 
-    # Seek 4 bytes backward from the signature to get the offset of the 
+    # Seek 4 bytes backward from the signature to get the offset of the
     # first embedded FILE, then seek to it
     seek _FH, $magic_pos - 4, 0;
     read _FH, $buf, 4;
@@ -484,7 +484,7 @@ if ($out) {
     }
 
     CreatePath($out) ;
-    
+
     my $fh = IO::File->new(
         $out,
         IO::File::O_CREAT() | IO::File::O_WRONLY() | IO::File::O_TRUNC(),
@@ -521,7 +521,7 @@ if ($out) {
 
         require_modules();
 
-        my @inc = grep { !/BSDPAN/ } 
+        my @inc = grep { !/BSDPAN/ }
                        grep {
                            ($bundle ne 'site') or
                            ($_ ne $Config::Config{archlibexp} and
@@ -997,4 +997,4 @@ See F<LICENSE>.
 
 =cut
 
-__END__
+ __END__

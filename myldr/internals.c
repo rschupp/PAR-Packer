@@ -12,22 +12,6 @@ XS(XS_Internals_PAR_BOOT) {
         par_init_env();
     }
 
-    /* Remove the PAR/parl options from @ARGV */
-    if ((tmpgv = gv_fetchpv("ARGV", TRUE, SVt_PVAV))) {/* @ARGV */
-        tmpav = GvAV(tmpgv);
-        for (i = 1; i < options_count; i++) {
-            svp = av_fetch(tmpav, i-1, 0);
-            if (!svp) break;
-            if (strcmp(fakeargv[i], SvPV_nolen(*svp))) break;
-            ok++;
-        }
-        if (ok == options_count - 1) {
-            for (i = 1; i < options_count; i++) {
-                SV* unused = av_shift(tmpav);
-            }
-        }
-    }
-
     if ((tmpgv = gv_fetchpv("\030",TRUE, SVt_PV))) {/* $^X */
 #ifdef WIN32
         sv_setpv(GvSV(tmpgv),"perl.exe");
@@ -51,7 +35,7 @@ XS(XS_Internals_PAR_BOOT) {
 #else
             prog = par_current_exec();
 
-            if( prog != NULL ) {            
+            if( prog != NULL ) {
                 sv_setpv( GvSV(tmpgv), prog );
                 free( prog );
             }
@@ -94,12 +78,12 @@ XS(XS_Internals_PAR_BOOT) {
     stmpdir = par_getenv("PAR_TEMP");
     if ( !stmpdir ) {
         stmpdir = par_mktmpdir( fakeargv );
-        if ( !stmpdir ) 
+        if ( !stmpdir )
             croak("Unable to create cache directory");
     }
     i = PerlDir_mkdir(stmpdir, 0700);
     if ( (i != 0) && (i != EEXIST) && (i != -1) ) {
-        croak("%s: creation of private cache subdirectory %s failed (errno=%i)\n", 
+        croak("%s: creation of private cache subdirectory %s failed (errno=%i)\n",
               fakeargv[0], stmpdir, i);
     }
 }

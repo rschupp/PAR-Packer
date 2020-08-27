@@ -13,9 +13,8 @@
 
 static PerlInterpreter *my_perl;
 
-static char *stmpdir;
-static int options_count;
 static char **fakeargv;
+static char *stmpdir;
 
 #ifdef HAS_PROCSELFEXE
 /* This is a function so that we don't hold on to MAXPATHLEN
@@ -61,7 +60,8 @@ int main ( int argc, char **argv, char **env )
 {
     int exitstatus;
     int i;
-    int argno = 0;
+    int argno;
+    int fakeargc;
 
 #ifdef PERL_GPROF_MONCONTROL
     PERL_GPROF_MONCONTROL(0);
@@ -99,19 +99,13 @@ int main ( int argc, char **argv, char **env )
     PL_exit_flags |= PERL_EXIT_EXPECTED;
 #endif /* PERL_EXIT_EXPECTED */
 
+    fakeargc = argc + 3;        /* allow for "-e", my_par_pl, "--" arguments */
 #ifdef PERL_PROFILING
-#define PROFILING_OPTION 1
-#else
-#define PROFILING_OPTION 0
+    fakeargc++;                 /* "-d:DProf" */
 #endif
+    New(666, fakeargv, fakeargc + 1, char *);
 
-#ifdef ALLOW_PERL_OPTIONS
-#define EXTRA_OPTIONS 3
-#else
-#define EXTRA_OPTIONS 4
-#endif /* ALLOW_PERL_OPTIONS */
-    New(666, fakeargv, argc + EXTRA_OPTIONS + 1 + PROFILING_OPTION, char *);
-
+    argno = 0;
     fakeargv[argno++] = argv[0];
 #ifdef PERL_PROFILING
     fakeargv[argno++] = "-d:DProf";
@@ -119,19 +113,14 @@ int main ( int argc, char **argv, char **env )
 
     fakeargv[argno++] = "-e";
     fakeargv[argno++] = (char *)my_par_pl;
-
-#ifndef ALLOW_PERL_OPTIONS
     fakeargv[argno++] = "--";
-#endif /* ALLOW_PERL_OPTIONS */
 
-    options_count = argno;
-
+    /* append argv[1 .. argc-1], NULL to argv */
     for (i = 1; i < argc; i++)
-        fakeargv[i + options_count - 1] = argv[i];
-    fakeargv[argc + options_count - 1] = NULL;
+        fakeargv[argno++] = argv[i];
+    fakeargv[argno] = NULL;
 
-    exitstatus = perl_parse(my_perl, par_xs_init, argc + options_count - 1,
-                            fakeargv, NULL);
+    exitstatus = perl_parse(my_perl, par_xs_init, fakeargc, fakeargv, NULL);
 
     if (exitstatus == 0)
 	exitstatus = perl_run( my_perl );
