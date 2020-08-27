@@ -668,19 +668,14 @@ sub pack_manifest_hash {
     $root = "$Config{archname}/" if ($opt->{m});
     $self->{pack_attrib}{root} = '';
 
-    my @mscandeps_cache;
-    if (defined $opt->{cachedeps}) {
-        @mscandeps_cache = (cache_file => $opt->{cachedeps});
-    }
-
     my $par_file = $self->{par_file};
     my (@modules, @data, @exclude);
 
     # Search for scannable code in all -I'd paths
-    # NOTE: We need this early, because Module::ScanDeps::_find_in_inc 
+    # NOTE: We need this early, because Module::ScanDeps::_find_in_inc
     # and others refer to @IncludeLibs.
     push @Module::ScanDeps::IncludeLibs, @{$opt->{I}} if $opt->{I};
-    
+
     foreach my $name (@{ $opt->{M} || [] }) {
         if ($name =~ s/^([\w:]+)::(\*{0,2})$/$1/) {
             my $ns = length $2;        # namespace depth indicator
@@ -696,7 +691,7 @@ sub pack_manifest_hash {
                 ? Module::ScanDeps::_glob_in_inc_1($mod, 1)
                 : Module::ScanDeps::_glob_in_inc($mod, 1);
             $self->_name2moddata($_, \@modules, \@data) foreach @mods_in_ns;
-        } 
+        }
         else {
             $self->_name2moddata($name, \@modules, \@data);
         }
@@ -737,49 +732,51 @@ sub pack_manifest_hash {
 
     my $add_deps = $self->_obj_function($fe, 'add_deps');
 
-    my @files; # files to scan
-    # Apply %Preload to the -M'd modules and add them to the list of
-    # files to scan
-    foreach my $module (@modules) {
-        my $file = Module::ScanDeps::_find_in_inc($module)
-          or $self->_die("Cannot find module $module (specified with -M)\n");
-        push @files, $file;
-        
-        my @preload = Module::ScanDeps::_get_preload($module) or next;
-        
-        $add_deps->(
-            used_by => $file,
-            rv      => \%map,
-            modules => \@preload,
-            skip    => \%skip,
-#            warn_missing => $args->{warn_missing},
-        );
-    }
-    push @files, @$input;
-
     if ($opt->{x} && defined $opt->{xargs}) {
         require Text::ParseWords;
         $opt->{x} = [ Text::ParseWords::shellwords($opt->{xargs}) ];
     }
 
-    my $scan_dispatch =
-      $opt->{n}
-      ? $self->_obj_function($fe, 'scan_deps_runtime')
-      : $self->_obj_function($fe, 'scan_deps');
+    if (!$opt->{n}) {
+        my @files = @$input;
 
+        # apply %Preload to the -M'd modules and add them to the list of files to scan
+        foreach my $module (@modules) {
+            my $file = Module::ScanDeps::_find_in_inc($module)
+              or $self->_die("Cannot find module $module (specified with -M)\n");
+            push @files, $file;
 
-    $scan_dispatch->(
-        rv      => \%map,
-        files   => \@files,
-        execute => $opt->{x},
-        compile => $opt->{c},
-        skip    => \%skip,
-        @mscandeps_cache,
-        ($opt->{n}) ? () : (
+            my @preload = Module::ScanDeps::_get_preload($module) or next;
+
+            $add_deps->(
+                used_by => $file,
+                rv      => \%map,
+                modules => \@preload,
+                skip    => \%skip,
+            );
+        }
+
+        # run static scan on the augmented file list
+        $self->_obj_function($fe, 'scan_deps')->(
+            rv      => \%map,
+            files   => \@files,
+            skip    => \%skip,
             recurse => 1,
-            first   => 1,
-        ),
-    );
+            ($opt->{cachedeps}) ?  (cache_file => $opt->{cachedeps}) : (),
+        );
+    }
+
+    if ($opt->{c} || $opt->{x}) {
+        # run dynamic scan in the original $input files
+        $self->_obj_function($fe, 'scan_deps_runtime')->(
+            rv      => \%map,
+            files   => $input,
+            execute => $opt->{x},
+            compile => $opt->{c},
+            skip    => \%skip,
+            ($opt->{cachedeps}) ?  (cache_file => $opt->{cachedeps}) : (),
+        );
+    }
 
     # Note: _find_in_inc() may return ()
     %skip = map { $_ => 1 } grep { defined } map { Module::ScanDeps::_find_in_inc($_) } @exclude;
@@ -822,7 +819,7 @@ sub pack_manifest_hash {
     # generate a selective set of filters from the options passed in via -F
     my $mod_filter = _generate_filter($opt, 'F');
 
-    my ($privlib, $archlib) = map { (my $lib = $_) =~ s{\\}{/}g; $lib } 
+    my ($privlib, $archlib) = map { (my $lib = $_) =~ s{\\}{/}g; $lib }
                                   @Config{qw(privlibexp archlibexp)};
 
     foreach my $pfile (sort grep length $map{$_}, keys %map) {
@@ -889,7 +886,7 @@ sub pack_manifest_hash {
             }
         }
         elsif ($^O eq 'darwin') {
-            # try "otool -D $file", expect itwo lines of output like 
+            # try "otool -D $file", expect itwo lines of output like
             #   $file:
             #   path
             # Note: some versions of otool report just a name in the
@@ -946,7 +943,7 @@ sub _generate_filter {
 
     my $verbatim = ($ENV{PAR_VERBATIM} || 0);
 
-    # List of filters. If the regex is undefined or matches the 
+    # List of filters. If the regex is undefined or matches the
     # file name (e.g. Foo/Bar.pm), apply filter to this module.
     my @filters = (
         { regex => undef, filter => PAR::Filter->new('PatchContent') },
@@ -1324,7 +1321,7 @@ sub _extract_parl {
     my ($fh, $filename) = tempfile(
         "parlXXXXXXX", SUFFIX => $Config{_exe}, TMPDIR => 1, UNLINK => 1);
     close $fh;
-    
+
     my $success = $class->write_parl($filename);
     if (not $success) {
         $self->_die("Failed to extract a parl from '$class' to file '$filename'");
@@ -1364,7 +1361,7 @@ sub _generate_output {
     unshift @args, '-q' unless $opt->{v} > 0;
     if ($opt->{B}) {
         unshift @args, "-B";
-    } 
+    }
     if ($opt->{L}) {
         unshift @args, "-L".$opt->{L};
     }
@@ -1563,7 +1560,7 @@ sub _find_shlib {
         # loader (ld.so). But it's the best guess we've got.
         @libpath = split(' ', $Config{libpth});
 
-        # add $ENV{LD_LIBRARY_PATH} (or equivalent) if defined 
+        # add $ENV{LD_LIBRARY_PATH} (or equivalent) if defined
         my $ldlibpath = $ENV{ $Config{ldlibpthname} };
         unshift @libpath, split(/\Q$Config{path_sep}\E/, $ldlibpath)
             if defined $ldlibpath;
@@ -1593,7 +1590,7 @@ sub _find_shlib_in_path
     my $dlext = $^O eq 'darwin' ? 'dylib' : $Config{dlext};
     for my $dir (@path)
     {
-        $dir = '.' if $dir eq '';      
+        $dir = '.' if $dir eq '';
         foreach my $p (catfile($dir, $file), catfile($dir, "$file.$dlext"))
         {
             return abs_path($p) if -e $p;
@@ -1616,7 +1613,7 @@ sub _can_run {
 
 sub _main_pl_multi {
     my ($self) = @_;
-   
+
     # insert code for @INC cleaning (in case of bundling core modules)
     my $clean_inc = $self->_main_pl_clean();
     # insert code for reusable apps
@@ -1651,7 +1648,7 @@ sub _open {
 
 sub _main_pl_single {
     my ($self, $file) = @_;
-    
+
     # insert code for @INC cleaning (in case of bundling core modules)
     my $clean_inc = $self->_main_pl_clean();
     # insert code for reusable apps
@@ -1708,7 +1705,7 @@ __REUSE_APP__
 sub _main_pl_clean {
     my $self = shift;
     my $opt = $self->{options};
-    
+
     my $clean_inc = '';
     if ($opt->{B}) { # bundle core modules
         # weed out all @INC entries
