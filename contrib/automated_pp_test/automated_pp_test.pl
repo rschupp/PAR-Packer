@@ -56,7 +56,7 @@ our $VERSION = 0.17;
 #    don't match for hello. Chomp and do an "eq".
 #
 ########################################################################
-use Test::More tests => 34;
+use Test::More tests => 35;
 use Cwd qw(chdir cwd);
 
 use Config;
@@ -414,7 +414,86 @@ sub pp_hello_1 {
   #.................................................................
 
 }
+#########################################################################
+sub pp_minus_u_hello {
+  my ($test_name_string,
+      $os,
+      $test_number,
+      $test_dir,
+      $hello_pl_file,
+      $a_default_executable,
+      $verbose,
+      $message_ref,
+      ) = @_;
 
+  #--------------------------------------------------------------------
+  # Test of 'pp -u hello'
+  # The command should: # Pack 'hello' into executable 'a.exe'
+  #
+  #  . Create the file "hello" with the code that will
+  #    print out the word "hello".
+  #  . system pp -u hello
+  #    a.exe will be created on windows
+  #  . pipe 'a' and collect the results.
+  #
+  #  Success if the result is "hello", failure otherwise.
+  #--------------------------------------------------------------------
+
+  my $error = EXIT_FAILURE;
+  my $test_file = $test_dir . "/$hello_pl_file";
+  my $pipe_command_string = "";
+  my $cmd = "";
+  my $sub_test = 0;
+  my $print_cannot_locate_message = $FALSE;
+
+  $$message_ref = "";
+
+
+  #.................................................................
+  if (!(chdir("$test_dir"))) {
+      $$message_ref = "\namsg070: sub $test_name_string cannot " .
+                      "chdir $test_dir\n:$!:\n";
+      return (EXIT_FAILURE);
+  }
+  #.................................................................
+
+  $error = create_file($test_file, "hello", $verbose, $message_ref);
+  if ($error == EXIT_FAILURE) {
+    $$message_ref = "\namsg720: sub $test_name_string: " . $$message_ref;
+    return (EXIT_FAILURE);
+  }
+
+  #.................................................................
+  $cmd = "$RUN_PP -u \"$hello_pl_file\" ";
+  if (system("$cmd")) {
+    $$message_ref = "\namsg740: sub $test_name_string cannot system $cmd\n";
+    return (EXIT_FAILURE);
+  }
+
+  #.................................................................
+  $error = pipe_a_command
+                         (
+                           $test_number,
+                           $sub_test++,
+                           $test_name_string,
+                           $test_dir,
+                           $pipe_command_string,
+                           $a_default_executable,
+                           "hello",
+                           $os,
+                           $verbose,
+                           $message_ref,
+                           $print_cannot_locate_message,
+                        );
+  if ($error == EXIT_FAILURE) {
+    $$message_ref =
+      $$message_ref . "\nDid $cmd produce $a_default_executable?\n";
+  }
+
+  return ($error);
+  #.................................................................
+
+}
 #########################################################################
 sub pp_minus_o_hello_hello_dot_pl {
   my ($test_name_string,
@@ -8345,6 +8424,50 @@ $error =
         $verbose,
         \$message,
      );
+
+if ($debug) {
+  if ($error) {
+    print DEBUG ("\n\nTest $test_number: $test_name_string FAILED\n");
+    print DEBUG ("$message\n");
+  } else {
+    print DEBUG ("\n\nTest $test_number: $test_name_string PASSED\n");
+  }
+}
+
+after_test($test_number++, $error, $message, $verbose);
+ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
+print ("\n\n\n") if ($error == EXIT_FAILURE);
+
+
+
+########################### Next Test 035 ##################################
+$test_name_string = "pp_minus_u_hello";
+$error = prior_to_test($test_number,
+                       $startdir,
+                       $os,
+                       \$test_dir,
+                       $verbose,
+                       \$message);
+if ($error == EXIT_FAILURE) {
+  $message = "\nCannot run test $test_name_string due to\n" .
+             "prior_to_test: Test $test_number : $message\n";
+  die($message);
+}
+
+if ($verbose) {
+  print ("About to run test $test_number: $test_name_string ");
+  print ("in directory $test_dir\n");
+}
+
+$error = pp_minus_u_hello(  $test_name_string,
+                      $os,
+                      $test_number,
+                      $test_dir,
+                      $hello_pl_file,
+                      $a_default_executable,
+                      $verbose,
+                      \$message,
+                   );
 
 if ($debug) {
   if ($error) {
