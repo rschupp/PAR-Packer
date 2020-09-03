@@ -698,7 +698,12 @@ sub pack_manifest_hash {
     }
 
     if ($opt->{u}) {
-        push @modules, "utf8_heavy.pl";
+        if ($] lt '5.031006') {
+            push @modules, "utf8_heavy.pl";
+        }
+        else {
+            $self->_warn("'-u' is not needed for Perl >= 5.31.6");
+        }
     }
 
     # Skip either

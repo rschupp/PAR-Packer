@@ -25,7 +25,7 @@ sub go {
         require Text::ParseWords;
         unshift @ARGV, Text::ParseWords::shellwords($ENV{PP_OPTS});
     }
-    
+
     my %opt;
     GetOptions( \%opt, PAR::Packer->options, 'h|help', 'V|version' )
         or die qq[Run "$0 --help" to show available options.\n];
@@ -263,8 +263,8 @@ supply arguments in this case.
 
 =item B<--xargs>=I<STRING>
 
-If B<-x> is given, splits the C<STRING> using the function 
-C<shellwords> from L<Text::ParseWords> and passes the result 
+If B<-x> is given, splits the C<STRING> using the function
+C<shellwords> from L<Text::ParseWords> and passes the result
 as C<@ARGV> when running C<perl inputfile>.
 
 =item B<-X>, B<--exclude>=I<MODULE>
@@ -316,7 +316,7 @@ Log the output of packaging to a file rather than to stdout.
 =item B<-F>, B<--modfilter>=I<FILTER[=REGEX]>,
 
 Filter included perl module(s) with a L<PAR::Filter> subclass.
-You may specify multiple such filters. 
+You may specify multiple such filters.
 
 By default, the I<PodStrip> filter is applied.  In case
 that causes trouble, you can turn this off by setting the
@@ -351,7 +351,7 @@ add C<Foo::Bar>, but B<neither> C<Foo::Bar::Quux> B<nor> C<Foo>.
 
 =item B<-M Foo::>
 
-Shorthand for C<-M Foo -M Foo:**>: every module in the C<Foo> namespace 
+Shorthand for C<-M Foo -M Foo:**>: every module in the C<Foo> namespace
 including C<Foo> itself.
 
 =back
@@ -378,7 +378,7 @@ dependencies from B<-c> or B<-x> exclusively.
 
 =item B<-N>, B<--namespace>=I<NAMESPACE>
 
-Add all modules in the namespace into the package, 
+Add all modules in the namespace into the package,
 along with their dependencies. If C<NAMESPACE> is something like C<Foo::Bar>
 then this will add all modules C<Foo/Bar/Quux.pm>, C<Foo/Bar/Fred/Barnie.pm> etc
 that can be located in your module search path. It mimics the behaviour
@@ -441,13 +441,15 @@ executable or the value passed to the C<-T> or C<--tempcache> switch.
 
 =item B<-u>, B<--unicode>
 
+Note: This option is ignored for Perl 5.32 and above.
+
 Package Unicode support (essentially F<utf8_heavy.pl> and everything
-below the directory F<unicore> in your perl library). 
+below the directory F<unicore> in your perl library).
 
 This option exists because it is impossible to detect using static analysis
-if your program needs Unicode support at runtime. (Note: If your 
+whether your program needs Unicode support at runtime. (Note: If your
 program contains C<use utf8> this does B<not> imply it needs Unicode
-support. It merely says that your program is written in UTF-8.)
+support. It merely says that your program source is written in UTF-8.)
 
 If your packed program exits with an error message like
 
