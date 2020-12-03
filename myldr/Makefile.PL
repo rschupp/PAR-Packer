@@ -196,7 +196,7 @@ push @parl_exes, $parldyn_exe if $dynperl;
 my $sha1_defines = qq[-DBYTEORDER=0x$Config{byteorder}];
 $sha1_defines .= qq[ -DU64TYPE="$Config{u64type}"]
     if defined($Config{u64type})
-       && ($Config{use64bitint} eq "define" || length($Config{byteorder}) == 8);
+       && ($Config{use64bitint} || length($Config{byteorder}) == 8);
 
 # Determine whether we can find a config.h. If yes, include it in
 # usernamefrompwuid.h. If not, set I_PWD to undefined in that header.
