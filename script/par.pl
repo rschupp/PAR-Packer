@@ -228,8 +228,7 @@ my ($start_pos, $data_pos);
     local $SIG{__WARN__} = sub {};
 
     # Check file type, get start of data section {{{
-    open _FH, '<', $progname or last;
-    binmode(_FH);
+    open _FH, '<:raw', $progname or last;
 
     # Search for the "\nPAR.pm\n signature backward from the end of the file
     my $buf;
@@ -247,8 +246,8 @@ my ($start_pos, $data_pos);
     # in any case, $magic_pos is a multiple of $chunk_size
 
     while ($magic_pos >= 0) {
-        seek(_FH, $magic_pos, 0);
-        read(_FH, $buf, $chunk_size + length($PAR_MAGIC));
+        seek _FH, $magic_pos, 0;
+        read _FH, $buf, $chunk_size + length($PAR_MAGIC);
         if ((my $i = rindex($buf, $PAR_MAGIC)) >= 0) {
             $magic_pos += $i;
             last;
@@ -312,21 +311,20 @@ my ($start_pos, $data_pos);
         $INC{$module} = "/loader/$info/$module";
 
         if ($ENV{PAR_CLEAN} and defined(&IO::File::new)) {
-            my $fh = IO::File->new_tmpfile or die $!;
-            binmode($fh);
-            print $fh $info->{buf};
-            seek($fh, 0, 0);
+            my $fh = IO::File->new_tmpfile or die "Can't create temp file: $!";
+            $fh->binmode();
+            $fh->print($info->{buf});
+            $fh->seek(0, 0);
             return $fh;
         }
         else {
             my $filename = _tempfile("$info->{crc}.pm", $info->{buf});
 
-            open my $fh, '<', $filename or die "can't read $filename: $!";
-            binmode($fh);
+            open my $fh, '<:raw', $filename or die qq[Can't read "$filename": $!];
             return $fh;
         }
 
-        die "Bootstrapping failed: cannot find $module!\n";
+        die "Bootstrapping failed: can't find module $module!";
     }, @INC);
 
     # Now load all bundled files {{{
@@ -416,7 +414,7 @@ if (!$start_pos or ($ARGV[0] eq '--par-options' && shift)) {
                 $quiet = 1;
             }
             elsif ($1 eq 'L') {
-                open $logfh, ">>", $2 or die "XXX: Cannot open log: $!";
+                open $logfh, ">>", $2 or die qq[Can't open log file "$2": $!];
             }
             elsif ($1 eq 'T') {
                 $cache_name = $2;
@@ -456,13 +454,12 @@ if ($out) {
 
 
     if (defined $par) {
-        open my $fh, '<', $par or die "Cannot find '$par': $!";
-        binmode($fh);
+        open my $fh, '<:raw', $par or die qq[Can't find par file "$par": $!];
         bless($fh, 'IO::File');
 
         $zip = Archive::Zip->new;
         ( $zip->readFromFileHandle($fh, $par) == Archive::Zip::AZ_OK() )
-            or die "Read '$par' error: $!";
+            or die qq[Error reading zip archive "$par"];
     }
 
 
@@ -475,12 +472,13 @@ if ($out) {
     };
 
     # Open input and output files {{{
-    local $/ = \4;
 
     if (defined $par) {
-        open PAR, '<', $par or die "$!: $par";
-        binmode(PAR);
-        die "$par is not a PAR file" unless <PAR> eq "PK\003\004";
+        open my $ph, '<:raw', $par or die qq[Can't read par file "$par": $!];
+        my $buf;
+        read $ph, $buf, 4;
+        die qq["$par" is not a par file] unless $buf eq "PK\003\004";
+        close $ph;
     }
 
     CreatePath($out) ;
@@ -489,12 +487,19 @@ if ($out) {
         $out,
         IO::File::O_CREAT() | IO::File::O_WRONLY() | IO::File::O_TRUNC(),
         0777,
-    ) or die $!;
-    binmode($fh);
+    ) or die qq[Can't create file "$out": $!];
+    $fh->binmode();
 
-    $/ = (defined $data_pos) ? \$data_pos : undef;
     seek _FH, 0, 0;
-    my $loader = scalar <_FH>;
+
+    my $loader;
+    if (defined $data_pos) {
+        read _FH, $loader, $data_pos;
+    } else {
+        local $/ = undef;
+        $loader = <_FH>;
+    }
+
     if (!$ENV{PAR_VERBATIM} and $loader =~ /^(?:#!|\@rem)/) {
         require PAR::Filter::PodStrip;
         PAR::Filter::PodStrip->apply(\$loader, $0);
@@ -509,7 +514,6 @@ if ($out) {
         }eg;
     }
     $fh->print($loader);
-    $/ = undef;
     # }}}
 
     # Write bundled modules {{{
@@ -573,10 +577,10 @@ if ($out) {
                 $content = $file->{buf};
             }
             else {
-                open FILE, '<', $file or die "Can't open $file: $!";
-                binmode(FILE);
-                $content = <FILE>;
-                close FILE;
+                local $/ = undef;
+                open my $fh, '<:raw', $file or die qq[Can't read "$file": $!];
+                $content = <$fh>;
+                close $fh;
 
                 PAR::Filter::PodStrip->apply(\$content, "<embedded>/$name")
                     if !$ENV{PAR_VERBATIM} and $name =~ /\.(?:pm|ix|al)$/i;
@@ -602,10 +606,9 @@ if ($out) {
     $cache_name = substr $cache_name, 0, 40;
     if (!$cache_name and my $mtime = (stat($out))[9]) {
         my $ctx = Digest::SHA->new(1);
-        open(my $fh, "<", $out);
-        binmode($fh);
+        open my $fh, "<:raw", $out;
         $ctx->addfile($fh);
-        close($fh);
+        close $fh;
 
         $cache_name = $ctx->hexdigest;
     }
@@ -640,13 +643,14 @@ if ($out) {
     }
 
     my $fh = IO::File->new;                             # Archive::Zip operates on an IO::Handle
-    $fh->fdopen(fileno(_FH), 'r') or die "$!: $@";
+    $fh->fdopen(fileno(_FH), 'r') or die qq[fdopen() failed: $!];
 
     # Temporarily increase the chunk size for Archive::Zip so that it will find the EOCD
     # even if lots of stuff has been appended to the pp'ed exe (e.g. by OSX codesign).
     Archive::Zip::setChunkSize(-s _FH);
     my $zip = Archive::Zip->new;
-    $zip->readFromFileHandle($fh, $progname) == Archive::Zip::AZ_OK() or die "$!: $@";
+    ( $zip->readFromFileHandle($fh, $progname) == Archive::Zip::AZ_OK() )
+        or die qq[Error reading zip archive "$progname"];
     Archive::Zip::setChunkSize(64 * 1024);
 
     push @PAR::LibCache, $zip;
@@ -694,12 +698,12 @@ Usage: $0 [ -Alib.par ] [ -Idir ] [ -Mmodule ] [ src.par ] [ program.pl ]
 
 sub CreatePath {
     my ($name) = @_;
-    
+
     require File::Basename;
     my ($basename, $path, $ext) = File::Basename::fileparse($name, ('\..*'));
-    
+
     require File::Path;
-    
+
     File::Path::mkpath($path) unless(-e $path); # mkpath dies with error
 }
 
@@ -774,28 +778,28 @@ sub _set_par_temp {
         my $stmpdir = "$path$Config{_delim}par-".unpack("H*", $username);
         mkdir $stmpdir, 0755;
         if (!$ENV{PAR_CLEAN} and my $mtime = (stat($progname))[9]) {
-            open (my $fh, "<". $progname);
+            open my $fh, "<:raw", $progname or die qq[Can't read "$progname": $!];
             seek $fh, -18, 2;
-            sysread $fh, my $buf, 6;
+            my $buf;
+            read $fh, $buf, 6;
             if ($buf eq "\0CACHE") {
                 seek $fh, -58, 2;
-                sysread $fh, $buf, 41;
+                read $fh, $buf, 41;
                 $buf =~ s/\0//g;
-                $stmpdir .= "$Config{_delim}cache-" . $buf;
+                $stmpdir .= "$Config{_delim}cache-$buf";
             }
             else {
-                my $digest = eval 
+                my $digest = eval
                 {
-                    require Digest::SHA; 
+                    require Digest::SHA;
                     my $ctx = Digest::SHA->new(1);
-                    open(my $fh, "<", $progname);
-                    binmode($fh);
+                    open my $fh, "<:raw", $progname or die qq[Can't read "$progname": $!];
                     $ctx->addfile($fh);
                     close($fh);
                     $ctx->hexdigest;
                 } || $mtime;
 
-                $stmpdir .= "$Config{_delim}cache-$digest"; 
+                $stmpdir .= "$Config{_delim}cache-$digest";
             }
             close($fh);
         }
@@ -814,9 +818,9 @@ sub _set_par_temp {
 
 
 # check if $name (relative to $par_temp) already exists;
-# if not, create a file with a unique temporary name, 
+# if not, create a file with a unique temporary name,
 # fill it with $contents, set its file mode to $mode if present;
-# finaly rename it to $name; 
+# finaly rename it to $name;
 # in any case return the absolute filename
 sub _tempfile {
     my ($name, $contents, $mode) = @_;
@@ -825,16 +829,15 @@ sub _tempfile {
     unless (-e $fullname) {
         my $tempname = "$fullname.$$";
 
-        open my $fh, '>', $tempname or die "can't write $tempname: $!";
-        binmode $fh;
+        open my $fh, '>:raw', $tempname or die qq[Can't write "$tempname": $!];
         print $fh $contents;
         close $fh;
         chmod $mode, $tempname if defined $mode;
 
         rename($tempname, $fullname) or unlink($tempname);
-        # NOTE: The rename() error presumably is something like ETXTBSY 
+        # NOTE: The rename() error presumably is something like ETXTBSY
         # (scenario: another process was faster at extraction $fullname
-        # than us and is already using it in some way); anyway, 
+        # than us and is already using it in some way); anyway,
         # let's assume $fullname is "good" and clean up our copy.
     }
 
@@ -940,7 +943,7 @@ require PAR;
 unshift @INC, \&PAR::find_par;
 PAR->import(@par_args);
 
-die qq(par.pl: Can't open perl script "$progname": No such file or directory\n)
+die qq[par.pl: Can't open perl script "$progname": No such file or directory\n]
     unless -e $progname;
 
 do $progname;
