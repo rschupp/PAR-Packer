@@ -155,7 +155,7 @@ followed by a 8-bytes magic string: "C<\012PAR.pm\012>".
 =cut
 
 
-my ($PAR_MAGIC, $par_temp, $progname, @tmpfile);
+my ($PAR_MAGIC, $par_temp, $progname, @tmpfile, %ModuleCache);
 END { if ($ENV{PAR_CLEAN}) {
     require File::Temp;
     require File::Basename;
@@ -293,7 +293,7 @@ my ($start_pos, $data_pos);
         }
         else {
             $require_list{$fullname} =
-            $PAR::Heavy::ModuleCache{$fullname} = {
+            $ModuleCache{$fullname} = {
                 buf => $buf,
                 crc => $crc,
                 name => $fullname,
@@ -556,7 +556,7 @@ if ($out) {
                     last;
                 }
                 elsif (m!^/loader/[^/]+/(.*[^Cc])\Z!) {
-                    if (my $ref = $PAR::Heavy::ModuleCache{$1}) {
+                    if (my $ref = $ModuleCache{$1}) {
                         ($file, $name) = ($ref, $1);
                         last;
                     }
