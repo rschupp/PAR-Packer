@@ -283,12 +283,12 @@ my ($start_pos, $data_pos);
         read _FH, $buf, unpack("N", $buf);
 
         if (defined($ext) and $ext !~ /\.(?:pm|pl|ix|al)$/i) {
-            my $filename = _tempfile("$crc$ext", $buf, 0755);
+            my $filename = _save_as("$crc$ext", $buf, 0755);
             $PAR::Heavy::FullCache{$fullname} = $filename;
             $PAR::Heavy::FullCache{$filename} = $fullname;
         }
         elsif ( $fullname =~ m|^/?shlib/| and defined $ENV{PAR_TEMP} ) {
-            my $filename = _tempfile("$basename$ext", $buf, 0755);
+            my $filename = _save_as("$basename$ext", $buf, 0755);
             outs("SHLIB: $filename\n");
         }
         else {
@@ -320,7 +320,7 @@ my ($start_pos, $data_pos);
             return $fh;
         }
         else {
-            my $filename = _tempfile("$info->{crc}.pm", $info->{buf});
+            my $filename = _save_as("$info->{crc}.pm", $info->{buf});
 
             open my $fh, '<:raw', $filename or die qq[Can't read "$filename": $!];
             return $fh;
@@ -819,7 +819,7 @@ sub _set_par_temp {
 # fill it with $contents, set its file mode to $mode if present;
 # finaly rename it to $name;
 # in any case return the absolute filename
-sub _tempfile {
+sub _save_as {
     my ($name, $contents, $mode) = @_;
 
     my $fullname = "$par_temp/$name";
