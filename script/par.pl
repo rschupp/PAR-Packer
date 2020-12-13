@@ -161,7 +161,7 @@ END { if ($ENV{PAR_CLEAN}) {
     require File::Basename;
     require File::Spec;
     my $topdir = File::Basename::dirname($par_temp);
-    outs(qq{Removing files in "$par_temp"});
+    outs(qq[Removing files in "$par_temp"]);
     File::Find::finddepth(sub { ( -d ) ? rmdir : unlink }, $par_temp);
     rmdir $par_temp;
     # Don't remove topdir because this causes a race with other apps
@@ -181,8 +181,10 @@ END { if ($ENV{PAR_CLEAN}) {
             SUFFIX => '.cmd',
             UNLINK => 0,
         );
+        my $filename = $tmp->filename;
 
-        print $tmp "#!/bin/sh
+        print $tmp <<"...";
+#!/bin/sh
 x=1; while [ \$x -lt 10 ]; do
    rm -rf '$par_temp'
    if [ \! -d '$par_temp' ]; then
@@ -191,14 +193,14 @@ x=1; while [ \$x -lt 10 ]; do
    sleep 1
    x=`expr \$x + 1`
 done
-rm '" . $tmp->filename . "'
-";
-            chmod 0700,$tmp->filename;
-        my $cmd = $tmp->filename . ' >/dev/null 2>&1 &';
+rm '$filename'
+...
         close $tmp;
+
+        chmod 0700, $filename;
+        my $cmd = "$filename >/dev/null 2>&1 &";
         system($cmd);
-        outs(qq(Spawned background process to perform cleanup: )
-             . $tmp->filename);
+        outs(qq[Spawned background process to perform cleanup: $filename]);
     }
 } }
 
@@ -273,7 +275,7 @@ my ($start_pos, $data_pos);
         read _FH, $buf, unpack("N", $buf);
 
         my $fullname = $buf;
-        outs(qq(Unpacking file "$fullname"...));
+        outs(qq[Unpacking FILE "$fullname"...]);
         my $crc = ( $fullname =~ s|^([a-f\d]{8})/|| ) ? $1 : undef;
         my ($basename, $ext) = ($buf =~ m|(?:.*/)?(.*)(\..*)|);
 
@@ -567,11 +569,8 @@ if ($out) {
 
             next unless defined $name and not $written{$name}++;
             next if !ref($file) and $file =~ /\.\Q$lib_ext\E$/;
-            outs( join "",
-                qq(Packing "), ref $file ? $file->{name} : $file,
-                qq("...)
-            );
 
+            outs(sprintf(qq[Packing FILE "%s"...], ref $file ? $file->{name} : $file));
             my $content;
             if (ref($file)) {
                 $content = $file->{buf};
@@ -588,14 +587,12 @@ if ($out) {
                 PAR::Filter::PatchContent->new->apply(\$content, $file, $name);
             }
 
-            outs(qq(Written as "$name"));
-            $fh->print("FILE");
-            $fh->print(pack('N', length($name) + 9));
-            $fh->print(sprintf(
-                "%08x/%s", Archive::Zip::computeCRC32($content), $name
-            ));
-            $fh->print(pack('N', length($content)));
-            $fh->print($content);
+            $fh->print("FILE",
+                       pack('N', length($name) + 9),
+                       sprintf("%08x/%s", Archive::Zip::computeCRC32($content), $name),
+                       pack('N', length($content)),
+                       $content);
+            outs(qq[Written as "$name"]);
         }
     }
     # }}}
@@ -657,7 +654,7 @@ if ($out) {
     $PAR::LibCache{$progname} = $zip;
 
     $quiet = !$ENV{PAR_DEBUG};
-    outs(qq(\$ENV{PAR_TEMP} = "$ENV{PAR_TEMP}"));
+    outs(qq[\$ENV{PAR_TEMP} = "$ENV{PAR_TEMP}"]);
 
     if (defined $ENV{PAR_TEMP}) { # should be set at this point!
         foreach my $member ( $zip->members ) {
@@ -674,9 +671,9 @@ if ($out) {
             my $extract_name = $1;
             my $dest_name = File::Spec->catfile($ENV{PAR_TEMP}, $extract_name);
             if (-f $dest_name && -s _ == $member->uncompressedSize()) {
-                outs(qq(Skipping "$member_name" since it already exists at "$dest_name"));
+                outs(qq[Skipping "$member_name" since it already exists at "$dest_name"]);
             } else {
-                outs(qq(Extracting "$member_name" to "$dest_name"));
+                outs(qq[Extracting "$member_name" to "$dest_name"]);
                 $member->extractToFileNamed($dest_name);
                 chmod(0555, $dest_name) if $^O eq "hpux";
             }
