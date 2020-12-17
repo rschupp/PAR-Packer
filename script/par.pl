@@ -534,41 +534,49 @@ if ($out) {
                            $_ ne $Config::Config{privlibexp});
                        } @INC;
 
+        # normalize paths (remove trailing or multiple consecutive slashes)
+        s|/+|/|g, s|/$|| foreach @inc;
+
         # Now determine the files loaded above by require_modules():
         # Perl source files are found in values %INC and DLLs are
         # found in @DynaLoader::dl_shared_objects.
         my %files;
         $files{$_}++ for @DynaLoader::dl_shared_objects, values %INC;
 
-        my $lib_ext = $Config::Config{lib_ext};
+        my $lib_ext = $Config::Config{lib_ext};         # XXX lib_ext vs dlext ?
         my %written;
 
-        foreach (sort keys %files) {
-            my ($name, $file);
+        foreach my $key (sort keys %files) {
+            my ($file, $name);
 
-            foreach my $dir (@inc) {
-                if ($name = $PAR::Heavy::FullCache{$_}) {
-                    $file = $_;
-                    last;
-                }
-                elsif (/^(\Q$dir\E\/(.*[^Cc]))\Z/i) {
-                    ($file, $name) = ($1, $2);
-                    last;
-                }
-                elsif (m!^/loader/[^/]+/(.*[^Cc])\Z!) {
-                    if (my $ref = $ModuleCache{$1}) {
-                        ($file, $name) = ($ref, $1);
+            if (defined(my $fc = $PAR::Heavy::FullCache{$key})) {
+                ($file, $name) = ($key, $fc);
+            }
+            else {
+                foreach my $dir (@inc) {
+                    if ($key =~ m|^\Q$dir\E/(.*)$|i) {
+                        ($file, $name) = ($key, $1);
                         last;
                     }
-                    elsif (-f "$dir/$1") {
-                        ($file, $name) = ("$dir/$1", $1);
-                        last;
+                    if ($key =~ m|^/loader/[^/]+/(.*)$|) {
+                        if (my $ref = $ModuleCache{$1}) {
+                            ($file, $name) = ($ref, $1);
+                            last;
+                        }
+                        if (-f "$dir/$1") {
+                            ($file, $name) = ("$dir/$1", $1);
+                            last;
+                        }
                     }
                 }
             }
+            # There are legitimate reasons why we couldn't find $name and $file for a $key:
+            # - cperl has e.g. $INC{"XSLoader.pm"} = "XSLoader.c",
+            #   $INC{"DynaLoader.pm"}' = "dlboot_c.PL"
+            next unless defined $name;
 
-            next unless defined $name and not $written{$name}++;
-            next if !ref($file) and $file =~ /\.\Q$lib_ext\E$/;
+            next if $written{$name}++;
+            next if !ref($file) and $file =~ /\.\Q$lib_ext\E$/i;
 
             outs(sprintf(qq[Packing FILE "%s"...], ref $file ? $file->{name} : $file));
             my $content;
@@ -705,7 +713,6 @@ sub CreatePath {
 }
 
 sub require_modules {
-    #local $INC{'Cwd.pm'} = __FILE__ if $^O ne 'MSWin32';
 
     require lib;
     require DynaLoader;
