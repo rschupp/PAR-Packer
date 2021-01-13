@@ -1,3 +1,23 @@
+1.052  2021-01-13
+
+- add note that --filter and __DATA__ are incompatible (cf. #36, #39)
+
+- change bugtracker to GitHub issues
+
+- when embedding FILEs, normalize paths in @INC
+
+- code cleanup:
+    - rename _tempfile() to _save_as()
+    - there is no $PAR::Heavy::ModuleCache, so make it a "my" variable
+    - consistent formatting in outs() calls
+    - demystify reading <$fh> with $/ = \$number: use "read $fh, $buf, $number" instead
+    - use "open $fh, '<:raw', ..." instead of "open $fh, '<', ...; binmode($fh);"
+    - make error messages more consistent
+
+- make extract-embedded.pl more robust
+
+- t/90-rt129312.t fails when Archive::Unzip::Burst is used
+
 1.051  2020-11-29
 
 - Fix #27: "pp -u broken in perl 5.32"
