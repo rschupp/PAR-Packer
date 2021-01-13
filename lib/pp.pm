@@ -287,6 +287,11 @@ If you are more serious about hiding your source code, you should have
 a look at Steve Hay's L<PAR::Filter::Crypto> module. Make sure you
 understand the Filter::Crypto caveats!
 
+Note: Most filters are incompatible with C<__DATA__> sections in your source.
+The packed executable typically aborts with an error message like
+
+  readline() on unopened filehandle DATA at (eval 13) line 3.
+
 =item B<-g>, B<--gui>
 
 Build an executable that does not have a console window. This option is
@@ -330,6 +335,8 @@ to select the files in the archive which should be filtered. Example:
 This creates a binary executable F<foo.exe> from F<foo.pl> packaging all files
 as usual except for files ending in C<warnings.pm> which are filtered with
 L<PAR::Filter::Bleach>.
+
+Note: The same restriction on C<__DATA__> sections holds as for B<--filter>.
 
 =item B<-M>, B<--module>=I<MODULE>
 
