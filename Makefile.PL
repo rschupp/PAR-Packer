@@ -97,7 +97,7 @@ WriteMakefile1(
           web  => 'https://github.com/rschupp/PAR-Packer',
         },
         MailingList => 'mailto:par@perl.org',
-        bugtracker => { web => 'https://rt.cpan.org/Dist/Display.html?Queue=PAR-Packer' },
+        bugtracker => { web => 'https://github.com/rschupp/PAR-Packer/issues' },
       },
       no_index => {
         directory => [ 'contrib' ],
@@ -108,8 +108,8 @@ WriteMakefile1(
 # inhibit parallel make as modules must be installed into blib *before*
 # recursing into myldr (i.e. target pm_to_blib must have finished
 # before subdirs is started)
-sub MY::postamble 
-{ 
+sub MY::postamble
+{
     return <<'...'
 # GNU make and others
 .NOTPARALLEL:
