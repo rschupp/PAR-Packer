@@ -41,11 +41,11 @@ sub find_file {
     foreach my $path (@paths) {
 	    $libperl = catfile($path, $file);
     	return $libperl if -e $libperl;
-        
+
     	# for MinGW
 	    $libperl = catfile($path, $1) if $file =~ /^lib(.+)/;
     	return $libperl if -e $libperl;
-        
+
        	# for Cygwin
     	$libperl = catfile($path, $file.$Config{_a});
     	return $libperl if -e $libperl;
@@ -170,11 +170,11 @@ $boot_ldflags .= " $static_ldflags";
 if ($dynperl) {
     # on Debian derived distros make sure that the Debian package "libperl-dev"
     # is installed (which contains the /usr/lib/libperl.so symlink)
-    die qq[You need to install the distro (Debian, Ubuntu etc) package "libperl-dev"\n] 
+    die qq[You need to install the distro (Debian, Ubuntu etc) package "libperl-dev"\n]
        if $^O =~ /^(linux|gnukfreebsd)$/i
-          && -x "/usr/bin/dpkg"                 
+          && -x "/usr/bin/dpkg"
                 # probably Debian or a derivative
-          && system("dpkg -S $^X >/dev/null 2>&1") == 0 
+          && system("dpkg -S $^X >/dev/null 2>&1") == 0
                 # we're building with the system (distro) perl
           && system("dpkg -l libperl-dev >/dev/null 2>&1") != 0;
                 # check install status of libperl-dev
@@ -201,7 +201,7 @@ $sha1_defines .= qq[ -DU64TYPE="$Config{u64type}"]
 # Determine whether we can find a config.h. If yes, include it in
 # usernamefrompwuid.h. If not, set I_PWD to undefined in that header.
 # -- Steffen
-my $configh = "$Config::Config{archlibexp}/CORE/config.h";
+my $configh = "$Config{archlibexp}/CORE/config.h";
 open PWOUT, '> usernamefrompwuid.h' or die "open 'usernamefrompwuid.h': $!";
 if (not -f $configh) {
     print PWOUT "#undef I_PWD\n";
@@ -264,7 +264,7 @@ $par_exe: \$(OBJECTS)
 	$mt_cmd
 
 my_par_pl.c: $par_pl
-	\$(PERLRUN) par_pl2c.pl my_par_pl < $par_pl > \$@ 
+	\$(PERLRUN) par_pl2c.pl my_par_pl < $par_pl > \$@
 
 $parl_exe: $par
 	\$(PERLRUN) -Mblib=.. run_with_inc.pl $par -q -B -O\$@
@@ -290,7 +290,7 @@ EOT
         for ($^O)
         {
             # sane platforms: use "ldd"
-            if (/linux|solaris|freebsd|openbsd|cygwin/i) 
+            if (/linux|solaris|freebsd|openbsd|cygwin/i)
             {
                 print STDERR qq[# using "ldd" to find shared libraries needed by $par_exe\n];
                 $method = "ldd";
@@ -298,8 +298,8 @@ EOT
             }
             # Mac OS X: use "otool -L" if available
             # Note: old versions of otool don't accept --version
-            if (/darwin/i && (qx(otool --version 2>&1)   
-                              || qx(otool -h /bin/ls 2>&1), $? == 0)) 
+            if (/darwin/i && (qx(otool --version 2>&1)
+                              || qx(otool -h /bin/ls 2>&1), $? == 0))
             {
                 print STDERR qq[# using "otool -L" to find shared libraries needed by $par_exe\n];
                 $method = "otool";

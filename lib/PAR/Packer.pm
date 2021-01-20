@@ -108,8 +108,7 @@ sub set_options {
 #    $self->{parl} ||= $self->_extract_parl('PAR::StrippedPARL::Static')
 #      or die("Can't find par loader");
 #   $self->{parl_is_temporary} = 1;
-    $self->{dynperl} ||=
-      $Config{useshrplib} && ($Config{useshrplib} ne 'false');
+    $self->{dynperl} ||= $Config{useshrplib} && ($Config{useshrplib} ne 'false');
     $self->{script_name} = $opt{script_name} || $0;
 }
 
@@ -1490,7 +1489,7 @@ sub _chase_lib {
 
    $file = abs_path($file);
 
-   while ($Config::Config{d_symlink} and -l $file) {
+   while ($Config{d_symlink} and -l $file) {
        if ($file =~ /^(.*?\.\Q$Config{dlext}\E\.\d+)\..*/) {
            return $1 if -e $1;
        }

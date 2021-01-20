@@ -78,7 +78,7 @@ sub can_run {
     my $_cmd = $cmd;
     return $_cmd if (-x $_cmd or $_cmd = MM->maybe_command($_cmd));
 
-    for my $dir ((split /$Config::Config{path_sep}/, $ENV{PATH}), '.') {
+    for my $dir ((split /$Config{path_sep}/, $ENV{PATH}), '.') {
         my $abs = catfile($dir, $_[1]);
         return $abs if (-x $abs or $abs = MM->maybe_command($abs));
     }

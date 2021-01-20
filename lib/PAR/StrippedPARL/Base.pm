@@ -7,7 +7,7 @@ our $VERSION = '0.975';
 use File::Temp ();
 use File::Spec;
 use Cwd;
-use Config ();
+use Config;
 
 =head1 NAME
 
@@ -54,7 +54,7 @@ sub write_parl {
 
     # write out to a temporary file first
     my ($fh, $tfile) = File::Temp::tempfile(
-        "parlXXXX", SUFFIX => $Config::Config{_exe}||'', TMPDIR => 1, UNLINK => 1);
+        "parlXXXX", SUFFIX => $Config{_exe}||'', TMPDIR => 1, UNLINK => 1);
     close $fh;
 
     if (not $class->write_raw($tfile)) {
@@ -90,7 +90,7 @@ Returns the empty list on failure.
 
 sub get_raw {
     my $class = shift;
-    my $pos = $class->_data_pos(); 
+    my $pos = $class->_data_pos();
     if (not defined $pos) {
         warn "${class}->_data_pos() did not return the original tell() position of the DATA file handle";
         return();
@@ -155,7 +155,7 @@ Audrey Tang E<lt>cpan@audreyt.orgE<gt>
 
 Copyright 2006-2009 by Steffen Mueller E<lt>smueller@cpan.orgE<gt>.
 
-This program is free software; you can redistribute it and/or 
+This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 See F<LICENSE>.

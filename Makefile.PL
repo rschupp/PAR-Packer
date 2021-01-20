@@ -4,6 +4,7 @@ use warnings;
 
 use ExtUtils::MakeMaker;
 use ExtUtils::CBuilder;
+use Config;
 
 if ($] == 5.010000) {
     # 5.10.0 breaks how PAR intercepts loading of shared libraries
@@ -17,7 +18,7 @@ if ($] == 5.010000) {
 sub if_win { return ($^O eq 'MSWin32') ? @_ : (); }
 
 my $have_cc = ExtUtils::CBuilder->new->have_compiler;
-warn "No compiler found, won't generate 'script/parl$Config::Config{_exe}!\n"
+warn "No compiler found, won't generate 'script/parl$Config{_exe}!\n"
     unless $have_cc;
 
 WriteMakefile1(
