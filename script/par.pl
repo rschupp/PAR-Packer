@@ -292,12 +292,12 @@ my ($start_pos, $data_pos);
             outs("SHLIB: $filename\n");
         }
         else {
-            $require_list{$fullname} =
             $ModuleCache{$fullname} = {
                 buf => $buf,
                 crc => $crc,
                 name => $fullname,
             };
+            $require_list{$fullname}++;
         }
         read _FH, $buf, 4;
     }
@@ -308,7 +308,10 @@ my ($start_pos, $data_pos);
 
         return if ref $module or !$module;
 
-        my $info = delete $require_list{$module} or return;
+        my $info = $ModuleCache{$module};
+        return unless $info;
+
+        delete $require_list{$module};
 
         $INC{$module} = "/loader/$info/$module";
 
@@ -321,6 +324,7 @@ my ($start_pos, $data_pos);
         }
         else {
             my $filename = _save_as("$info->{crc}.pm", $info->{buf});
+            $info->{file} = $filename;
 
             open my $fh, '<:raw', $filename or die qq[Can't read "$filename": $!];
             return $fh;
