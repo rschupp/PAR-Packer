@@ -758,28 +758,37 @@ sub _set_par_temp {
         return;
     }
 
+    #  non-windows should not have LOCALAPPDATA, but just to be sure...
+    my @paths = $^O eq 'MSWin32'
+     ? qw( PAR_TMPDIR LOCALAPPDATA TMPDIR TEMPDIR TEMP TMP )
+     : qw( PAR_TMPDIR TMPDIR TEMPDIR TEMP TMP );
+
     foreach my $path (
-        (map $ENV{$_}, qw( PAR_TMPDIR TMPDIR TEMPDIR TEMP TMP )),
-        qw( C:\\TEMP /tmp . )
+        (map $ENV{$_}, @paths),
+        qw( /tmp . )
     ) {
         next unless defined $path and -d $path and -w $path;
         my $username;
-        my $pwuid;
-        # does not work everywhere:
-        eval {($pwuid) = getpwuid($>) if defined $>;};
 
-        if ( defined(&Win32::LoginName) ) {
-            $username = &Win32::LoginName;
-        }
-        elsif (defined $pwuid) {
-            $username = $pwuid;
+        #  match code in mktempdir.c
+        my $stmpdir;
+        if ( $^O eq 'MSWin32' ) {
+            $stmpdir = "$path$Config{_delim}pp"
         }
         else {
-            $username = $ENV{USERNAME} || $ENV{USER} || 'SYSTEM';
+            my $pwuid;
+            # does not work everywhere:
+            eval {($pwuid) = getpwuid($>) if defined $>;};
+            if (defined $pwuid) {
+                $username = $pwuid;
+            }
+            else {
+                $username = $ENV{USERNAME} || $ENV{USER} || 'SYSTEM';
+            }
+            $username =~ s/\W/_/g;
+            $stmpdir = "$path$Config{_delim}par-".unpack("H*", $username);
         }
-        $username =~ s/\W/_/g;
 
-        my $stmpdir = "$path$Config{_delim}par-".unpack("H*", $username);
         mkdir $stmpdir, 0755;
         if (!$ENV{PAR_CLEAN} and my $mtime = (stat($progname))[9]) {
             open my $fh, "<:raw", $progname or die qq[Can't read "$progname": $!];

@@ -77,11 +77,12 @@ char *par_mktmpdir ( char **argv ) {
     /* NOTE: all arrays below are NULL terminated */
     const char *temp_dirs[] = { 
         P_tmpdir, 
-#ifdef WIN32
-        "C:\\TEMP", 
-#endif
         ".", NULL };
-    const char *temp_keys[] = { "PAR_TMPDIR", "TMPDIR", "TEMPDIR", 
+    const char *temp_keys[] = { "PAR_TMPDIR",
+#ifdef WIN32
+                                "LOCALAPPDATA",
+#endif
+                                "TMPDIR", "TEMPDIR", 
                                  "TEMP", "TMP", NULL };
     const char *user_keys[] = { "USER", "USERNAME", NULL };
 
@@ -138,19 +139,6 @@ char *par_mktmpdir ( char **argv ) {
         }
     }
 
-#ifdef WIN32
-    /* Try the windows temp directory */
-    if ( tmpdir == NULL && (val = par_getenv("WinDir")) && strlen(val) ) {
-        char* buf = malloc(strlen(val) + 5 + 1);
-        sprintf(buf, "%s\\temp", val);
-        if (isWritableDir(buf)) {
-            tmpdir = buf;
-        } else {
-            free(buf);
-        }
-    }
-#endif
-
     /* Try default locations */
     for ( i = 0 ; tmpdir == NULL && (val = temp_dirs[i]) && strlen(val) ; i++ ) {
         if ( isWritableDir(val) ) {
@@ -166,14 +154,16 @@ char *par_mktmpdir ( char **argv ) {
         strlen(subdirbuf_suffix) + 1024;
 
     /* stmpdir is what we are going to return; 
-       top_tmpdir is the top $TEMP/par-$USER, needed to build stmpdir.  
+       top_tmpdir is the top $TEMP/par-$USER ($TEMP/pp on Windows),
+       needed to build stmpdir.  
        NOTE: We need 2 buffers because snprintf() can't write to a buffer
        it is also reading from. */
     top_tmpdir = malloc( stmp_len );
-    sprintf(top_tmpdir, "%s%s%s%s", tmpdir, dir_sep, subdirbuf_prefix, username);
 #ifdef WIN32
+    sprintf(top_tmpdir, "%s\\pp", tmpdir);
     _mkdir(top_tmpdir);         /* FIXME bail if error (other than EEXIST) */
 #else
+    sprintf(top_tmpdir, "%s%s%s%s", tmpdir, dir_sep, subdirbuf_prefix, username);
     {
         if (mkdir(top_tmpdir, 0700) == -1 && errno != EEXIST) {
             fprintf(stderr, "%s: creation of private subdirectory %s failed (errno=%i)\n", 
