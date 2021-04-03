@@ -222,15 +222,21 @@ my %sys = (
 );
 
 _set_progname();
+outs(qq[\$progname = "$progname"]);
+
 _set_par_temp();
+outs(qq[\$ENV{PAR_TEMP} = "$ENV{PAR_TEMP}"]);
 
 # Magic string checking and extracting bundled modules {{{
 my ($start_pos, $data_pos);
-{
+MAGIC: {
     local $SIG{__WARN__} = sub {};
 
     # Check file type, get start of data section {{{
-    open _FH, '<:raw', $progname or last;
+    unless (open _FH, '<:raw', $progname) {
+        outs(qq[Can't read from file "$progname"]);  # don't use $! here as it requires Errno.pm
+        last MAGIC;
+    }
 
     # Search for the "\nPAR.pm\n signature backward from the end of the file
     my $buf;
@@ -256,7 +262,10 @@ my ($start_pos, $data_pos);
         }
         $magic_pos -= $chunk_size;
     }
-    last if $magic_pos < 0;
+    if ($magic_pos < 0) {
+        outs(qq[Can't find "$PAR_MAGIC" in file "$progname"]);
+        last MAGIC;
+    }
 
     # Seek 4 bytes backward from the signature to get the offset of the
     # first embedded FILE, then seek to it
@@ -363,7 +372,11 @@ my ($start_pos, $data_pos);
 
     # }}}
 
-    last unless $buf eq "PK\003\004";
+    unless ($buf eq "PK\003\004") {
+        outs(qq[No zip found after FILE section in file "$progname"]);
+        last MAGIC ;
+    }
+
     $start_pos = (tell _FH) - 4;                # start of zip
 }
 # }}}
@@ -667,7 +680,6 @@ if ($out) {
     $PAR::LibCache{$progname} = $zip;
 
     $quiet = !$ENV{PAR_DEBUG};
-    outs(qq[\$ENV{PAR_TEMP} = "$ENV{PAR_TEMP}"]);
 
     if (defined $ENV{PAR_TEMP}) { # should be set at this point!
         foreach my $member ( $zip->members ) {

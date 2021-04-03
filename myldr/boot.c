@@ -278,6 +278,8 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     exit(rc);
 #else
     execvp(my_perl, argv);
+    fprintf(stderr, "%s: exec of %s (custom Perl interpreter) failed (errno=%i)\n", 
+                    argv[0], my_perl, errno);
     DIE;
 #endif
 }
