@@ -5,6 +5,8 @@
 #else
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdio.h>
+#include <stdarg.h>
 #endif
 
 #include "mktmpdir.c"
@@ -158,6 +160,16 @@ char* shell_quote(const char *src)
 }
 #endif
 
+void die(const char *format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    vfprintf(stderr, format, ap);
+    va_end(ap);
+    
+    exit(255);
+}
+
 char pp_version_info[] = "@(#) Packed by PAR::Packer " PAR_PACKER_VERSION;
 
 int main ( int argc, char **argv, char **env )
@@ -178,18 +190,15 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
 #endif
 #endif
 
-#define DIE exit(255)
-
     par_init_env();
 
     stmpdir = par_mktmpdir( argv );	
-    if ( !stmpdir ) DIE;        /* error message has already been printed */
+    if ( !stmpdir ) die("");        /* error message has already been printed */
 
     rc = my_mkdir(stmpdir, 0700);
     if ( rc == -1 && errno != EEXIST) {
-	fprintf(stderr, "%s: creation of private cache subdirectory %s failed (errno= %i)\n", 
-                        argv[0], stmpdir, errno);
- 	DIE;
+	die("%s: creation of private cache subdirectory %s failed (errno= %i)\n", 
+            argv[0], stmpdir, errno);
     }
 
     /* extract embedded_files[0] (i.e. the custom Perl interpreter) 
@@ -197,9 +206,8 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     my_prog = par_findprog(argv[0], strdup(par_getenv("PATH")));
     rc = extract_embedded_file(embedded_files, par_basename(my_prog), stmpdir, &my_perl);
     if (rc == EXTRACT_FAIL) {
-        fprintf(stderr, "%s: extraction of %s (custom Perl interpreter) failed (errno=%i)\n", 
-                            argv[0], my_perl, errno);
-        DIE;
+        die("%s: extraction of %s (custom Perl interpreter) failed (errno=%i)\n", 
+            argv[0], my_perl, errno);
     }
 
     if (rc == EXTRACT_OK)       /* i.e. file didn't already exist */
@@ -239,9 +247,8 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     emb_file = embedded_files + 1;
     while (emb_file->name) {
         if (extract_embedded_file(emb_file, emb_file->name, stmpdir, &my_file) == EXTRACT_FAIL) {
-            fprintf(stderr, "%s: extraction of %s failed (errno=%i)\n", 
-                                argv[0], my_file, errno);
-            DIE;
+            die("%s: extraction of %s failed (errno=%i)\n", 
+                argv[0], my_file, errno);
         }
         emb_file++;
     }
@@ -278,9 +285,8 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     exit(rc);
 #else
     execvp(my_perl, argv);
-    fprintf(stderr, "%s: exec of %s (custom Perl interpreter) failed (errno=%i)\n", 
-                    argv[0], my_perl, errno);
-    DIE;
+    die("%s: exec of %s (custom Perl interpreter) failed (errno=%i)\n", 
+        argv[0], my_perl, errno);
 #endif
 }
 
