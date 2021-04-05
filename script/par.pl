@@ -240,7 +240,7 @@ MAGIC: {
 
     # Search for the "\nPAR.pm\n signature backward from the end of the file
     my $buf;
-    my $size = -s $progname;
+    my $size = -s _FH;
     my $chunk_size = 64 * 1024;
     my $magic_pos;
 
