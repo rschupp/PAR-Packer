@@ -205,8 +205,9 @@ rm '$filename'
 } }
 
 BEGIN {
-    Internals::PAR::BOOT() if defined &Internals::PAR::BOOT;
     $PAR_MAGIC = "\nPAR.pm\n";
+
+    Internals::PAR::BOOT() if defined &Internals::PAR::BOOT;
 
     eval {
 
@@ -239,20 +240,11 @@ MAGIC: {
     }
 
     # Search for the "\nPAR.pm\n signature backward from the end of the file
+    my $chunk_size = 64 * 1024;
     my $buf;
     my $size = -s _FH;
-    my $chunk_size = 64 * 1024;
-    my $magic_pos;
 
-    if ($size <= $chunk_size) {
-        $magic_pos = 0;
-    } elsif ((my $m = $size % $chunk_size) > 0) {
-        $magic_pos = $size - $m;
-    } else {
-        $magic_pos = $size - $chunk_size;
-    }
-    # in any case, $magic_pos is a multiple of $chunk_size
-
+    my $magic_pos = $size - $size % $chunk_size; # NOTE: $magic_pos is a multiple of $chunk_size
     while ($magic_pos >= 0) {
         seek _FH, $magic_pos, 0;
         read _FH, $buf, $chunk_size + length($PAR_MAGIC);
@@ -263,7 +255,7 @@ MAGIC: {
         $magic_pos -= $chunk_size;
     }
     if ($magic_pos < 0) {
-        outs(qq[Can't find "$PAR_MAGIC" in file "$progname"]);
+        outs(qq[Can't find magic string "$PAR_MAGIC" in file "$progname"]);
         last MAGIC;
     }
 
