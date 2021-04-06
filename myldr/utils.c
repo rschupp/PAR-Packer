@@ -82,7 +82,7 @@ char *par_current_exec( void )
 
 
 
-char *par_findprog(char *prog, char *path) {
+char *par_findprog(char *prog, const char *path) {
     char *p, filename[MAXPATHLEN];
     /* char *ret; */ /* Commented out for reason described below */
     int proglen, plen;
@@ -109,26 +109,8 @@ char *par_findprog(char *prog, char *path) {
     /* Special case if prog contains '/' */
     if (strstr(prog, dir_sep)) {
         par_setenv("PAR_PROGNAME", prog);
-        return(prog);
+        return prog;
     }
-
-    /* I'm commenting out this block because using par_current_exec_proc()
-     * ends up breaking the PAR feature of inferring the script-to-be-run
-     * from the name of the executable in case of symlinks because /proc/
-     * has the name of the executable and not that of the symlink.
-     */
-/*
-  #if defined __linux__ || defined __FreeBSD__
-    ret = par_current_exec_proc();
-  #else
-    ret = NULL;
-  #endif
-
-    if( ret != NULL ) {
-        par_setenv( "PAR_PROGNAME", ret );
-        return ret;
-    }
-*/
 
     /* Walk through PATH (path), looking for ourself (prog).
         This fails if we are invoked in an obscure manner;
@@ -136,7 +118,9 @@ char *par_findprog(char *prog, char *path) {
         "/full/path/to" isn't in $PATH.  Of course, I can't think 
         of a situation this will happen. */
     proglen = strlen(prog);
-    p = strtok(path, path_sep);
+    p = strtok(strdup(path), path_sep);         
+    /* Note: use a copy of path as strtok() modifies its first argument */
+
     while ( p != NULL ) {
         if (*p == '\0') p = ".";
 
@@ -154,20 +138,20 @@ char *par_findprog(char *prog, char *path) {
 
         if (plen + 1 + proglen >= MAXPATHLEN) {
             par_setenv("PAR_PROGNAME", prog);
-            return(prog);
+            return prog;
         }
 
         sprintf(filename, "%s%s%s", p, dir_sep, prog);
         if ((stat(filename, &statbuf) == 0) && S_ISREG(statbuf.st_mode) &&
             access(filename, X_OK) == 0) {
                 par_setenv("PAR_PROGNAME", filename);
-                return(strdup(filename));
+                return strdup(filename);
         }
         p = strtok(NULL, path_sep);
     }
 
     par_setenv("PAR_PROGNAME", prog);
-    return(prog);
+    return prog;
 }
 
 
@@ -179,7 +163,7 @@ char *par_basename (const char *name) {
         if (*p == *dir_sep) base = p + 1;
     }
 
-    return (char *)base;
+    return (char*)base;
 }
 
 
@@ -191,7 +175,7 @@ char *par_dirname (const char *path) {
 
     /* Empty or NULL string gets treated as "." */
     if (path == NULL || *path == '\0') {
-        return(strdup("."));
+        return strdup(".");
     }
 
     /* Strip trailing slashes */
@@ -216,11 +200,11 @@ char *par_dirname (const char *path) {
     }
 
     if (endp - path + 2 > sizeof(bname)) {
-        return(NULL);
+        return NULL;
     }
 
     strncpy(bname, path, endp - path + 1);
-    return(bname);
+    return bname;
 }
 
 void par_init_env () {

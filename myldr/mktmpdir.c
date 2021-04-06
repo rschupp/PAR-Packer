@@ -194,7 +194,7 @@ char *par_mktmpdir ( char **argv ) {
     /* Doesn't really work - XXX */
     val = par_getenv( "PATH" );
     if (val != NULL)
-        progname = par_findprog(argv[0], strdup(val));
+        progname = par_findprog(argv[0], val);
     if (progname == NULL)
         progname = argv[0];
 

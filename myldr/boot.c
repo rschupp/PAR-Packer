@@ -203,7 +203,7 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
 
     /* extract embedded_files[0] (i.e. the custom Perl interpreter) 
      * into stmpdir (but under the same basename as argv[0]) */
-    my_prog = par_findprog(argv[0], strdup(par_getenv("PATH")));
+    my_prog = par_findprog(argv[0], par_getenv("PATH"));
     rc = extract_embedded_file(embedded_files, par_basename(my_prog), stmpdir, &my_perl);
     if (rc == EXTRACT_FAIL) {
         die("%s: extraction of %s (custom Perl interpreter) failed (errno=%i)\n", 
