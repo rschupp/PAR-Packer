@@ -1,3 +1,21 @@
+1.053  2022-01-25
+
+- Fix: merge PR #56 from from Philip Kime <Philip@kime.org.uk>:
+  Updating OSX codesign fix util with fix for automatically added ad-hoc signatures on OSX 12+
+
+- Fix: merge PR #42 from Andrew-Kulpa/master:
+  Get exe size from file handle instead of path
+
+- Fix: prevent TABs in literal makefile fragments from being expanded
+
+- Cleanups:
+  - par_findprog(): pass a copy of argument `path´ to strtok()
+  - simplify searching for PAR magic
+  - consolidate die()s
+  - add a test for GitHub #41
+  - add error message when exec'ing the custom perl fails in myldr/boot
+  - untangle %require_list and %ModuleCache
+
 1.052  2021-01-13
 
 - add note that --filter and __DATA__ are incompatible (cf. #36, #39)
