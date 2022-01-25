@@ -1,26 +1,10 @@
-/*
- * Copyright (c) 2019 Todd Philip Kime <Philip@kime.org.uk>
- *
- * Permission to use, copy, modify, and distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- */
+/* -*- C -*- main.c */
 
+/* compile with:
 
-/*
- * Build on OSX 64-bit with:
- * 
- * gcc pp_osx_codesign_fix.c -o pp_osx_codesign_fix.c
- */
+  gcc -std=c99 pp_osx_codesign_fix.c -o pp_osx_codesign_fix
+
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -71,16 +55,58 @@ int main(int argc, char *argv[]) {
   off_t load_commands_offset = header_size;
   uint32_t ncmds = header->ncmds;
 
+  /* 
+     First get rid of any code signature - on OSX 12+, an ad-hoc signature is automatically
+     put into the pp binary and nothing can be done with the headers until this is removed since
+     it otherwise overlaps the string table. The assumption here is that the string table comes last
+     in the load commands but if there is a signature, that's last
+  */ 
+
   off_t current_offset = load_commands_offset;
+  bool found_sig = FALSE;
   for (uint32_t i = 0U; i < ncmds; i++) {
     struct load_command *cmd = load_bytes(obj_file, current_offset, sizeof(struct load_command));
 
+    if (cmd->cmd == LC_CODE_SIGNATURE) {
+      found_sig = TRUE;
+      printf("Found Signature, removing ...\n");
+      
+      /* Zero out the signature itself */
+      struct linkedit_data_command *command = load_bytes(obj_file, current_offset, sizeof(struct linkedit_data_command));
+      write_bytes(obj_file, command->dataoff, command->datasize, calloc(1, command->datasize));
+      free(command);
+
+      /* Remove LC for signature */ 
+      write_bytes(obj_file, current_offset, sizeof(struct linkedit_data_command), calloc(1, 0));
+
+      break;   
+     
+    }
+    current_offset += cmd->cmdsize;
+  }
+
+  if (found_sig) {
+      printf("Rewriting header info ...\n");
+
+      header->ncmds -= 1;
+      header->sizeofcmds -= sizeof(struct linkedit_data_command);
+
+      /* Re-write the header */
+      write_bytes(obj_file, 0, header_size, header);
+  }
+  
+  
+  /* reset offset and start again with the LCs */
+  current_offset = load_commands_offset;
+  for (uint32_t i = 0U; i < ncmds; i++) {
+    struct load_command *cmd = load_bytes(obj_file, current_offset, sizeof(struct load_command));
+
+    /* 
+       __LINKEDIT.File Size = .exe size - __LINKEDIT.File Offset
+       __LINKEDIT.VM Size   = .exe size - __LINKEDIT.File Offset
+    */ 
     if (cmd->cmd == LC_SEGMENT_64) {
       struct segment_command_64 *segment = load_bytes(obj_file, current_offset, sizeof(struct segment_command_64));
-      /* 
-         __LINKEDIT.File Size = .exe size - __LINKEDIT.File Offset
-         __LINKEDIT.VM Size   = .exe size - __LINKEDIT.File Offset
-      */ 
       if (strcmp(segment->segname, "__LINKEDIT") == 0) {
         printf("Correcting __LINKEDIT\n");
         printf("  Old File Size: %i\n", (int)segment->filesize);
@@ -93,10 +119,11 @@ int main(int argc, char *argv[]) {
         free(segment);
       }
     }
-    else if (cmd->cmd == LC_SYMTAB) {
-      /* 
-         LC_SYMTAB.String Table Size = .exe size - String Table Offset
-      */ 
+
+    /* 
+       LC_SYMTAB.String Table Size = .exe size - String Table Offset
+    */ 
+    if (cmd->cmd == LC_SYMTAB) {
       struct symtab_command *symtab = load_bytes(obj_file, current_offset, sizeof(struct symtab_command));
       printf("Correcting LC_SYMTAB\n");
       printf("  Old String Table Size: %i\n", (int)symtab->strsize);
@@ -107,7 +134,6 @@ int main(int argc, char *argv[]) {
     }
     
     current_offset += cmd->cmdsize;
-    free(cmd);
   }
 
   free(header);  
