@@ -1,3 +1,7 @@
+1.054  2022-01-27
+
+- Temporarily disable t/90-gh41.t (system("\\\\?\\some-absolute-path") fails)
+
 1.053  2022-01-25
 
 - Fix: merge PR #56 from from Philip Kime <Philip@kime.org.uk>:
