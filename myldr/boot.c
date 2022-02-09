@@ -94,34 +94,6 @@ uint32_t read_magic(FILE *obj_file, int offset) {
   return magic;
 }
 
-/* Duplicate argv with some changes */
-char **copy_argv(int argc, char *argv[], char *newpath) {
-  int length=0;
-  size_t ptr_args = argc + 1;
-  // New argv[0]
-  length += strlen(newpath);
-  for (int i = 1; i < argc; i++)
-  {
-    length += (strlen(argv[i]) + 1);
-  }
-  char** new_argv = (char**)malloc((ptr_args) * sizeof(char*) + length);
-  // copy argv into the contiguous buffer
-  // first the new argv[0]
-  new_argv[0] = &(((char*)new_argv)[(ptr_args * sizeof(char*))]);
-  strcpy(new_argv[0], newpath);
-
-  length = strlen(newpath);
-  for (int i = 1; i < argc; i++)
-  {
-    new_argv[i] = &(((char*)new_argv)[(ptr_args * sizeof(char*)) + length]);
-    strcpy(new_argv[i], argv[i]);
-    length += (strlen(argv[i]) + 1);
-  }
-  // insert NULL terminating ptr at the end of the ptr array
-  new_argv[ptr_args-1] = NULL;
-  return (new_argv);
-}
-
 /* double slashes in the tmpdir path confuse execve */
 char *sanitise_tmp(char *s) {
   if (s) {
@@ -273,9 +245,8 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     if (magic == FAT_CIGAM || magic == FAT_MAGIC) {
 
       /* Create seperate dir for extracted thin binary*/
-      char *ftmpdir = malloc(strlen(stmpdir)+4);
-      ftmpdir = par_mktmpdir( argv );
-      strcat(ftmpdir, "_FAT");
+      char *ftmpdir = malloc(strlen(stmpdir)+5);
+      sprintf(ftmpdir, "%s%s", stmpdir, "/thin");
       sanitise_tmp(ftmpdir);
       rc = my_mkdir(ftmpdir, 0700);
       if ( rc == -1 && errno != EEXIST) {
@@ -293,25 +264,22 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
       struct stat buffer;
       int exist = stat("/usr/bin/lipo", &buffer);
       if(exist == 0) {
-        char *archthinbin = malloc(strlen(ftmpdir)+strlen(arch)+11);
-        strcat(archthinbin, ftmpdir);
-        strcat(archthinbin, "/biberthin_");
-        strcat(archthinbin, arch);
-        char *lipocmd = malloc(strlen(arch)+strlen(archthinbin)+strlen(my_prog)+40);
-        strcat(lipocmd, "/usr/bin/lipo -extract_family ");
-        strcat(lipocmd, arch);
-        strcat(lipocmd, " -output ");
-        strcat(lipocmd, archthinbin);
-        strcat(lipocmd, " ");
-        strcat(lipocmd, my_prog);
-        system(lipocmd);
+        char *archthinbin = malloc(strlen(ftmpdir)+strlen(par_basename(my_prog))+1);
+        sprintf(archthinbin, "%s/%s", ftmpdir, par_basename(my_prog));
+        char* lipo_argv[] = { "lipo", "-extract_family", arch, "-output", archthinbin, my_prog, NULL };
+	pid_t pid = fork();
+	if ( pid == 0 ) {
+          execve("/usr/bin/lipo", lipo_argv, env);
+        }
+
+        waitpid(pid, NULL, 0);
         free(arch);
 
         /* exec correct thin binary */
         exist = stat(archthinbin, &buffer);
         if(exist == 0) {
-          char **nargv = copy_argv(argc, argv, archthinbin);
-          execve(archthinbin, nargv, env);
+          argv[0] = archthinbin;
+          execve(archthinbin, argv, env);
           die("%s: Cannot execute thin binary %s (errno=%i)\n", argv[0], archthinbin, errno);
         }
         else {
@@ -319,7 +287,7 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
         }
       }
       else {
-	die("%s: Cannot find /usr/bin/lipo to unpack universal binary - do you need install Developer Tools? (errno=%i)\n", argv[0], errno);
+        die("%s: Cannot find /usr/bin/lipo to unpack universal binary - do you need install Developer Tools? (errno=%i)\n", argv[0], errno);
       }
     }
 #endif    
