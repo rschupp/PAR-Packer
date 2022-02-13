@@ -13,6 +13,7 @@
 #include <mach-o/fat.h>
 #include <mach-o/loader.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <stdlib.h>
 #include <string.h> 
 #endif
@@ -94,7 +95,7 @@ uint32_t read_magic(FILE *obj_file, int offset) {
   return magic;
 }
 
-/* double slashes in the tmpdir path confuse execve */
+/* double slashes in the tmpdir path confuse execve on macOS */
 char *sanitise_tmp(char *s) {
   if (s) {
     const char *src = s;
@@ -102,7 +103,7 @@ char *sanitise_tmp(char *s) {
     while ((*dst = *src) != '\0') {
       do {
         src++;
-      } while ((*dst == '/' || *dst == '\\')  && (*src == '/' || *src == '\\'));
+      } while (*dst == '/' && *src == '/');
       dst++;
     }
   }  
@@ -238,57 +239,70 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     my_prog = par_findprog(argv[0], par_getenv("PATH"));
 
 #ifdef __MACH__
-    /* Detect if FAT binary */
-    FILE *obj_file = fopen(my_prog, "rb");
-    uint32_t magic = read_magic(obj_file, 0);
-    fclose(obj_file);
-    if (magic == FAT_CIGAM || magic == FAT_MAGIC) {
+    {
+        /* Detect if FAT binary */
+        FILE *obj_file = fopen(my_prog, "rb");
+        uint32_t magic = read_magic(obj_file, 0);
+        fclose(obj_file);
 
-      /* Create seperate dir for extracted thin binary*/
-      char *ftmpdir = malloc(strlen(stmpdir)+5);
-      sprintf(ftmpdir, "%s%s", stmpdir, "/thin");
-      sanitise_tmp(ftmpdir);
-      rc = my_mkdir(ftmpdir, 0700);
-      if ( rc == -1 && errno != EEXIST) {
-	die("%s: creation of MacOS extracted thin binary private cache subdirectory %s failed (errno= %i)\n", 
-            argv[0], ftmpdir, errno);
-      }
-      
-      /* Get architecture name */
-      size_t size;
-      sysctlbyname("hw.machine", NULL, &size, NULL, 0);
-      char *arch = malloc(size);
-      sysctlbyname("hw.machine", arch, &size, NULL, 0);
+        if (magic == FAT_CIGAM || magic == FAT_MAGIC) 
+        {
+            /* Create separate dir for extracted thin binary*/
+            char *ftmpdir = malloc(strlen(stmpdir) + 5 + 1);
+            sprintf(ftmpdir, "%s%s", stmpdir, "/thin");
+            sanitise_tmp(ftmpdir);
+            rc = my_mkdir(ftmpdir, 0700);
+            if (rc == -1 && errno != EEXIST)
+                die("%s: creation of cache subdirectory "
+                    "for extracted macOS thin binary %s failed (errno= %i)\n", 
+                    argv[0], ftmpdir, errno);
+            
+            /* Get architecture name */
+            size_t size;
+            sysctlbyname("hw.machine", NULL, &size, NULL, 0);
+            char *arch = malloc(size);
+            sysctlbyname("hw.machine", arch, &size, NULL, 0);
 
-      /* Detect if lipo exists, if not die */
-      struct stat buffer;
-      int exist = stat("/usr/bin/lipo", &buffer);
-      if(exist == 0) {
-        char *archthinbin = malloc(strlen(ftmpdir)+strlen(par_basename(my_prog))+1);
-        sprintf(archthinbin, "%s/%s", ftmpdir, par_basename(my_prog));
-        char* lipo_argv[] = { "lipo", "-extract_family", arch, "-output", archthinbin, my_prog, NULL };
-	pid_t pid = fork();
-	if ( pid == 0 ) {
-          execve("/usr/bin/lipo", lipo_argv, env);
+            /* Detect if lipo exists, if not die */
+            struct stat buffer;
+            int exist = stat("/usr/bin/lipo", &buffer);
+            if (exist == -1)
+                die("%s: cannot find /usr/bin/lipo to unpack universal binary - "
+                    "do you need install Developer Tools? (errno=%i)\n", 
+                    argv[0], errno);
+          
+            char *archthinbin = malloc(strlen(ftmpdir) + 1 + strlen(par_basename(my_prog)) + 1);
+            sprintf(archthinbin, "%s/%s", ftmpdir, par_basename(my_prog));
+            char* lipo_argv[] = { "lipo", "-extract_family", arch, "-output", archthinbin, my_prog, NULL };
+            pid_t pid = fork();
+            if (pid == -1) 
+                die("%s: fork failed (errno=%i)\n",  argv[0], errno);
+            if (pid == 0)
+            {
+                /* child */
+                execve("/usr/bin/lipo", lipo_argv, env);
+                exit(1);
+            }
+
+            /* parent */
+            int wstatus;
+            waitpid(pid, &wstatus, 0);
+            if (!(WIFEXITED(wstatus) && WEXITSTATUS(wstatus) == 0))
+                die("%s: extracting %s binary with lipo failed (wstatus=%i)\n",
+                    argv[0], arch, wstatus);
+            free(arch);
+
+            /* exec correct thin binary */
+            exist = stat(archthinbin, &buffer);
+            if (exist == -1)
+                die("%s: cannot find thin binary %s to run (errno=%i)\n", 
+                    argv[0], archthinbin, errno);
+
+            argv[0] = archthinbin;
+            execve(archthinbin, argv, env);
+            die("%s: cannot execute thin binary %s (errno=%i)\n", 
+                argv[0], archthinbin, errno);
         }
-
-        waitpid(pid, NULL, 0);
-        free(arch);
-
-        /* exec correct thin binary */
-        exist = stat(archthinbin, &buffer);
-        if(exist == 0) {
-          argv[0] = archthinbin;
-          execve(archthinbin, argv, env);
-          die("%s: Cannot execute thin binary %s (errno=%i)\n", argv[0], archthinbin, errno);
-        }
-        else {
-          die("%s: Cannot find thin binary %s to run (errno=%i)\n", argv[0], archthinbin, errno);
-        }
-      }
-      else {
-        die("%s: Cannot find /usr/bin/lipo to unpack universal binary - do you need install Developer Tools? (errno=%i)\n", argv[0], errno);
-      }
     }
 #endif    
     
