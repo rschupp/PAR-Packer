@@ -8,6 +8,14 @@
 #include <stdio.h>
 #include <stdarg.h>
 #endif
+#ifdef __MACH__
+#include <sys/sysctl.h>
+#include <mach-o/fat.h>
+#include <mach-o/loader.h>
+#include <sys/stat.h>
+#include <stdlib.h>
+#include <string.h> 
+#endif
 
 #include "mktmpdir.c"
 
@@ -77,6 +85,30 @@ int extract_embedded_file(embedded_file_t *emb_file, const char* ext_name, const
     return EXTRACT_OK;
 }
 
+/* Simple magic number reader for MacOS */
+#ifdef __MACH__
+uint32_t read_magic(FILE *obj_file, int offset) {
+  uint32_t magic;
+  fseek(obj_file, offset, SEEK_SET);
+  fread(&magic, sizeof(uint32_t), 1, obj_file);
+  return magic;
+}
+
+/* double slashes in the tmpdir path confuse execve */
+char *sanitise_tmp(char *s) {
+  if (s) {
+    const char *src = s;
+    char *dst = s;
+    while ((*dst = *src) != '\0') {
+      do {
+        src++;
+      } while ((*dst == '/' || *dst == '\\')  && (*src == '/' || *src == '\\'));
+      dst++;
+    }
+  }  
+  return s;
+}
+#endif
 
 /* turn off automatic globbing of process arguments when using MingW */
 #if defined(WIN32) && defined(__MINGW32__)
@@ -192,7 +224,7 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
 
     par_init_env();
 
-    stmpdir = par_mktmpdir( argv );	
+    stmpdir = par_mktmpdir( argv );
     if ( !stmpdir ) die("");        /* error message has already been printed */
 
     rc = my_mkdir(stmpdir, 0700);
@@ -204,6 +236,62 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     /* extract embedded_files[0] (i.e. the custom Perl interpreter) 
      * into stmpdir (but under the same basename as argv[0]) */
     my_prog = par_findprog(argv[0], par_getenv("PATH"));
+
+#ifdef __MACH__
+    /* Detect if FAT binary */
+    FILE *obj_file = fopen(my_prog, "rb");
+    uint32_t magic = read_magic(obj_file, 0);
+    fclose(obj_file);
+    if (magic == FAT_CIGAM || magic == FAT_MAGIC) {
+
+      /* Create seperate dir for extracted thin binary*/
+      char *ftmpdir = malloc(strlen(stmpdir)+5);
+      sprintf(ftmpdir, "%s%s", stmpdir, "/thin");
+      sanitise_tmp(ftmpdir);
+      rc = my_mkdir(ftmpdir, 0700);
+      if ( rc == -1 && errno != EEXIST) {
+	die("%s: creation of MacOS extracted thin binary private cache subdirectory %s failed (errno= %i)\n", 
+            argv[0], ftmpdir, errno);
+      }
+      
+      /* Get architecture name */
+      size_t size;
+      sysctlbyname("hw.machine", NULL, &size, NULL, 0);
+      char *arch = malloc(size);
+      sysctlbyname("hw.machine", arch, &size, NULL, 0);
+
+      /* Detect if lipo exists, if not die */
+      struct stat buffer;
+      int exist = stat("/usr/bin/lipo", &buffer);
+      if(exist == 0) {
+        char *archthinbin = malloc(strlen(ftmpdir)+strlen(par_basename(my_prog))+1);
+        sprintf(archthinbin, "%s/%s", ftmpdir, par_basename(my_prog));
+        char* lipo_argv[] = { "lipo", "-extract_family", arch, "-output", archthinbin, my_prog, NULL };
+	pid_t pid = fork();
+	if ( pid == 0 ) {
+          execve("/usr/bin/lipo", lipo_argv, env);
+        }
+
+        waitpid(pid, NULL, 0);
+        free(arch);
+
+        /* exec correct thin binary */
+        exist = stat(archthinbin, &buffer);
+        if(exist == 0) {
+          argv[0] = archthinbin;
+          execve(archthinbin, argv, env);
+          die("%s: Cannot execute thin binary %s (errno=%i)\n", argv[0], archthinbin, errno);
+        }
+        else {
+          die("%s: Cannot find thin binary %s to run (errno=%i)\n", argv[0], archthinbin, errno);
+        }
+      }
+      else {
+        die("%s: Cannot find /usr/bin/lipo to unpack universal binary - do you need install Developer Tools? (errno=%i)\n", argv[0], errno);
+      }
+    }
+#endif    
+    
     rc = extract_embedded_file(embedded_files, par_basename(my_prog), stmpdir, &my_perl);
     if (rc == EXTRACT_FAIL) {
         die("%s: extraction of %s (custom Perl interpreter) failed (errno=%i)\n", 
