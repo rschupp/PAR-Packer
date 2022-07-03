@@ -74,7 +74,7 @@ sub write_parl {
 
     system(Cwd::abs_path($tfile), @libs, qw( -q -B ), "-O$file");
     unless ($? == 0) {
-        warn "Failed to execute temporary parl (class $class) in file '$tfile': $!";
+        warn "Failed to execute temporary parl (class $class) '$tfile': \$?=$?";
         return;
     }
     return 1;
