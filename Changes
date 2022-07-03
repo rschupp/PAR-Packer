@@ -1,3 +1,25 @@
+1.055  2022-07-03
+
+- Fix #62: rs6000_71 (AIX) "An offset in the .loader section header is too large."
+  
+  Communicate pp option "--clean" to the generated executable in a
+  different way. Previously this was done by patching "__ENV_PAR_..." strings
+  **in the executable being built** and interpreting these strings in
+  par.pl **at runtime**. Though hacky, this seemingly worked on any OS
+  (without rendering the executable invalid).
+  But the only information ever passed was the value of PAR_CLEAN and this was
+  gleaned at build time from the value of JSONPath $par.clean from META.yml
+  in the zip (set by pp by option "--clean").
+  Instead read and interpret "META.yml" in par.pl **at runtime**.
+
+- Fix: merge PR #58 from Philip@kime.org.uk:
+  
+  Adding support for running MacOS Universal binaries created via 'lipo'
+  from already pp'ed and signed thin binaries
+
+- Make writing stuff more robust: check return value of print() 
+  and close() in some places.
+
 1.054  2022-01-27
 
 - Temporarily disable t/90-gh41.t (system("\\\\?\\some-absolute-path") fails)
