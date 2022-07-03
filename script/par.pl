@@ -258,12 +258,15 @@ MAGIC: {
         outs(qq[Can't find magic string "$PAR_MAGIC" in file "$progname"]);
         last MAGIC;
     }
+    outs("Found PAR magic at position $magic_pos");
 
     # Seek 4 bytes backward from the signature to get the offset of the
     # first embedded FILE, then seek to it
     seek _FH, $magic_pos - 4, 0;
     read _FH, $buf, 4;
-    seek _FH, $magic_pos - 4 - unpack("N", $buf), 0;
+    my $offset = unpack("N", $buf);
+    outs("Offset from start of FILEs is $offset");
+    seek _FH, $magic_pos - 4 - $offset, 0;
     $data_pos = tell _FH;
 
     # }}}
@@ -508,7 +511,8 @@ if ($out) {
         PAR::Filter::PodStrip->apply(\$loader, $0);
     }
 
-    $fh->print($loader);
+    $fh->print($loader)
+        or die qq[Error writing loader to "$out": $!];
     # }}}
 
     # Write bundled modules {{{
@@ -579,9 +583,9 @@ if ($out) {
             }
             else {
                 local $/ = undef;
-                open my $fh, '<:raw', $file or die qq[Can't read "$file": $!];
-                $content = <$fh>;
-                close $fh;
+                open my $th, '<:raw', $file or die qq[Can't read "$file": $!];
+                $content = <$th>;
+                close $th;
 
                 PAR::Filter::PodStrip->apply(\$content, "<embedded>/$name")
                     if !$ENV{PAR_VERBATIM} and $name =~ /\.(?:pm|ix|al)$/i;
@@ -593,30 +597,38 @@ if ($out) {
                        pack('N', length($name) + 9),
                        sprintf("%08x/%s", Archive::Zip::computeCRC32($content), $name),
                        pack('N', length($content)),
-                       $content);
+                       $content)
+                or die qq[Error writing embedded FILE to "$out": $!];
+
             outs(qq[Written as "$name"]);
         }
     }
     # }}}
 
     # Now write out the PAR and magic strings {{{
-    $zip->writeToFileHandle($fh) if $zip;
+    if ($zip) {
+        $zip->writeToFileHandle($fh) == Archive::Zip::AZ_OK
+            or die qq[Error writing zip part of "$out"];
+    }
 
     $cache_name = substr $cache_name, 0, 40;
     if (!$cache_name and my $mtime = (stat($out))[9]) {
         my $ctx = Digest::SHA->new(1);
-        open my $fh, "<:raw", $out;
-        $ctx->addfile($fh);
-        close $fh;
+        open my $th, "<:raw", $out;
+        $ctx->addfile($th);
+        close $th;
 
         $cache_name = $ctx->hexdigest;
     }
-    $cache_name .= "\0" x (41 - length $cache_name);
-    $cache_name .= "CACHE";
-    $fh->print($cache_name);
-    $fh->print(pack('N', $fh->tell - length($loader)));
-    $fh->print($PAR_MAGIC);
-    $fh->close;
+    $cache_name .= "\0" x (40 - length $cache_name);
+    $cache_name .= "\0CACHE";
+    # compute the offset from the end of $loader to end of "...\0CACHE"
+    my $offset = $fh->tell + length($cache_name) - length($loader);
+    $fh->print($cache_name, 
+               pack('N', $offset),
+               $PAR_MAGIC)
+    && $fh->close
+        or die qq[Error writing trailer of "$out": $!];
     chmod 0755, $out;
     # }}}
 
@@ -648,10 +660,13 @@ if ($out) {
     # even if lots of stuff has been appended to the pp'ed exe (e.g. by OSX codesign).
     Archive::Zip::setChunkSize(-s _FH);
     my $zip = Archive::Zip->new;
-    ( $zip->readFromFileHandle($fh, $progname) == Archive::Zip::AZ_OK() )
+    ($zip->readFromFileHandle($fh, $progname) == Archive::Zip::AZ_OK())
         or die qq[Error reading zip archive "$progname"];
     Archive::Zip::setChunkSize(64 * 1024);
 
+    $quiet = !$ENV{PAR_DEBUG};
+
+    outs("Reading META.yml...");
     if (my $meta = $zip->contents('META.yml')) {
         # check par.clean
         $meta =~ s/.*^par:\s*$//ms;
@@ -665,8 +680,8 @@ if ($out) {
     push @PAR::LibCache, $zip;
     $PAR::LibCache{$progname} = $zip;
 
-    $quiet = !$ENV{PAR_DEBUG};
 
+    outs("Extracting zip...");
     if (defined $ENV{PAR_TEMP}) { # should be set at this point!
         foreach my $member ( $zip->members ) {
             next if $member->isDirectory;
@@ -684,8 +699,9 @@ if ($out) {
             if (-f $dest_name && -s _ == $member->uncompressedSize()) {
                 outs(qq[Skipping "$member_name" since it already exists at "$dest_name"]);
             } else {
-                outs(qq[Extracting "$member_name" to "$dest_name"]);
-                $member->extractToFileNamed($dest_name);
+                outs(qq[Extracting "$member_name" to "$dest_name"...]);
+                ($member->extractToFileNamed($dest_name) == Archive::Zip::AZ_OK())
+                    or die qq[Error extracting zip member to "$dest_name"];
                 chmod(0555, $dest_name) if $^O eq "hpux";
             }
         }
@@ -836,9 +852,11 @@ sub _save_as {
     unless (-e $fullname) {
         my $tempname = "$fullname.$$";
 
-        open my $fh, '>:raw', $tempname or die qq[Can't write "$tempname": $!];
-        print $fh $contents;
-        close $fh;
+        my $fh;
+        (open $fh, '>:raw', $tempname)
+        && (print $fh $contents)
+        && (close $fh)
+            or die qq[Error writing "$tempname": $!];
         chmod $mode, $tempname if defined $mode;
 
         rename($tempname, $fullname) or unlink($tempname);
