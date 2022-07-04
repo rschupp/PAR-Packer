@@ -256,7 +256,7 @@ $res_section
 
 clean::
 	-\$(RM_F) boot_embedded_files.c my_par_pl.c
-	-\$(RM_F) $(OBJECTS)
+	-\$(RM_F) \$(OBJECTS)
 	-\$(RM_F) *.opt *.pdb perlxsi.c
 	-\$(RM_F) usernamefrompwuid.h
 	-\$(RM_F) $par_exe $boot_exe @parl_exes Dynamic.pm Static.pm
