@@ -20,6 +20,7 @@
 #else
 #  include <fcntl.h>
 #endif
+#include <string.h>
 #include <stdio.h>
 
 #include "env.c"
@@ -83,9 +84,7 @@ char *par_current_exec( void )
 
 
 char *par_findprog(char *prog, const char *path) {
-    char *p, filename[MAXPATHLEN];
-    /* char *ret; */ /* Commented out for reason described below */
-    int proglen, plen;
+    char *p, *endp, filename[MAXPATHLEN];
     char *par_temp = par_getenv("PAR_TEMP");
 
     /* NOTE: This code is #include'd both from a plain C program (boot.c)
@@ -117,37 +116,35 @@ char *par_findprog(char *prog, const char *path) {
         Basically, execvp( "/full/path/to/prog", "prog", NULL ) and
         "/full/path/to" isn't in $PATH.  Of course, I can't think 
         of a situation this will happen. */
-    proglen = strlen(prog);
-    p = strtok(strdup(path), path_sep);         
-    /* Note: use a copy of path as strtok() modifies its first argument */
 
-    while ( p != NULL ) {
+    /* Note: use a copy of path as strtok() modifies its first argument */
+    for (p = strtok(strdup(path), path_sep); p != NULL;  p = strtok(NULL, path_sep))  {
+        /* an empty PATH element means the current directory */
         if (*p == '\0') p = ".";
 
         if ( par_temp != NULL && ( strcmp(par_temp, p) == 0 ) ) {
-            p = strtok(NULL, path_sep);
             continue;
         }
 
-        plen = strlen(p);
-
         /* strip trailing '/' */
-        while (p[plen-1] == *dir_sep) {
-            p[--plen] = '\0';
+        endp = p + strlen(p) - 1;
+        while (p < endp && *endp == *dir_sep) {
+            *endp ='\0';
+            endp--;
         }
 
-        if (plen + 1 + proglen >= MAXPATHLEN) {
+        if (strlen(p) + 1 + strlen(prog) >= MAXPATHLEN) {
             par_setenv("PAR_PROGNAME", prog);
             return prog;
         }
 
         sprintf(filename, "%s%s%s", p, dir_sep, prog);
-        if ((stat(filename, &statbuf) == 0) && S_ISREG(statbuf.st_mode) &&
-            access(filename, X_OK) == 0) {
+        if (stat(filename, &statbuf) == 0 
+            && S_ISREG(statbuf.st_mode)
+            && access(filename, X_OK) == 0) {
                 par_setenv("PAR_PROGNAME", filename);
                 return strdup(filename);
         }
-        p = strtok(NULL, path_sep);
     }
 
     par_setenv("PAR_PROGNAME", prog);
@@ -156,56 +153,40 @@ char *par_findprog(char *prog, const char *path) {
 
 
 char *par_basename (const char *name) {
-    const char *base = name;
-    const char *p;
-
-    for (p = name; *p; p++) {
-        if (*p == *dir_sep) base = p + 1;
-    }
-
-    return (char*)base;
+    char *base = strrchr(name, *dir_sep);
+    return strdup(base != NULL ? base + 1 : name);
 }
 
 
-
-
 char *par_dirname (const char *path) {
-    static char bname[MAXPATHLEN];
-    register const char *endp;
+    char dname[MAXPATHLEN];
+    char *endp;
 
     /* Empty or NULL string gets treated as "." */
     if (path == NULL || *path == '\0') {
         return strdup(".");
     }
 
-    /* Strip trailing slashes */
-    endp = path + strlen(path) - 1;
-    while (endp > path && *endp == *dir_sep) endp--;
-
-    /* Find the start of the dir */
-    while (endp > path && *endp != *dir_sep) endp--;
-
-    /* Either the dir is "/" or there are no slashes */
-    if (endp == path) {
-        if (*endp == *dir_sep) {
-            return strdup(".");
-        }
-        else {
-            return strdup(dir_sep);
-        }
-    } else {
-        do {
-            endp--;
-        } while (endp > path && *endp == *dir_sep);
-    }
-
-    if (endp - path + 2 > sizeof(bname)) {
+    if (strlen(path) + 1 > sizeof(dname))
         return NULL;
+
+    strcpy(dname, path);
+
+    /* Strip trailing slashes */
+    endp = dname + strlen(dname) - 1;
+    while (endp > dname && *endp == *dir_sep) {
+        *endp = '\0';
+        endp--;
     }
 
-    strncpy(bname, path, endp - path + 1);
-    return bname;
+    endp = strrchr(dname, *dir_sep);
+    if (endp == NULL)
+        return strdup(".");
+    if (endp > dname)
+        *endp = '\0';
+    return strdup(dname);
 }
+
 
 void par_init_env () {
     char *buf;
