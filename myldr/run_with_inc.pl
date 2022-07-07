@@ -10,4 +10,4 @@ $ENV{PAR_TMPDIR} = File::Temp::tempdir(TMPDIR => 1, CLEANUP => 1);
 # then execute it
 splice @ARGV, 1, 0, map { "-I$_" } @INC; 
 system(@ARGV) == 0
-    or die "system(@ARGV) failed: $!\n";
+    or die "system(@ARGV) failed: \$?=$?\n";
