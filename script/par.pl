@@ -929,10 +929,11 @@ sub _par_init_env {
     }
 
     for (qw( SPAWNED TEMP CLEAN DEBUG CACHE PROGNAME ) ) {
-        delete $ENV{'PAR_'.$_};
+        delete $ENV{"PAR_$_"};
     }
+
     for (qw/ TMPDIR TEMP CLEAN DEBUG /) {
-        $ENV{'PAR_'.$_} = $ENV{'PAR_GLOBAL_'.$_} if exists $ENV{'PAR_GLOBAL_'.$_};
+        $ENV{"PAR_$_"} = $ENV{"PAR_GLOBAL_$_"} if exists $ENV{"PAR_GLOBAL_$_"};
     }
 
     my $par_clean = "__ENV_PAR_CLEAN__               ";
