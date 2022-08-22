@@ -477,6 +477,14 @@ if ($out) {
     }
 
 
+    my %env = do {
+        if ($zip and my $meta = $zip->contents('META.yml')) {
+            $meta =~ s/.*^par:$//ms;
+            $meta =~ s/^\S.*//ms;
+            $meta =~ /^  ([^:]+): (.+)$/mg;
+        }
+    };
+
     # Open input and output files {{{
 
     if (defined $par) {
@@ -509,6 +517,16 @@ if ($out) {
     if (!$ENV{PAR_VERBATIM} and $loader =~ /^(?:#!|\@rem)/) {
         require PAR::Filter::PodStrip;
         PAR::Filter::PodStrip->apply(\$loader, $0);
+    }
+
+    foreach my $key (sort keys %env) {
+        my $val = $env{$key} or next;
+        $val = eval $val if $val =~ /^['"]/;
+        my $magic = "__ENV_PAR_" . uc($key) . "__";
+        my $set = "PAR_" . uc($key) . "=$val";
+        $loader =~ s{$magic( +)}{
+            $magic . $set . (' ' x (length($1) - length($set)))
+        }eg;
     }
 
     $fh->print($loader)
@@ -663,19 +681,6 @@ if ($out) {
     ($zip->readFromFileHandle($fh, $progname) == Archive::Zip::AZ_OK())
         or die qq[Error reading zip archive "$progname"];
     Archive::Zip::setChunkSize(64 * 1024);
-
-    $quiet = !$ENV{PAR_DEBUG};
-
-    outs("Reading META.yml...");
-    if (my $meta = $zip->contents('META.yml')) {
-        # check par.clean
-        $meta =~ s/.*^par:\s*$//ms;
-        $meta =~ s/^\S.*//ms;
-        if (my ($clean) = $meta =~ /^\s+clean: (.*)$/m) {
-            $clean =~ /^\s*|\s*$/g;
-            $ENV{PAR_CLEAN} = 1 if $clean;
-        }
-    }
 
     push @PAR::LibCache, $zip;
     $PAR::LibCache{$progname} = $zip;
@@ -924,15 +929,20 @@ sub _par_init_env {
     }
 
     for (qw( SPAWNED TEMP CLEAN DEBUG CACHE PROGNAME ) ) {
-        delete $ENV{"PAR_$_"};
+        delete $ENV{'PAR_'.$_};
+    }
+    for (qw/ TMPDIR TEMP CLEAN DEBUG /) {
+        $ENV{'PAR_'.$_} = $ENV{'PAR_GLOBAL_'.$_} if exists $ENV{'PAR_GLOBAL_'.$_};
     }
 
-    for (qw/ TMPDIR TEMP CLEAN DEBUG /) {
-        $ENV{"PAR_$_"} = $ENV{"PAR_GLOBAL_$_"} if exists $ENV{"PAR_GLOBAL_$_"};
-    }
+    my $par_clean = "__ENV_PAR_CLEAN__               ";
 
     if ($ENV{PAR_TEMP}) {
         delete $ENV{PAR_CLEAN};
+    }
+    elsif (!exists $ENV{PAR_GLOBAL_CLEAN}) {
+        my $value = substr($par_clean, 12 + length("CLEAN"));
+        $ENV{PAR_CLEAN} = $1 if $value =~ /^PAR_CLEAN=(\S+)/;
     }
 }
 
