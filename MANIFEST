@@ -71,6 +71,7 @@ t/80-doublecolon.t
 t/85-crt-glob.t
 t/85-myfile.t
 t/90-gh41.t
+t/90-gh66.t
 t/90-rt101800.t
 t/90-rt103861.t
 t/90-rt104560.t
