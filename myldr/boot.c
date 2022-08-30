@@ -125,7 +125,7 @@ int _CRT_glob = 0;
 /* seek file descriptor fd to member Subsystem (a WORD) of the
  * IMAGE_OPTIONAL_HEADER structure of a Windows executable
  * (so that the next 2 bytes read/written from/to fd get/set Subsystem);
- * cf. sub _fix_console in PAR/Packer.pm 
+ * cf. sub _fix_console in PAR/Packer.pm
  */
 void seek_to_subsystem( int fd ) {
     BYTE buf[64];
@@ -205,6 +205,11 @@ void die(const char *format, ...)
 
 char pp_version_info[] = "@(#) Packed by PAR::Packer " PAR_PACKER_VERSION;
 
+/* the contents of this string (in the executable myldr/boot)
+ * will be patched by script/par.pl if option "--clean" is used with pp
+ */
+static char pass_par_clean[] = "__PASS_PAR_CLEAN__               \0";
+
 int main ( int argc, char **argv, char **env )
 {
     int rc;
@@ -224,6 +229,15 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
 #endif
 
     par_init_env();
+
+    /* check for patched content of pass_par_clean */
+    {
+        char *equals = strchr(pass_par_clean, '=');
+        if (equals != NULL) {
+            equals[2] = '\0';    /* trim value to one byte */
+            par_setenv("PAR_CLEAN", equals + 1);
+        }
+    }
 
     stmpdir = par_mktmpdir( argv );
     if ( !stmpdir ) die("");        /* error message has already been printed */

@@ -382,7 +382,6 @@ my ($out, $bundle, $logfh, $cache_name);
 
 delete $ENV{PAR_APP_REUSE}; # sanitize (REUSE may be a security problem)
 
-$quiet = 0 unless $ENV{PAR_DEBUG};
 # Don't swallow arguments for compiled executables without --par-options
 if (!$start_pos or ($ARGV[0] eq '--par-options' && shift)) {
     my %dist_cmd = qw(
@@ -477,7 +476,8 @@ if ($out) {
     }
 
 
-    my %env = do {
+    # Extract the "par" dictionary from META.yml in $zip
+    my %meta_par = do {
         if ($zip and my $meta = $zip->contents('META.yml')) {
             $meta =~ s/.*^par:$//ms;
             $meta =~ s/^\S.*//ms;
@@ -519,14 +519,16 @@ if ($out) {
         PAR::Filter::PodStrip->apply(\$loader, $0);
     }
 
-    foreach my $key (sort keys %env) {
-        my $val = $env{$key} or next;
-        $val = eval $val if $val =~ /^['"]/;
-        my $magic = "__ENV_PAR_" . uc($key) . "__";
-        my $set = "PAR_" . uc($key) . "=$val";
-        $loader =~ s{$magic( +)}{
-            $magic . $set . (' ' x (length($1) - length($set)))
-        }eg;
+    # Patch a certain string in $loader
+    if ($meta_par{clean}) {
+        my $par_clean = "=1";
+        my $pass_par_clean = uc "__pass_par_clean__";
+        # NOTE: we avoid to mention the contents of pass_par_clean so that
+        # this file doesn't contain it **at all**
+
+        $loader =~ s{(?<=${pass_par_clean})( +)}
+                    {$par_clean . (" " x (length($1) - length($par_clean)))}eg;
+                    # NOTE: the replacement must be the same number of bytes as the match
     }
 
     $fh->print($loader)
@@ -936,14 +938,8 @@ sub _par_init_env {
         $ENV{"PAR_$_"} = $ENV{"PAR_GLOBAL_$_"} if exists $ENV{"PAR_GLOBAL_$_"};
     }
 
-    my $par_clean = "__ENV_PAR_CLEAN__               ";
-
     if ($ENV{PAR_TEMP}) {
         delete $ENV{PAR_CLEAN};
-    }
-    elsif (!exists $ENV{PAR_GLOBAL_CLEAN}) {
-        my $value = substr($par_clean, 12 + length("CLEAN"));
-        $ENV{PAR_CLEAN} = $1 if $value =~ /^PAR_CLEAN=(\S+)/;
     }
 }
 

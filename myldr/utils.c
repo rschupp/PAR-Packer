@@ -189,7 +189,6 @@ char *par_dirname (const char *path) {
 
 
 void par_init_env () {
-    char par_clean[] = "__ENV_PAR_CLEAN__               \0";
     char *buf;
 
     /* ignore PERL5LIB et al. as they make no sense for a self-contained executable */
@@ -219,12 +218,6 @@ void par_init_env () {
     }
     else if ( (buf = par_getenv("PAR_GLOBAL_CLEAN")) != NULL ) {
         par_setenv("PAR_CLEAN", buf);
-    }
-    else {
-        buf = par_clean + 12 + strlen("CLEAN");
-        if (strncmp(buf, "PAR_CLEAN=", strlen("PAR_CLEAN=")) == 0) {
-            par_setenv("PAR_CLEAN", buf + strlen("PAR_CLEAN="));
-        }
     }
 
     par_setenv("PAR_INITIALIZED", "1");
