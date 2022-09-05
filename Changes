@@ -1,3 +1,26 @@
+1.056  2022-09-05
+
+- Fix #66: patch myldr/boot for "pp --clean ..." without side effects
+  
+  - make sure myldr/boot contains exactly one string of the form
+    "__PASS_PAR_CLEAN__               \0" so that there are no
+    duplicates that may get split on chunk boundaries
+    (myldr/boot_embedded_files.c)
+  - simplify patching of this string (in $loader) to
+    "__PASS_PAR_CLEAN__=1             \0" in script/par.pl
+  - add a test for #66 (check for ephemeral vs persistent cache directory)
+
+- Revert "Fixes #62: rs6000_71 (AIX) "An offset in the .loader section header is too large.""
+  
+  PAR_CLEAN is set too late: at this point PAR_TEMP has already
+  been set (and populated) to a persistent cache directory
+  (/tmp/par-USER/cache-SHA1) instead of an ephemeral one (/tmp/par-USER/temp-PID).
+
+- Some code cleanup
+  - replace some magic numbers with constants
+  - use string interpolation (instead of concatenation)
+  - clean up some convoluted C code
+
 1.055  2022-07-03
 
 - Fix #62: rs6000_71 (AIX) "An offset in the .loader section header is too large."
