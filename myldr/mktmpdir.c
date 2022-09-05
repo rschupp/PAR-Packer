@@ -222,6 +222,15 @@ char *par_mktmpdir ( char **argv ) {
     }
 
     if ( !par_env_clean() && (f = open( progname, O_RDONLY | OPEN_O_BINARY ))) {
+        /* TODO The following should implement the full search for the PAR magic 
+         * string ("\nPAR.pm\n") as implemented in find_par_magic() in script/par.pl
+         * and then use that position to look for "\0CACHE".
+         * E.g. signed pp-packed executables don't have "\0CACHE" in position 18 bytes
+         * from the end of the executables.
+         * But in this case the code below will just resort to compute the SHA1 of the 
+         * executable on the fly and thus provide a stable cache directory path
+         * (though perhaps a little less efficient).
+         */
         lseek(f, -18, 2);
         read(f, buf, 6);
         if(buf[0] == 0 && buf[1] == 'C' && buf[2] == 'A' && buf[3] == 'C' && buf[4] == 'H' && buf[5] == 'E') {
