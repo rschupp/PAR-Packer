@@ -14,7 +14,7 @@ $VERSION = $PAR::Packer::VERSION;
 use PAR ();
 use Module::ScanDeps ();
 use App::Packer::PAR ();
-use Getopt::ArgvFile default=>1;
+use Getopt::ArgvFile default=>1, resolveEnvVars=>1;
 use Getopt::Long qw(:config no_ignore_case);
 
 
@@ -156,7 +156,7 @@ You may think of F<pp> as "F<perlcc> that works without hassle". :-)
 
 A GUI interface is also available as the F<tkpp> command.
 
-It does not provide the compilation-step acceleration provided by
+It does B<not> provide the compilation-step acceleration provided by
 F<perlcc> (however, see B<-f> below for byte-compiled, source-hiding
 techniques), but makes up for it with better reliability, smaller
 executable size, and full retrieval of original source code.
@@ -183,6 +183,9 @@ an argument starting with an 'at' (@) sigil. This argument will be
 interpreted as a file to read options from. Mixing ordinary options
 and C<@file> options is possible. This is implemented using the
 L<Getopt::ArgvFile> module, so read its documentation for advanced usage.
+Note that L<Getopt::ArgvFile> is used here with parameter C<resolveEnvVars=1>,
+i.e. substrings of the form C<${>I<FOO>C<}> in the contents of C<@file> are replaced
+with the value of environment variable I<FOO>.
 
 =over 4
 
