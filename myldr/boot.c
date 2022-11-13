@@ -277,14 +277,15 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
             char *arch = malloc(size);
             sysctlbyname("hw.machine", arch, &size, NULL, 0);
 
-            /* Detect if lipo exists, if not die */
+            /* Detect if CLT are installed, if not, die */
+            int x = system("/usr/bin/xcode-select -p 1>/dev/null");
+            if (x != 0) 
+              die("%s: Command Line Tools are not installed - "
+                  "run 'xcode-select --install' to install (errno=%i)\n", 
+                  argv[0], errno);
+
+            int exist;
             struct stat buffer;
-            int exist = stat("/usr/bin/lipo", &buffer);
-            if (exist == -1)
-                die("%s: cannot find /usr/bin/lipo to unpack universal binary - "
-                    "do you need install Developer Tools? (errno=%i)\n", 
-                    argv[0], errno);
-          
             char *archthinbin = malloc(strlen(ftmpdir) + 1 + strlen(par_basename(my_prog)) + 1);
             sprintf(archthinbin, "%s/%s", ftmpdir, par_basename(my_prog));
             char* lipo_argv[] = { "lipo", "-extract_family", arch, "-output", archthinbin, my_prog, NULL };
