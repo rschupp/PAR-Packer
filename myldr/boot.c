@@ -278,7 +278,7 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
             sysctlbyname("hw.machine", arch, &size, NULL, 0);
 
             /* Detect if CLT are installed, if not, die */
-            int x = system("/usr/bin/xcode-select -p 1>/dev/null");
+            int x = system("/usr/bin/xcode-select -p 1>/dev/null 2>/dev/null");
             if (x != 0) 
               die("%s: Command Line Tools are not installed - "
                   "run 'xcode-select --install' to install (errno=%i)\n", 
