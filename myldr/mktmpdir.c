@@ -1,8 +1,6 @@
 #include "mktmpdir.h"
 #include "sha1.h"
 
-#define PAR_TEMP "PAR_TEMP"
-
 #ifdef O_BINARY
 #  define OPEN_O_BINARY O_BINARY
 #else
@@ -96,7 +94,7 @@ char *par_mktmpdir ( char **argv ) {
     unsigned char buf[32768];
     unsigned char sha_data[20];
 
-    if ( (val = par_getenv(PAR_TEMP)) && strlen(val) ) {
+    if ( (val = par_getenv("PAR_TEMP")) && strlen(val) ) {
         par_setup_libpath(val);
         return strdup(val);
     }
@@ -296,7 +294,7 @@ char *par_mktmpdir ( char **argv ) {
     free(top_tmpdir);
 
     /* set dynamic loading path */
-    par_setenv(PAR_TEMP, stmpdir);
+    par_setenv("PAR_TEMP", stmpdir);
 
     par_setup_libpath( stmpdir );
 
