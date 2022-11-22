@@ -49,18 +49,17 @@ int extract_embedded_file(embedded_file_t *emb_file, const char* ext_name, const
     int fd;
     chunk_t *chunk;
     struct stat statbuf;
-    int len = strlen(stmpdir) + 1 + strlen(ext_name);
     char *tmp_path;
 
-    *ext_path = malloc(len + 1);
+    *ext_path = malloc(strlen(stmpdir) + 1 + strlen(ext_name) + 1);
     sprintf(*ext_path, "%s/%s", stmpdir, ext_name);
 
     if (par_lstat(*ext_path, &statbuf) == 0 && statbuf.st_size == emb_file->size )
         return EXTRACT_ALREADY; /* file already exists and has the expected size */
 
-    tmp_path = malloc(len + 1 + 20 + 1); /* 20 decimal digits should be enough to hold up to 2^64-1 */
+    tmp_path = malloc(strlen(*ext_path) + 1 + 20 + 1); 
+                                /* 20 decimal digits should be enough to hold up to 2^64-1 */
     sprintf(tmp_path, "%s.%lu", *ext_path, (unsigned long)getpid());
-
     fd = open(tmp_path, O_CREAT | O_WRONLY | OPEN_O_BINARY, 0755);
     if ( fd == -1 ) 
         return EXTRACT_FAIL;
