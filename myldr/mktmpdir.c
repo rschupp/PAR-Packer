@@ -229,21 +229,28 @@ char *par_mktmpdir ( char **argv ) {
          * executable on the fly and thus provide a stable cache directory path
          * (though perhaps a little less efficient).
          */
-        lseek(f, -18, 2);
-        read(f, buf, 6);
-        if(buf[0] == 0 && buf[1] == 'C' && buf[2] == 'A' && buf[3] == 'C' && buf[4] == 'H' && buf[5] == 'E') {
-            /* pre-computed cache_name in this file */
-            /* "$TEMP/par-$USER/cache-$cache_name" */
+        int have_cache = 1;
+
+        lseek(f, -8, 2);
+        read(f, buf, 8);
+        if (memcmp(buf, "\nPAR.pm\n", 8) != 0)
+            have_cache = 0;
+
+        if (have_cache) {
+            lseek(f, -18, 2);
+            read(f, buf, 6);
+            if (memcmp(buf, "\0CACHE", 6) != 0)
+                have_cache = 0;
+        }
+
+        if (have_cache) {
+            /* pre-computed cache_name */
             lseek(f, -58, 2);
-            read(f, buf, 41);
-            sprintf(
-                stmpdir,
-                "%s%scache-%s%s",
-                top_tmpdir, dir_sep, buf, subdirbuf_suffix
-            );
+            read(f, sha1, 40);
+            sha1[40] = '\0';
         }
         else {
-            /* "$TEMP/par-$USER/cache-$SHA1" */
+            /* compute sha1 on the fly */
 	    lseek(f, 0, 0);
             sha_info = sha_init();
             while( ( j = read( f, buf, sizeof( buf ) ) ) > 0 )
@@ -256,17 +263,16 @@ char *par_mktmpdir ( char **argv ) {
             {
                 sprintf( sha1+k*2, "%02x", sha_data[k] );
             }
-            sha1[40] = '\0';
-            sprintf(
-                stmpdir,
-                "%s%scache-%s%s",
-                top_tmpdir, dir_sep, sha1, subdirbuf_suffix
-            );
         }
+
+        /* "$TEMP/par-$USER/cache-$SHA1" */
+        sprintf(
+            stmpdir,
+            "%s%scache-%s%s",
+            top_tmpdir, dir_sep, sha1, subdirbuf_suffix
+        );
     }
     else {
-        int i = 0;
-
         /* "$TEMP/par-$USER/temp-$PID" */
 
         par_setenv("PAR_CLEAN", "1");
@@ -281,7 +287,7 @@ char *par_mktmpdir ( char **argv ) {
            "$TEMP/par-$USER/temp-$PID-$i". This will guard against cases where
            a prior invocation crashed leaving garbage in a temp directory that
            might interfere. */
-
+        int i = 0;
         while (my_mkdir(stmpdir, 0700) == -1 && errno == EEXIST) {
             sprintf(
                 stmpdir,

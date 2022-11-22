@@ -161,6 +161,7 @@ BEGIN {
     $FILE_offset_size = 4;   # pack("N")
     $cache_marker = "\0CACHE";
     $cache_name_size = 40;
+    $PKZIP_MAGIC = "PK\003\004";
 }
 
 
@@ -178,8 +179,7 @@ sub find_par_magic
         seek $fh, $pos, 0;
         read $fh, $buf, $chunk_size + length($PAR_MAGIC);
         if ((my $i = rindex($buf, $PAR_MAGIC)) >= 0) {
-            $pos += $i;
-            return $pos;
+            return $pos + $i;
         }
         $pos -= $chunk_size;
     }
@@ -259,7 +259,7 @@ _set_par_temp();
 outs(qq[\$ENV{PAR_TEMP} = "$ENV{PAR_TEMP}"]);
 
 # Magic string checking and extracting bundled modules {{{
-my ($start_pos, $data_pos);
+my ($start_pos, $start_of_FILE_section);
 MAGIC: {
     local $SIG{__WARN__} = sub {};
 
@@ -277,6 +277,15 @@ MAGIC: {
     }
     outs("Found PAR magic at position $magic_pos");
 
+    # Check for "\0CACHE" 4 bytes below the signature
+    seek _FH, $magic_pos - $FILE_offset_size - length($cache_marker), 0;
+    read _FH, $buf, length($cache_marker);
+    if ($buf ne $cache_marker) {
+        outs("No cache marker found");
+        last MAGIC;
+    }
+    outs(qq[Cache marker "$buf" found]);
+
     # Seek 4 bytes backward from the signature to get the offset of the
     # first embedded FILE, then seek to it
     seek _FH, $magic_pos - $FILE_offset_size, 0;
@@ -284,7 +293,7 @@ MAGIC: {
     my $offset = unpack("N", $buf);
     outs("Offset from start of FILEs is $offset");
     seek _FH, $magic_pos - $FILE_offset_size - $offset, 0;
-    $data_pos = tell _FH;
+    $start_of_FILE_section = tell _FH;
 
     # }}}
 
@@ -384,7 +393,7 @@ MAGIC: {
 
     # }}}
 
-    unless ($buf eq "PK\003\004") {
+    if ($buf ne $PKZIP_MAGIC) {
         outs(qq[No zip found after FILE section in file "$progname"]);
         last MAGIC ;
     }
@@ -508,7 +517,7 @@ if ($out) {
         open my $ph, '<:raw', $par or die qq[Can't read par file "$par": $!];
         my $buf;
         read $ph, $buf, 4;
-        die qq["$par" is not a par file] unless $buf eq "PK\003\004";
+        die qq["$par" is not a par file] unless $buf eq $PKZIP_MAGIC;
         close $ph;
     }
 
@@ -524,8 +533,8 @@ if ($out) {
     seek _FH, 0, 0;
 
     my $loader;
-    if (defined $data_pos) {
-        read _FH, $loader, $data_pos;
+    if (defined $start_of_FILE_section) {
+        read _FH, $loader, $start_of_FILE_section;
     } else {
         local $/ = undef;
         $loader = <_FH>;
