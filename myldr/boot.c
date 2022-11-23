@@ -207,7 +207,6 @@ char pp_version_info[] = "@(#) Packed by PAR::Packer " PAR_PACKER_VERSION;
 /* the contents of this string (in the executable myldr/boot)
  * will be patched by script/par.pl if option "--clean" is used with pp
  */
-static char pass_par_clean[] = "__PASS_PAR_CLEAN__               \0";
 
 int main ( int argc, char **argv, char **env )
 {
@@ -228,15 +227,6 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
 #endif
 
     par_init_env();
-
-    /* check for patched content of pass_par_clean */
-    {
-        char *equals = strchr(pass_par_clean, '=');
-        if (equals != NULL) {
-            equals[2] = '\0';    /* trim value to one byte */
-            par_setenv("PAR_CLEAN", equals + 1);
-        }
-    }
 
     stmpdir = par_mktmpdir( argv );
     if ( !stmpdir ) die("");        /* error message has already been printed */

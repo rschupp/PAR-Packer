@@ -219,6 +219,7 @@ char *par_mktmpdir ( char **argv ) {
 #undef STREQ
     }
 
+    int use_cache = 0;
     if ( !par_env_clean() && (f = open( progname, O_RDONLY | OPEN_O_BINARY ))) {
         /* TODO The following should implement the full search for the PAR magic 
          * string ("\nPAR.pm\n") as implemented in find_par_magic() in script/par.pl
@@ -229,27 +230,25 @@ char *par_mktmpdir ( char **argv ) {
          * executable on the fly and thus provide a stable cache directory path
          * (though perhaps a little less efficient).
          */
-        int have_cache = 1;
-
         lseek(f, -8, 2);
         read(f, buf, 8);
-        if (memcmp(buf, "\nPAR.pm\n", 8) != 0)
-            have_cache = 0;
-
-        if (have_cache) {
+        if (memcmp(buf, "\nPAR.pm\n", 8) == 0) {
             lseek(f, -18, 2);
             read(f, buf, 6);
-            if (memcmp(buf, "\0CACHE", 6) != 0)
-                have_cache = 0;
+            if (memcmp(buf, "\0CACHE", 6) == 0) {
+                use_cache = 1;
+                /* pre-computed cache_name */
+                lseek(f, -58, 2);
+                read(f, sha1, 40);
+                sha1[40] = '\0';
+            }
+            else if (memcmp(buf, "\0CLEAN", 6) == 0) {
+                par_setenv("PAR_CLEAN", "1");   /* TODO already done below */
+            }
+            /* TODO else die? */
         }
 
-        if (have_cache) {
-            /* pre-computed cache_name */
-            lseek(f, -58, 2);
-            read(f, sha1, 40);
-            sha1[40] = '\0';
-        }
-        else {
+#if 0
             /* compute sha1 on the fly */
 	    lseek(f, 0, 0);
             sha_info = sha_init();
@@ -263,8 +262,9 @@ char *par_mktmpdir ( char **argv ) {
             {
                 sprintf( sha1+k*2, "%02x", sha_data[k] );
             }
-        }
-
+#endif
+    }
+    if (use_cache) {
         /* "$TEMP/par-$USER/cache-$SHA1" */
         sprintf(
             stmpdir,
@@ -274,7 +274,6 @@ char *par_mktmpdir ( char **argv ) {
     }
     else {
         /* "$TEMP/par-$USER/temp-$PID" */
-
         par_setenv("PAR_CLEAN", "1");
         sprintf(
             stmpdir,

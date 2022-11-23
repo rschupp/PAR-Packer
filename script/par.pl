@@ -154,12 +154,11 @@ followed by a 8-bytes magic string: "C<\012PAR.pm\012>".
 
 =cut
 
-my ($PAR_MAGIC, $FILE_offset_size, $CACHE_marker, $cache_name_size);
+my ($PAR_MAGIC, $FILE_offset_size, $cache_name_size);
 # NOTE: must initialize them in BEGIN as they are used in BEGIN below
 BEGIN {
     $PAR_MAGIC = "\nPAR.pm\n";
     $FILE_offset_size = 4;   # pack("N")
-    $cache_marker = "\0CACHE";
     $cache_name_size = 40;
     $PKZIP_MAGIC = "PK\003\004";
 }
@@ -278,9 +277,9 @@ MAGIC: {
     outs("Found PAR magic at position $magic_pos");
 
     # Check for "\0CACHE" 4 bytes below the signature
-    seek _FH, $magic_pos - $FILE_offset_size - length($cache_marker), 0;
-    read _FH, $buf, length($cache_marker);
-    if ($buf ne $cache_marker) {
+    seek _FH, $magic_pos - $FILE_offset_size - length("\0CACHE"), 0;
+    read _FH, $buf, length("\0CACHE");
+    if ($buf ne "\0CACHE" && $buf ne "\0CLEAN") {
         outs("No cache marker found");
         last MAGIC;
     }
@@ -525,7 +524,7 @@ if ($out) {
 
     my $fh = IO::File->new(
         $out,
-        IO::File::O_CREAT() | IO::File::O_WRONLY() | IO::File::O_TRUNC(),
+        IO::File::O_CREAT() | IO::File::O_RDWR() | IO::File::O_TRUNC(),
         0777,
     ) or die qq[Can't create file "$out": $!];
     $fh->binmode();
@@ -543,18 +542,6 @@ if ($out) {
     if (!$ENV{PAR_VERBATIM} and $loader =~ /^(?:#!|\@rem)/) {
         require PAR::Filter::PodStrip;
         PAR::Filter::PodStrip->apply(\$loader, $0);
-    }
-
-    # Patch a certain string in $loader
-    if ($meta_par{clean}) {
-        my $par_clean = "=1";
-        my $pass_par_clean = uc "__pass_par_clean__";
-        # NOTE: we avoid to mention the contents of pass_par_clean so that
-        # this file doesn't contain it **at all**
-
-        $loader =~ s{(?<=${pass_par_clean})( +)}
-                    {$par_clean . (" " x (length($1) - length($par_clean)))}eg;
-                    # NOTE: the replacement must be the same number of bytes as the match
     }
 
     $fh->print($loader)
@@ -657,24 +644,30 @@ if ($out) {
             or die qq[Error writing zip part of "$out"];
     }
 
-    $cache_name = substr $cache_name, 0, $cache_name_size;
-    if (!$cache_name and my $mtime = (stat($out))[9]) {
-        my $ctx = Digest::SHA->new(1);
-        open my $th, "<:raw", $out;
-        $ctx->addfile($th);
-        close $th;
-
-        $cache_name = $ctx->hexdigest;
+    if ($meta_par{clean}) {
+        $fh->print("\0CLEAN");
     }
-    $cache_name .= "\0" x ($cache_name_size - length $cache_name);
-    $cache_name .= $cache_marker;
-    # compute the offset from the end of $loader to end of "...\0CACHE"
-    my $offset = $fh->tell + length($cache_name) - length($loader);
-    $fh->print($cache_name, 
-               pack('N', $offset),
-               $PAR_MAGIC)
-    && $fh->close
-        or die qq[Error writing trailer of "$out": $!];
+    else {
+        if (!defined $cache_name) {
+            my $ctx = Digest::SHA->new(1);
+            seek $fh, 0, 0;
+            $ctx->addfile($fh);
+            seek $fh, 0, 2;
+            $cache_name = $ctx->hexdigest;
+        }
+        # truncate $cache_name to 40 byes and fill with NULs if necessary
+        $cache_name = substr $cache_name, 0, $cache_name_size;
+        $cache_name .= "\0" x ($cache_name_size - length $cache_name);
+        $fh->print($cache_name, 
+                   "\0CACHE");
+    }
+
+    # compute the offset from the end of $loader to end of "...\0CACHE" or "\0CLEAN"
+    my $offset = $fh->tell - length($loader);
+    $fh->print(pack('N', $offset),
+               $PAR_MAGIC);
+
+    $fh->close or die qq[Error writing trailer of "$out": $!];
     chmod 0755, $out;
     # }}}
 
@@ -842,13 +835,13 @@ sub _set_par_temp {
             if ((my $magic_pos = find_par_magic($fh)) >= 0) {
                 seek $fh, $magic_pos 
                           - $FILE_offset_size 
-                          - length($cache_marker), 0;
+                          - length("\0CACHE"), 0;
                 my $buf;
-                read $fh, $buf, length($cache_marker);
-                if ($buf eq $cache_marker) {
+                read $fh, $buf, length("\0CACHE");
+                if ($buf eq "\0CACHE") {
                     seek $fh, $magic_pos 
                               - $FILE_offset_size 
-                              - length($cache_marker) 
+                              - length("\0CACHE") 
                               - $cache_name_size, 0;
                     read $fh, $buf, $cache_name_size;
                     $buf =~ s/\0//g;
