@@ -173,7 +173,7 @@ sub find_par_magic
     my $buf;
     my $size = -s $fh;
 
-    my $pos = $size - $size % $chunk_size;      # NOTE: $pos is a multiple of $chunk_size
+    my $pos = ($size-1) - ($size-1) % $chunk_size;      # NOTE: $pos is a multiple of $chunk_size
     while ($pos >= 0) {
         seek $fh, $pos, 0;
         read $fh, $buf, $chunk_size + length($PAR_MAGIC);

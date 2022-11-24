@@ -21,6 +21,18 @@
 #define Stat_t struct stat
 #endif
 
+static char PAR_MAGIC[] = "\nPAR.pm\n";
+#define magic_size 8
+
+/* "\0CACHE" or "\0CLEAN" */
+#define cache_marker_size 6
+
+/* size of a pack("N") number */
+#define FILE_offset_size 4
+
+#define cache_name_size 40
+
+
 static int isWritableDir(const char* val)
 {
     Stat_t statbuf;
@@ -67,6 +79,40 @@ void par_setup_libpath( const char * stmpdir )
     }
 }
 
+static void *par_memrmem(void* haystack, size_t haystacklen, void* needle, size_t needlelen)
+{
+    char *hs = haystack;
+    char *p;
+    if (haystacklen < needlelen)
+        return NULL;
+    for (p = hs + haystacklen - needlelen; p >= hs; p--)
+        if (memcmp(p, needle, needlelen) == 0)
+            return p;
+    return NULL;
+}
+
+static off_t find_par_magic(int fd)
+{
+#define CHUNK_SIZE (64 * 1024)
+    char buf[CHUNK_SIZE + magic_size];
+
+    off_t file_size = lseek(fd, 0, 2);
+    int len;
+    char *p;
+
+    for (off_t pos = (file_size-1) - (file_size-1) % CHUNK_SIZE; 
+         pos >= 0; 
+         pos -= CHUNK_SIZE) {
+        lseek(fd, pos, 0);
+        len = read(fd, buf, CHUNK_SIZE + magic_size);
+        p = par_memrmem(buf, len, PAR_MAGIC, magic_size);
+        if (p)
+            return pos + (p - buf);
+    }
+    return -1;
+#undef CHUNK_SIZE
+}
+
 char *par_mktmpdir ( char **argv ) {
     int i;
     const char *tmpdir = NULL;
@@ -89,10 +135,7 @@ char *par_mktmpdir ( char **argv ) {
     char *progname = NULL, *username = NULL;
     char *stmpdir = NULL, *top_tmpdir = NULL;
     int f, j, k, stmp_len = 0;
-    char sha1[41];
-    SHA_INFO *sha_info;
-    unsigned char buf[32768];
-    unsigned char sha_data[20];
+    char sha1[cache_name_size + 1];
 
     if ( (val = par_getenv("PAR_TEMP")) && strlen(val) ) {
         par_setup_libpath(val);
@@ -139,12 +182,12 @@ char *par_mktmpdir ( char **argv ) {
 #ifdef WIN32
     /* Try the windows temp directory */
     if ( tmpdir == NULL && (val = par_getenv("WinDir")) && strlen(val) ) {
-        char* buf = malloc(strlen(val) + 5 + 1);
-        sprintf(buf, "%s\\temp", val);
-        if (isWritableDir(buf)) {
-            tmpdir = buf;
+        char* p = malloc(strlen(val) + 5 + 1);
+        sprintf(p, "%s\\temp", val);
+        if (isWritableDir(p)) {
+            tmpdir = p;
         } else {
-            free(buf);
+            free(p);
         }
     }
 #endif
@@ -221,48 +264,26 @@ char *par_mktmpdir ( char **argv ) {
 
     int use_cache = 0;
     if ( !par_env_clean() && (f = open( progname, O_RDONLY | OPEN_O_BINARY ))) {
-        /* TODO The following should implement the full search for the PAR magic 
-         * string ("\nPAR.pm\n") as implemented in find_par_magic() in script/par.pl
-         * and then use that position to look for "\0CACHE".
-         * E.g. signed pp-packed executables don't have "\0CACHE" in position 18 bytes
-         * from the end of the executables.
-         * But in this case the code below will just resort to compute the SHA1 of the 
-         * executable on the fly and thus provide a stable cache directory path
-         * (though perhaps a little less efficient).
-         */
-        lseek(f, -8, 2);
-        read(f, buf, 8);
-        if (memcmp(buf, "\nPAR.pm\n", 8) == 0) {
-            lseek(f, -18, 2);
-            read(f, buf, 6);
-            if (memcmp(buf, "\0CACHE", 6) == 0) {
-                use_cache = 1;
-                /* pre-computed cache_name */
-                lseek(f, -58, 2);
-                read(f, sha1, 40);
-                sha1[40] = '\0';
-            }
-            else if (memcmp(buf, "\0CLEAN", 6) == 0) {
-                par_setenv("PAR_CLEAN", "1");   /* TODO already done below */
-            }
-            /* TODO else die? */
-        }
+        off_t pos = find_par_magic(f);
+        char buf[cache_marker_size];
 
-#if 0
-            /* compute sha1 on the fly */
-	    lseek(f, 0, 0);
-            sha_info = sha_init();
-            while( ( j = read( f, buf, sizeof( buf ) ) ) > 0 )
-            {
-                sha_update( sha_info, buf, j );
+        if (pos >= 0) {                 
+            /* back up over pack(N) number and "\0CACHE" (or "\0CLEAN") */
+            pos -= FILE_offset_size + cache_marker_size;                  
+            lseek(f, pos, 0); 
+            read(f, buf, cache_marker_size);
+            if (memcmp(buf, "\0CACHE", cache_marker_size) == 0) {
+                use_cache = 1;
+                /* back up over pre-computed cache_name */
+                pos -= cache_name_size;
+                lseek(f, pos, 0);
+                read(f, sha1, cache_name_size);
+                sha1[cache_name_size] = '\0';
             }
-            close( f );
-            sha_final( sha_data, sha_info );
-            for( k = 0; k < 20; k++ )
-            {
-                sprintf( sha1+k*2, "%02x", sha_data[k] );
+            else if (memcmp(buf, "\0CLEAN", cache_marker_size) == 0) {
+                use_cache = 0;
             }
-#endif
+        }
     }
     if (use_cache) {
         /* "$TEMP/par-$USER/cache-$SHA1" */
