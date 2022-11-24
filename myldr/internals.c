@@ -45,25 +45,6 @@ XS(XS_Internals_PAR_BOOT) {
 #endif
 #endif
         }
-#if (PERL_REVISION == 5 && PERL_VERSION == 8 \
-        && ( PERL_SUBVERSION >= 1 && PERL_SUBVERSION <= 5)) || \
-    (PERL_REVISION == 5 && PERL_VERSION == 9 && PERL_SUBVERSION <= 1)
-        /* 5.8.1 through 5.8.5, as well as 5.9.0 does not copy fakeargv, sigh */
-        {
-            char *p;
-            STRLEN len = strlen( fakeargv[0] );
-            New( 42, p, len+1, char );
-            Copy( fakeargv[0], p, len, char );
-            SvSETMAGIC(GvSV(tmpgv));
-            Copy( p, fakeargv[0], len, char );
-            fakeargv[0][len] = '\0';
-            Safefree( p );
-        }
-        /*
-#else
-        SvSETMAGIC(GvSV(tmpgv));
-        */
-#endif
     }
 
     /* PAR::Packer isn't included in a packed executable, but we provide
