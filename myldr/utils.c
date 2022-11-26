@@ -226,12 +226,8 @@ void par_init_env () {
 }
 
 int par_env_clean () {
-    static int rv = -1;
-
-    if (rv == -1) {
-        char *buf = par_getenv("PAR_CLEAN");
-        rv = ( ((buf == NULL) || (*buf == '\0') || (*buf == '0')) ? 0 : 1);
-    }
-
-    return rv;
+    char *val = par_getenv("PAR_CLEAN");
+    if (val == NULL || *val == '\0' || *val == '0')
+        return 0;
+    return 1;
 }
