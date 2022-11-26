@@ -95,12 +95,12 @@ static off_t find_par_magic(int fd)
 {
 #define CHUNK_SIZE (64 * 1024)
     char buf[CHUNK_SIZE + magic_size];
-
-    off_t file_size = lseek(fd, 0, 2);
+    off_t pos;
     int len;
     char *p;
+    off_t file_size = lseek(fd, 0, 2);
 
-    for (off_t pos = (file_size-1) - (file_size-1) % CHUNK_SIZE; 
+    for (pos = (file_size-1) - (file_size-1) % CHUNK_SIZE; 
          pos >= 0; 
          pos -= CHUNK_SIZE) {
         lseek(fd, pos, 0);
