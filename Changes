@@ -1,3 +1,22 @@
+1.057  2022-11029
+
+- use a different method to mark executable built from "pp --clean ..."
+  
+  - scripts/par.pl: don't patch the string "__PASS_PAR_CLEAN__               \0" in the
+    "boot" section of the executable and ...
+  - myldr/boot.c: ... stop looking for the patched string
+  - scripts/par.pl: add "\0CLEAN" in lieu of "\0CACHE" (and drop the 40-byte
+    cache name below that) in the "trailer" section when generating a packed
+    executable when META.yml indicates "--clean" was specified)
+  - myldr/mktmpdir.c: allow "\0CLEAN" as an alternative to "\0CACHE"
+    and set PAR_CLEAN=1 in that case
+  - myldr/mktmpdir.c: implement find_par_magic() akin the one in script/par.pl
+
+- better CLT detection in MacOS (#70) [plk <Philip@kime.org.uk>]
+
+- use Getopt::ArgvFile with resolveEnvVars=1 
+  suggested by Johan Vromans (@sciurius on GitHub)
+
 1.056  2022-09-05
 
 - Fix #66: patch myldr/boot for "pp --clean ..." without side effects
