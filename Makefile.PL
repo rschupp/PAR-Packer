@@ -70,8 +70,10 @@ WriteMakefile1(
         'script/pp',
         'script/tkpp',
     ],
-    DIR                       => $have_cc ? [ 'myldr' ] : [],
+    DIR                       => $have_cc ? [qw( myldr t/XSFoo )] : [],
     NEEDS_LINKING	      => $have_cc,
+
+    clean => { FILES => "t/blib" },
 
     META_MERGE      => {
       'meta-spec'             => { version => 2 },
