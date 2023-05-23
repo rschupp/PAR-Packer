@@ -316,10 +316,6 @@ MAGIC: {
             $PAR::Heavy::FullCache{$fullname} = $filename;
             $PAR::Heavy::FullCache{$filename} = $fullname;
         }
-        elsif ( $fullname =~ m|^/?shlib/| and defined $ENV{PAR_TEMP} ) {
-            my $filename = _save_as("$basename$ext", $buf, 0755);
-            outs("SHLIB: $filename\n");
-        }
         else {
             $ModuleCache{$fullname} = {
                 buf => $buf,
@@ -715,7 +711,6 @@ if ($out) {
             next unless $member_name =~ m{
                 ^
                 /?shlib/
-                (?:$Config::Config{version}/)?
                 (?:$Config::Config{archname}/)?
                 ([^/]+)
                 $
