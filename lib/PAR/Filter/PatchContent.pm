@@ -26,6 +26,10 @@ sub PATCH_CONTENT () { +{
         '$is_dosish = ' =>
         '$is_dosish = $^O eq \'cygwin\' || ',
     ],
+    'DynaLoader.pm' => [
+        'my $do_expand = ' =>                   # perl >= 5.36.0
+        'use vars qw($do_expand); $do_expand = ',
+    ],
     'Pod/Usage.pm' => [
         ' = $0' =>
         ' = $ENV{PAR_0} || $0',
