@@ -62,10 +62,10 @@
 \B\.prove$
 
 # Avoid MYMETA files
-^MYMETA\.
+MYMETA\.
 
 # Temp files for new META
-^META_new\.(?:json|yml)
+META_new\.(?:json|yml)
 
 # Avoid travis-ci.org file
 ^\.travis\.yml
@@ -77,7 +77,6 @@
 ^contrib/automated_pp_test/pp_switch_tests
 ^myldr/Makefile$
 ^myldr/Makefile\.old$
-^myldr/MYMETA\.
 ^myldr/Dynamic.pm
 ^myldr/Static.pm
 ^myldr/boot$
@@ -94,7 +93,6 @@
 ^package/parl-.*$
 ^script/parl(?:\.(?!pod).+)?$
 ^script/parldyn(?:\.(?!pod).+)?$
-^MYMETA\.
 ^a\.out$
 .*\.o$
 .*\.obj$
