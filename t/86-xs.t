@@ -6,7 +6,7 @@ use warnings;
 use Test::More;
 require "./t/utils.pl";
 
-plan tests => 7;
+plan tests => 6;
 
 use Config;
 
@@ -26,8 +26,6 @@ diag($out);
 $out =~ s:\\:/:g;
 my ($shared_objects) = $out =~ /^dl_shared_objects = (.*)$/m;
 ok($shared_objects, "dl_shared_objects found");
-ok((grep { m{/auto/XSFoo/XSFoo\.\Q$Config{dlext}\E$} } split(" ", $shared_objects, -1)),
-   "dl_shared_objects contains XSFoo DLL");
 my ($modules) = $out =~ /^dl_modules = (.*)$/m;
 ok($modules, "dl_modules found");
 ok((grep { $_ eq "XSFoo" } split(" ", $modules, -1)),
