@@ -34,7 +34,7 @@ plan tests => 2 * (keys %expected);
 
 while (my ($M, $exp) = each %expected) 
 {
-    my $exe = pp_ok(-I => "t", -M => $M,
+    my $exe = pp_ok(-I => "t/blib/lib", -M => $M,
                     -e => q[print qq[testing 'pp -M Foo::' and variants\n]]);
 
     my $zip = Archive::Zip->new();

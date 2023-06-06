@@ -10,7 +10,7 @@ plan tests => 6;
 
 use Config;
 
-my $exe = pp_ok(-I => "t/blib/arch", -I => "t/blib/lib", -e => <<'...');
+my $exe = pp_ok(-I => "t/blib/lib", -e => <<'...');
 use XSFoo; 
 XSFoo::hello();
 
@@ -29,4 +29,4 @@ ok($shared_objects, "dl_shared_objects found");
 my ($modules) = $out =~ /^dl_modules = (.*)$/m;
 ok($modules, "dl_modules found");
 ok((grep { $_ eq "XSFoo" } split(" ", $modules, -1)),
-   "dl_modules contains XSFooDLL");
+   "dl_modules contains XSFoo DLL");

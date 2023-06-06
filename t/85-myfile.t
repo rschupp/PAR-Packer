@@ -11,7 +11,7 @@ require "./t/utils.pl";
 
 plan tests => 6;
 
-my $exe = pp_ok(-I => "t", -e => <<'...');
+my $exe = pp_ok(-I => "t/blib/lib", -e => <<'...');
 use Cwd;
 use Data::Dumper;
 use Myfile;
