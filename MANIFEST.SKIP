@@ -90,6 +90,7 @@ META_new\.(?:json|yml)
 ^myldr/usernamefrompwuid.h$
 ^myldr/.*\.pdb$
 ^myldr/usernamefrompwuid\.h$
+^none/
 ^package/parl-.*$
 ^script/parl(?:\.(?!pod).+)?$
 ^script/parldyn(?:\.(?!pod).+)?$
