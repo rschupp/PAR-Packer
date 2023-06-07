@@ -8,8 +8,6 @@ require "./t/utils.pl";
 
 plan tests => 6;
 
-use Config;
-
 my $exe = pp_ok(-I => "t/blib/lib", -e => <<'...');
 use XSFoo; 
 XSFoo::hello();

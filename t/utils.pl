@@ -22,7 +22,7 @@ sub pp_ok
 
     die "system(LIST) with double quotes in LIST doesn't work on Windows: @_"
         if grep { /"/ } @_;
-    system($^X, $pp, -o => $exe, @_);
+    system($^X, "-Mblib", $pp, -o => $exe, @_);
     # Note: -x is unreliable on Windows
     ok( $? == 0 && -f $exe, qq[successfully packed "$exe"] );
 
