@@ -1,4 +1,24 @@
-1.057  2022-11029
+1.058  2023-06-12
+
+- patch DynaLoader.pm to make intercepting DynaLoader::bootstrap work again
+  for Perl >= 5.35 on Windows (see #74)
+  
+  $do_expand was changed in perl 5.36 from an (implicit) "local" variable
+  to "my". This breaks how PAR::Heavy intercepts calls to
+  DynaLoader::bootstrap: monkey-patching DynaLoader::bootstrap,
+  DynaLoader::dl_findfile and DynaLoader::bootstrap while setting
+  "local $DynaLoader::do_expand = 1".
+
+- reorganize modules etc used in tests
+- add test to run an XS module from a .par file
+- add a test for loading XS "glue" DLLs
+
+- remove unused code for packed DLLs ("pp --link ...")
+  - nobody packs (non-XS) DLLs as embedded "FILE"s
+  - nobody uses a $Config{version) sub directory when packing DLLs below
+    "shlib/" in the zip
+
+1.057  2022-11-29
 
 - use a different method to mark executable built from "pp --clean ..."
   
