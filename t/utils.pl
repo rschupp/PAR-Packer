@@ -22,7 +22,11 @@ sub pp_ok
 
     die "system(LIST) with double quotes in LIST doesn't work on Windows: @_"
         if grep { /"/ } @_;
-    system($^X, "-Mblib", $pp, -o => $exe, @_);
+
+    # Note: The test harness runs tests 
+    # with PERL5LIB prepended as if "-Mblib" was in effect
+    system($^X, $pp, -o => $exe, @_);
+
     # Note: -x is unreliable on Windows
     ok( $? == 0 && -f $exe, qq[successfully packed "$exe"] );
 
@@ -36,9 +40,12 @@ sub run_ok
 
     my ($out, $err);
     run3(\@cmd, \undef, \$out, \$err);
-    is( $?, 0, qq[successfully ran "@cmd"] );
-
-    return ($out, $err);
+    if (is( $?, 0, qq[successfully ran "@cmd"] )) {
+        return ($out, $err);
+    } else {
+        diag("OUT:\n$out\nERR:\n$err");
+        return;
+    }
 }
 
 

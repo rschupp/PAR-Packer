@@ -20,7 +20,9 @@ sub pp_p_ok
 
     die "system(LIST) with double quotes in LIST doesn't work on Windows: @_"
         if grep { /"/ } @_;
-    system($^X, "-Mblib", $pp, -p => -o => $par, @_);
+    # Note: The test harness runs tests 
+    # with PERL5LIB prepended as if "-Mblib" was in effect
+    system($^X, $pp, -p => -o => $par, @_);
     ok( $? == 0 && -f $par, qq[successfully packed "$par"] );
 
     return $par;

@@ -24,7 +24,7 @@ else
 my $data = "AUTHORS";
 
 # Note: there's nothing special about IPC::Open3 here - any module that
-# (1) we know to be installed and (2) is not one of the "bundled" modules
+# (1) we know to be installed and (2) is not one of the "embedded" modules
 # will do.
 my $exe = pp_ok(-a => $data,
                 -e => q[use IPC::Open3; print qq[PAR_TEMP=$ENV{PAR_TEMP}\n];]);
