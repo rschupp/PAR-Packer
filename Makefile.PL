@@ -54,8 +54,8 @@ WriteMakefile1(
     TEST_REQUIRES => {
       'Test::More'            => 0,
       'IPC::Run3'             => '0.048',
-      if_win(
-        'Win32::Exe'          => '0.17'),
+      # if_win(
+      # 'Win32::Exe'          => '0.17'),
     },
 
     MAN1PODS => {
