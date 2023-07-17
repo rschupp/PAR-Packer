@@ -13,11 +13,13 @@ use IPC::Run3;
 # use an absolute pathname in case a test chdir()s
 my $pp = catfile(getcwd(), qw( blib script pp ));
 
+my $xid = 0;
+
 # runs 1 test
 sub pp_ok
 {
     $ENV{PAR_TMPDIR} ||= tempdir(TMPDIR => 1, CLEANUP => 1);
-    my $exe = catfile($ENV{PAR_TMPDIR},"packed$Config{_exe}");
+    my $exe = catfile($ENV{PAR_TMPDIR}, sprintf("pp%03d%s", $xid++, $Config{_exe}));
     unlink($exe);
 
     die "system(LIST) with double quotes in LIST doesn't work on Windows: @_"

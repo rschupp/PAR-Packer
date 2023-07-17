@@ -123,9 +123,9 @@ int main ( int argc, char **argv, char **env )
     exitstatus = perl_parse(my_perl, par_xs_init, fakeargc, fakeargv, NULL);
 
     if (exitstatus == 0)
-	exitstatus = perl_run( my_perl );
+	perl_run( my_perl );
 
-    perl_destruct( my_perl );
+    exitstatus = perl_destruct( my_perl );
 
     if ( par_getenv("PAR_SPAWNED") == NULL ) {
         if ( stmpdir == NULL )
