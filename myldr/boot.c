@@ -131,20 +131,20 @@ void seek_to_subsystem( int fd ) {
     DWORD off;
     WORD size, magic;
 
-    lseek(fd, 0, SEEK_SET);              // CHECK != -1
-    read(fd, buf, 64);                  // CHECK == 64
+    CHECK(lseek(fd, 0, SEEK_SET) != -1, "lseek failed");
+    CHECK(read(fd, buf, 64) == 64, "short read");
     ASSERT(unpack_S(buf) == 0x5a4d, "MZ magic bytes");    // "MZ"
     off = unpack_L(buf+60);
 
-    lseek(fd, off, SEEK_SET);                // CHECK != -1
-    read(fd, buf, 4 + 20 + 2);         // CHECK == 4 + 20 + 2
+    CHECK(lseek(fd, off, SEEK_SET) != -1, "lseek failed");
+    CHECK(read(fd, buf, 4 + 20 + 2) == 4 + 20 + 2, "short read");
     ASSERT(unpack_L(buf) == 0x4550, "PE header");    // "PE\0\0"
     size = unpack_S(buf+20);
     magic = unpack_S(buf+24);
     ASSERT(( size == 224 && magic == 0x10b ) 
            || ( size == 240 && magic == 0x20b ), "IMAGE_NT_OPTIONAL_HDR_MAGIC");
 
-    lseek(fd, off + 4 + 20 + 68, SEEK_SET);          // CHECK != -1
+    CHECK(lseek(fd, off + 4 + 20 + 68, SEEK_SET) != -1, "lseek failed");
 }
 
 /* algorithm stolen from Win32::ShellQuote, in particular quote_literal() */
@@ -192,16 +192,6 @@ char* shell_quote(const char *src)
 }
 #endif
 
-void die(const char *format, ...)
-{
-    va_list ap;
-    va_start(ap, format);
-    vfprintf(stderr, format, ap);
-    va_end(ap);
-    
-    exit(255);
-}
-
 char pp_version_info[] = "@(#) Packed by PAR::Packer " PAR_PACKER_VERSION;
 
 /* the contents of this string (in the executable myldr/boot)
@@ -229,11 +219,11 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     par_init_env();
 
     stmpdir = par_mktmpdir( argv );
-    if ( !stmpdir ) die("");        /* error message has already been printed */
+    if ( !stmpdir ) par_die("");        /* error message has already been printed */
 
     rc = my_mkdir(stmpdir, 0700);
     if ( rc == -1 && errno != EEXIST) {
-	die("%s: creation of private cache subdirectory %s failed (errno= %i)\n", 
+	par_die("%s: creation of private cache subdirectory %s failed (errno= %i)\n", 
             argv[0], stmpdir, errno);
     }
 
@@ -256,9 +246,9 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
             sanitise_tmp(ftmpdir);
             rc = my_mkdir(ftmpdir, 0700);
             if (rc == -1 && errno != EEXIST)
-                die("%s: creation of cache subdirectory "
-                    "for extracted macOS thin binary %s failed (errno= %i)\n", 
-                    argv[0], ftmpdir, errno);
+                par_die("%s: creation of cache subdirectory "
+                        "for extracted macOS thin binary %s failed (errno= %i)\n", 
+                        argv[0], ftmpdir, errno);
             
             /* Get architecture name */
             size_t size;
@@ -269,9 +259,9 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
             /* Detect if CLT are installed, if not, die */
             int x = system("/usr/bin/xcode-select -p 1>/dev/null 2>/dev/null");
             if (x != 0) 
-              die("%s: Command Line Tools are not installed - "
-                  "run 'xcode-select --install' to install (errno=%i)\n", 
-                  argv[0], errno);
+                par_die("%s: Command Line Tools are not installed - "
+                        "run 'xcode-select --install' to install (errno=%i)\n", 
+                        argv[0], errno);
 
             int exist;
             struct stat buffer;
@@ -280,7 +270,7 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
             char* lipo_argv[] = { "lipo", "-extract_family", arch, "-output", archthinbin, my_prog, NULL };
             pid_t pid = fork();
             if (pid == -1) 
-                die("%s: fork failed (errno=%i)\n",  argv[0], errno);
+                par_die("%s: fork failed (errno=%i)\n",  argv[0], errno);
             if (pid == 0)
             {
                 /* child */
@@ -292,28 +282,28 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
             int wstatus;
             waitpid(pid, &wstatus, 0);
             if (!(WIFEXITED(wstatus) && WEXITSTATUS(wstatus) == 0))
-                die("%s: extracting %s binary with lipo failed (wstatus=%i)\n",
-                    argv[0], arch, wstatus);
+                par_die("%s: extracting %s binary with lipo failed (wstatus=%i)\n",
+                        argv[0], arch, wstatus);
             free(arch);
 
             /* exec correct thin binary */
             exist = stat(archthinbin, &buffer);
             if (exist == -1)
-                die("%s: cannot find thin binary %s to run (errno=%i)\n", 
-                    argv[0], archthinbin, errno);
+                par_die("%s: cannot find thin binary %s to run (errno=%i)\n", 
+                        argv[0], archthinbin, errno);
 
             argv[0] = archthinbin;
             execve(archthinbin, argv, env);
-            die("%s: cannot execute thin binary %s (errno=%i)\n", 
-                argv[0], archthinbin, errno);
+            par_die("%s: cannot execute thin binary %s (errno=%i)\n", 
+                    argv[0], archthinbin, errno);
         }
     }
 #endif    
     
     rc = extract_embedded_file(embedded_files, par_basename(my_prog), stmpdir, &my_perl);
     if (rc == EXTRACT_FAIL) {
-        die("%s: extraction of %s (custom Perl interpreter) failed (errno=%i)\n", 
-            argv[0], my_perl, errno);
+        par_die("%s: extraction of %s (custom Perl interpreter) failed (errno=%i)\n", 
+                argv[0], my_perl, errno);
     }
 
     if (rc == EXTRACT_OK)       /* i.e. file didn't already exist */
@@ -337,14 +327,14 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
             fd = open(my_prog, O_RDONLY | OPEN_O_BINARY, 0755);
             ASSERT(fd != -1, "open my_prog");
             seek_to_subsystem(fd);
-            read(fd, &subsystem, 2);    // CHECK == 2
-            close(fd);                  // CHECK != -1
+            CHECK(read(fd, &subsystem, 2) == 2, "short read");
+            CHECK(close(fd) != -1, "close failed");
 
             fd = open(my_perl, O_RDWR | OPEN_O_BINARY, 0755);
             ASSERT(fd != -1, "open my_perl");
             seek_to_subsystem(fd);
-            write(fd, &subsystem, 2);   // CHECK == 2
-            close(fd);                  // CHECK != -1
+            CHECK(write(fd, &subsystem, 2) == 2, "short write");
+            CHECK(close(fd) != -1, "close failed");
         }
 #endif
     }
@@ -353,8 +343,8 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     emb_file = embedded_files + 1;
     while (emb_file->name) {
         if (extract_embedded_file(emb_file, emb_file->name, stmpdir, &my_file) == EXTRACT_FAIL) {
-            die("%s: extraction of %s failed (errno=%i)\n", 
-                argv[0], my_file, errno);
+            par_die("%s: extraction of %s failed (errno=%i)\n", 
+                    argv[0], my_file, errno);
         }
         emb_file++;
     }
@@ -391,8 +381,8 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     exit(rc);
 #else
     execvp(my_perl, argv);
-    die("%s: exec of %s (custom Perl interpreter) failed (errno=%i)\n", 
-        argv[0], my_perl, errno);
+    par_die("%s: exec of %s (custom Perl interpreter) failed (errno=%i)\n", 
+            argv[0], my_perl, errno);
 #endif
 }
 

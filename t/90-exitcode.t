@@ -7,8 +7,8 @@ use File::Basename;
 use Test::More;
 require "./t/utils.pl";
 
-my @scripts = ("exit(42);", "END { exit(42); }");
-plan tests => 2* @scripts;
+my @scripts = ('exit(42);', 'END { exit(42); }', 'END { $? = 42; }');
+plan tests => 2 * @scripts;
 
 foreach my $script (@scripts) 
 {

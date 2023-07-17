@@ -32,6 +32,8 @@ static char PAR_MAGIC[] = "\nPAR.pm\n";
 
 #define cache_name_size 40
 
+#define CHECK(code, msg) if (!(code)) { par_die(msg); }
+
 
 static int isWritableDir(const char* val)
 {
@@ -103,8 +105,9 @@ static off_t find_par_magic(int fd)
     for (pos = (file_size-1) - (file_size-1) % CHUNK_SIZE; 
          pos >= 0; 
          pos -= CHUNK_SIZE) {
-        lseek(fd, pos, 0);
+        CHECK(lseek(fd, pos, 0) != -1, "lseek failed");
         len = read(fd, buf, CHUNK_SIZE + magic_size);
+        CHECK(len != -1, "read failed");
         p = par_memrmem(buf, len, PAR_MAGIC, magic_size);
         if (p)
             return pos + (p - buf);
@@ -271,13 +274,13 @@ char *par_mktmpdir ( char **argv ) {
             /* back up over pack(N) number and "\0CACHE" (or "\0CLEAN") */
             pos -= FILE_offset_size + cache_marker_size;                  
             lseek(f, pos, 0); 
-            read(f, buf, cache_marker_size);
+            CHECK(read(f, buf, cache_marker_size) == cache_marker_size, "short read");
             if (memcmp(buf, "\0CACHE", cache_marker_size) == 0) {
                 use_cache = 1;
                 /* back up over pre-computed cache_name */
                 pos -= cache_name_size;
                 lseek(f, pos, 0);
-                read(f, sha1, cache_name_size);
+                CHECK(read(f, sha1, cache_name_size) == cache_name_size, "short read");
                 sha1[cache_name_size] = '\0';
             }
             else if (memcmp(buf, "\0CLEAN", cache_marker_size) == 0) {
