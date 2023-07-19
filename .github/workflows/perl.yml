@@ -1,0 +1,34 @@
+name: Perl CI
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ['windows-latest']
+        perl: 
+          - '5.32'
+          - '5.36'
+          - '5.38'
+
+    name: Perl ${{ matrix.perl }} on ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up perl
+        uses: shogo82148/actions-setup-perl@v1
+        id: setup
+        with:
+          perl-version: ${{ matrix.perl }}
+          install-modules-with: cpanm
+      - name: "Hack: ensure strawberry stuff is at front of PATH"
+        run: |
+          "C:\Strawberry\c\bin" >> $env:GITHUB_PATH
+          "C:\Strawberry\perl\site\\bin" >> $env:GITHUB_PATH
+          "C:\Strawberry\perl\bin" >> $env:GITHUB_PATH
+      - run: perl Makefile.PL
+      - run: gmake
+      - run: prove -b -v
