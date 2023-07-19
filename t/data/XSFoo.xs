@@ -8,6 +8,8 @@
 
 MODULE = XSFoo		PACKAGE = XSFoo		
 
+PROTOTYPES: DISABLE
+
 void
 hello()
     CODE:
