@@ -15,7 +15,6 @@ contrib/gui_pp/gpp_readme.txt
 contrib/pare/pare
 contrib/pare/pare_readme.txt
 contrib/pp_osx_codesign_fix/pp_osx_codesign_fix.c
-contrib/procedural_pp/pp_old
 contrib/stdio/Stdio.pm
 contrib/stdio/Stdio_readme.txt
 lib/App/Packer/PAR.pm

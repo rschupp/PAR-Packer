@@ -23,7 +23,11 @@ jobs:
         id: setup
         with:
           perl-version: ${{ matrix.perl }}
+          distribution: strawberry
           install-modules-with: cpanm
+      - run: |
+          $env:PATH
+          Get-Command Notepad -All | Format-Table CommandType, Name, Definition
       - name: "Hack: ensure strawberry stuff is at front of PATH"
         run: |
           "C:\Strawberry\c\bin" >> $env:GITHUB_PATH
