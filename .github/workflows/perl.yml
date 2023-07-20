@@ -27,12 +27,7 @@ jobs:
           install-modules-with: cpanm
       - run: |
           $env:PATH
-          Get-Command Notepad -All | Format-Table CommandType, Name, Definition
-      - name: "Hack: ensure strawberry stuff is at front of PATH"
-        run: |
-          "C:\Strawberry\c\bin" >> $env:GITHUB_PATH
-          "C:\Strawberry\perl\site\\bin" >> $env:GITHUB_PATH
-          "C:\Strawberry\perl\bin" >> $env:GITHUB_PATH
+          Get-Command perl -All | Format-Table CommandType, Name, Definition
       - run: perl Makefile.PL
       - run: gmake
       - run: prove -b -v
