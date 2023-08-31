@@ -415,9 +415,10 @@ static void par_rmtmpdir ( char *stmpdir ) {
 #endif
 
 void par_cleanup (char *stmpdir) {
-    char *dirname = par_dirname(stmpdir);
-    char *basename = par_basename(dirname);
+    char *dirname, *basename;
     if ( par_env_clean() && stmpdir != NULL && strlen(stmpdir)) {
+        dirname = par_dirname(stmpdir);
+        basename = par_basename(dirname);
         if ( strstr(basename, "par-") == basename ) {
             par_rmtmpdir(stmpdir);
             /* Don't try to remove dirname because this will introduce a race
