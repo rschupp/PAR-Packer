@@ -6,7 +6,7 @@ WriteMakefile(
     VERSION_FROM      => 'lib/XSFoo.pm',
     PREREQ_PM         => {},
     ABSTRACT          => 'Test files for PAR::Packer',
-    AUTHOR            => 'Roderich Schupp <rschupp@cpan.org>',
+    AUTHOR            => 'Roderich Schupp <roderich.schupp@gmail.com>',
     LICENSE           => 'perl',
     LIBS              => [''],
     DEFINE            => '',

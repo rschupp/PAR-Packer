@@ -93,8 +93,10 @@ Please consult the documentation of 'pp' for more information.
 
 You can write to the mailing list at <par@perl.org>, or send an empty mail to
 <par-subscribe@perl.org> to participate in the discussion.
+Archives of the mailing list are available at
+<https://www.mail-archive.com/par@perl.org/> or <https://groups.google.com/g/perl.par>.
 
-Please submit bug reports to <bug-par-packer@rt.cpan.org>.
+Please submit bug reports to <https://github.com/rschupp/PAR-Packer/issues>.
 
 * Copyright
 
