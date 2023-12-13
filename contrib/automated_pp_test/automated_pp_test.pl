@@ -112,6 +112,8 @@ if ($os =~ m/^Win/i) {
 
 my $TRUE = 1;
 my $FALSE = 0;
+my $_out = $Config{_exe} || '.out';
+
 
 #########################################################################
 sub how_many_cache_dirs {
@@ -384,7 +386,7 @@ sub pp_hello_1 {
   }
 
   #.................................................................
-  $cmd = "$RUN_PP \"$hello_pl_file\" ";
+  $cmd = "$RUN_PP -o \"$a_default_executable\" \"$hello_pl_file\" ";
   if (system("$cmd")) {
     $$message_ref = "\namsg074: sub $test_name_string cannot system $cmd\n";
     return (EXIT_FAILURE);
@@ -1518,7 +1520,7 @@ sub pp_minus_e_print_hello {
       return (EXIT_FAILURE);
   }
 
-  $cmd = "$RUN_PP -e \"print qq[hello\n];\"";
+  $cmd = "$RUN_PP -o \"$a_default_executable\"  -e \"print qq[hello\n];\"";
   if (system("$cmd")) {
     $$message_ref = "\namsg131: sub $test_name_string cannot system $cmd\n";
     return (EXIT_FAILURE);
@@ -1764,7 +1766,7 @@ sub pp_minus_c_hello {
     return (EXIT_FAILURE);
   }
 
-  $cmd = "$RUN_PP -c \"$hello_pl_file\" ";
+  $cmd = "$RUN_PP -o \"$a_default_executable\"  -c \"$hello_pl_file\" ";
   if (system(" $cmd ")) {
     $$message_ref = "\namsg152: sub $test_name_string Cannot system $cmd\n";
     return (EXIT_FAILURE);
@@ -1855,7 +1857,7 @@ sub pp_minus_x_hello {
     return (EXIT_FAILURE);
   }
 
-  $cmd = "$RUN_PP -x \"$hello_pl_file\"";
+  $cmd = "$RUN_PP -o \"$a_default_executable\"  -x \"$hello_pl_file\"";
   if (system("$cmd")) {
     $$message_ref = "\namsg157: sub $test_name_string Cannot system $cmd\n";
     return (EXIT_FAILURE);
@@ -1943,7 +1945,7 @@ sub pp_minus_n_minus_x_hello {
     return (EXIT_FAILURE);
   }
 
-  $cmd = "$RUN_PP -n -x \"$hello_pl_file\"";
+  $cmd = "$RUN_PP -o \"$a_default_executable\"  -n -x \"$hello_pl_file\"";
   if (system("$cmd")) {
     $$message_ref = "\namsg162: sub $test_name_string cannot system $cmd\n";
     return (EXIT_FAILURE);
@@ -2032,6 +2034,7 @@ sub pp_minus_I_foo_hello {
   my $cmd = "";
   my $sub_test = 0;
   my $print_cannot_locate_message = $TRUE;
+  my $common_a_default_executable = $a_default_executable;
 
 #..............................................
   my $foo_top_of_file_text = '
@@ -2091,7 +2094,9 @@ sub hidden_print {
     return (EXIT_FAILURE);
   }
   #..........................................................
-  $cmd = "$RUN_PP foo.pl";
+  ($a_default_executable = $common_a_default_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
+  $cmd = "$RUN_PP -o \"$a_default_executable\"  foo.pl";
   if (system("$cmd")) {
     $$message_ref = "\namsg169: sub $test_name_string cannot system $cmd\n";
     return (EXIT_FAILURE);
@@ -2126,7 +2131,9 @@ sub hidden_print {
   print ("\n"); # To add a line after the above expected error messages.
 
   #.................................................................
-  $cmd = "$RUN_PP -I \"$hidden_dir\" foo.pl";
+  ($a_default_executable = $common_a_default_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
+  $cmd = "$RUN_PP -o \"$a_default_executable\"  -I \"$hidden_dir\" foo.pl";
   if (system("$cmd")) {
     $$message_ref = "\namsg170: sub $test_name_string cannot system $cmd\n";
     return (EXIT_FAILURE);
@@ -2255,7 +2262,7 @@ sub pp_minus_lib_foo_hello {
   my $cmd = "";
   my $sub_test = 0;
   my $print_cannot_locate_message = $TRUE;
-
+  my $common_a_default_executable = $a_default_executable;
 
 #..............................................
   my $foo_top_of_file_text = '
@@ -2313,7 +2320,9 @@ sub hidden_print {
     return (EXIT_FAILURE);
   }
   #..........................................................
-  $cmd = "$RUN_PP foo.pl";
+  ($a_default_executable = $common_a_default_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
+  $cmd = "$RUN_PP -o \"$a_default_executable\"  foo.pl";
   if (system("$cmd")) {
     $$message_ref = "\namsg178: sub $test_name_string cannot system $cmd\n";
     return (EXIT_FAILURE);
@@ -2348,7 +2357,9 @@ sub hidden_print {
   print ("\n"); # To add a line after the above expected error messages.
 
   #.................................................................
-  $cmd = "$RUN_PP --lib \"$foo_dir\" foo.pl";
+  ($a_default_executable = $common_a_default_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
+  $cmd = "$RUN_PP -o \"$a_default_executable\"  --lib \"$foo_dir\" foo.pl";
   if (system("$cmd")) {
     $$message_ref = "\namsg180: sub $test_name_string cannot system $cmd\n";
     return (EXIT_FAILURE);
@@ -2424,7 +2435,6 @@ sub hidden_print {
 
   #.................................................................
   return ($error);
-
 }
 
 #########################################################################
@@ -2500,7 +2510,7 @@ sub pp_minus_I_foo_minus_I_bar_hello {
   my $cmd = "";
   my $sub_test = 0;
   my $print_cannot_locate_message = $TRUE;
-
+  my $common_a_default_executable =  $a_default_executable;
 #..............................................
   my $foo_top_of_file_text = '
 use hidden_print_caller;
@@ -2590,7 +2600,9 @@ sub hidden_print {
   }
 
   #..........................................................
-  $cmd = "$RUN_PP \"$foo_file\"";
+  ($a_default_executable = $common_a_default_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
+  $cmd = "$RUN_PP -o \"$a_default_executable\"  \"$foo_file\"";
   if (system("$cmd")) {
     $$message_ref = "\namsg190: sub $test_name_string cannot system $cmd\n";
     return (EXIT_FAILURE);
@@ -2625,7 +2637,9 @@ sub hidden_print {
   print ("\n"); # To add a line after the above expected error messages.
 
   #.................................................................
-  $cmd = "$RUN_PP -I \"$foo_dir\" -I \"$bar_dir\" \"$foo_file\"";
+  ($a_default_executable = $common_a_default_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
+  $cmd = "$RUN_PP -o \"$a_default_executable\"  -I \"$foo_dir\" -I \"$bar_dir\" \"$foo_file\"";
   if (system("$cmd")) {
     $$message_ref = "\namsg194: sub $test_name_string cannot system $cmd\n";
     return (EXIT_FAILURE);
@@ -2702,7 +2716,6 @@ sub hidden_print {
   #.................................................................
   return ($error);
   #.................................................................
-
 }
 
 #########################################################################
@@ -2763,6 +2776,7 @@ sub pp_minus_lib_foo_minus_lib_bar_hello {
   my $cmd = "";
   my $sub_test = 0;
   my $print_cannot_locate_message = $TRUE;
+  my $common_a_default_executable = $a_default_executable;
 
 #..............................................
   my $foo_top_of_file_text = '
@@ -2852,7 +2866,9 @@ sub hidden_print {
     return (EXIT_FAILURE);
   }
   #..........................................................
-  $cmd = "$RUN_PP foo.pl";
+  ($a_default_executable = $common_a_default_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
+  $cmd = "$RUN_PP -o \"$a_default_executable\"  foo.pl";
   if (system("$cmd")) {
     $$message_ref = "\namsg204: sub $test_name_string cannot system $cmd\n";
     return (EXIT_FAILURE);
@@ -2887,7 +2903,9 @@ sub hidden_print {
   print ("\n"); # To add a line after the above expected error messages.
 
   #.................................................................
-  $cmd = "$RUN_PP --lib \"$foo_dir\"" .
+  ($a_default_executable = $common_a_default_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
+  $cmd = "$RUN_PP -o \"$a_default_executable\"  --lib \"$foo_dir\"" .
          ' --lib ' . "\"$bar_dir\"" . ' foo.pl';
   if (system("$cmd")) {
     $$message_ref = "\namsg206: sub $test_name_string cannot system $cmd\n";
@@ -3022,6 +3040,7 @@ sub pp_minus_M_foo_hidden_print_foo {
   my $sub_test = 0;
   my $hidden_print_file = File::Spec->catfile($foo_dir, "hidden_print\.pm");
   my $print_cannot_locate_message = $FALSE;
+  my $common_a_default_executable = $a_default_executable;
 
 #..............................................
   my $foo_top_of_file_text = '
@@ -3080,7 +3099,9 @@ sub hidden_print {
     return (EXIT_FAILURE);
   }
   #..........................................................
-  $cmd = "$RUN_PP foo.pl";
+  ($a_default_executable = $common_a_default_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
+  $cmd = "$RUN_PP -o \"$a_default_executable\"  foo.pl";
   if (system("$cmd")) {
     $$message_ref = "\namsg214: sub $test_name_string cannot system $cmd\n";
     return (EXIT_FAILURE);
@@ -3114,8 +3135,9 @@ sub hidden_print {
   }
 
   #..........................................................
+  ($a_default_executable = $common_a_default_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
 
-   $cmd = "$RUN_PP -M ${SUBDIR1}::hidden_print foo.pl";
+   $cmd = "$RUN_PP -o \"$a_default_executable\"  -M ${SUBDIR1}::hidden_print foo.pl";
   if (system("$cmd")) {
     $$message_ref = "\namsg216: sub $test_name_string cannot system $cmd\n";
     return (EXIT_FAILURE);
@@ -3254,6 +3276,7 @@ sub pp_minus_M_foo_minus_M_bar_hello {
   my $bar_dir = File::Spec->catdir($test_dir, $SUBDIR2);
   my $subdir_foo_file =  File::Spec->catfile($foo_dir, "foo_1\.pm");
   my $print_cannot_locate_message = $FALSE;
+  my $common_a_default_executable = $a_default_executable;
 
 #..............................................
   my $foo_top_of_file_text = '
@@ -3340,7 +3363,9 @@ sub bar_1 {
     return (EXIT_FAILURE);
   }
   #..........................................................
-  $cmd = "$RUN_PP foo.pl";
+  ($a_default_executable = $common_a_default_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
+  $cmd = "$RUN_PP -o \"$a_default_executable\"  foo.pl";
   if (system("$cmd")) {
     $$message_ref = "\namsg238: sub $test_name_string cannot system $cmd\n";
     return (EXIT_FAILURE);
@@ -3374,7 +3399,9 @@ sub bar_1 {
   }
 
   #.................................................................
-  $cmd = "$RUN_PP -M ${SUBDIR1}::foo_1 -M ${SUBDIR2}::bar_1 foo.pl";
+  ($a_default_executable = $common_a_default_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
+  $cmd = "$RUN_PP -o \"$a_default_executable\"  -M ${SUBDIR1}::foo_1 -M ${SUBDIR2}::bar_1 foo.pl";
 
   if (system("$cmd")) {
     $$message_ref = "\namsg240: sub $test_name_string cannot system $cmd\n";
@@ -3496,6 +3523,7 @@ sub pp_minus_X_module_foo {
   my $cmd = "";
   my $sub_test = 0;
   my $print_cannot_locate_message = $FALSE;
+  my $common_a_default_executable = $a_default_executable;
 
   #..............................................
   my $foo_top_of_file_text = '
@@ -3536,7 +3564,9 @@ print $basename;
   }
 
   #..........................................................
-  $cmd = "$RUN_PP \"" . File::Spec->catfile($test_dir, $foo_pl_file) . '"';
+  ($a_default_executable = $common_a_default_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
+  $cmd = "$RUN_PP -o \"$a_default_executable\"  \"" . File::Spec->catfile($test_dir, $foo_pl_file) . '"';
   if (system("$cmd")) {
     $$message_ref = "\namsg284: sub $test_name_string cannot system $cmd\n";
     return (EXIT_FAILURE);
@@ -3570,8 +3600,9 @@ print $basename;
   }
 
   #.................................................................
+  ($a_default_executable = $common_a_default_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
 
-  $cmd = "$RUN_PP -X File::Basename \""
+  $cmd = "$RUN_PP -o \"$a_default_executable\"  -X File::Basename \""
          . File::Spec->catfile($test_dir, $foo_pl_file) . '"';
   if (system("$cmd")) {
     $$message_ref = "\namsg286: sub $test_name_string cannot system $cmd\n";
@@ -3670,7 +3701,7 @@ print "hello";
   }
 
   #..........................................................
-  $pipe_command_string = "$RUN_PP -r \"$hello_pl_file\"";
+  $pipe_command_string = "$RUN_PP -o \"$a_default_executable\"  -r \"$hello_pl_file\"";
   $cmd = $pipe_command_string; # Just to keep our code 
                                     # template here consistent.
   #.................................................................
@@ -3763,7 +3794,7 @@ print "hello $ARGV[0] $ARGV[1] $ARGV[2]";
 
   #..........................................................
   $pipe_command_string = 
-                "$RUN_PP -r \"$hello_pl_file\" \"one\" \"two\" \"three\"";
+                "$RUN_PP -o \"$a_default_executable\"  -r \"$hello_pl_file\" \"one\" \"two\" \"three\"";
   $cmd = $pipe_command_string; # Just to keep our code 
                                     # template here consistent.
   #.................................................................
@@ -3830,6 +3861,7 @@ sub pp_hello_to_log_file {
   my $sub_test = 0;
   my $log_file = 'c.txt';
   my $print_cannot_locate_message = $FALSE;
+  my $common_a_default_executable = $a_default_executable;
 
   #..............................................
   my $hello_top_of_file_text = '
@@ -3863,7 +3895,9 @@ print "hello";
   }
 
   #..........................................................
-  $cmd = "$RUN_PP hello.pl -v --log=$log_file";
+  ($a_default_executable = $common_a_default_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
+  $cmd = "$RUN_PP -o \"$a_default_executable\"  hello.pl -v --log=$log_file";
   if (system("$cmd")) {
     $$message_ref = "\namsg312: sub $test_name_string cannot system $cmd\n";
     return (EXIT_FAILURE);
@@ -3917,8 +3951,10 @@ print "hello";
     return(EXIT_FAILURE);
   }
   #..........................................................
+  ($a_default_executable = $common_a_default_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
   $log_file = 'd.txt';
-  $cmd = "$RUN_PP -L $log_file -v hello.pl";
+  $cmd = "$RUN_PP -o \"$a_default_executable\"  -L $log_file -v hello.pl";
   if (system("$cmd")) {
     $$message_ref = "\namsg314: sub $test_name_string cannot system $cmd\n";
     return (EXIT_FAILURE);
@@ -4040,7 +4076,7 @@ print "hello";
   }
 
   #..........................................................
-  $cmd = "$RUN_PP hello.pl";
+  $cmd = "$RUN_PP -o \"$a_default_executable\"  hello.pl";
   if (system("$cmd")) {
     $$message_ref = "\namsg324: sub $test_name_string cannot system $cmd\n";
     return (EXIT_FAILURE);
@@ -4185,8 +4221,6 @@ sub pp_minus_v_tests {
        $test_number,
        $test_dir,
        $hello_pl_file,
-       $hello_executable,
-       $a_default_executable,
        $verbose,
        $message_ref,
      ) = @_;
@@ -4194,14 +4228,6 @@ sub pp_minus_v_tests {
   #--------------------------------------------------------------------
   # Goal: Test -v with no arguements, with some other parameter, too,
   #       in many different ways.\
-  #
-  #       pp -v 1 hello.pl > v_1.txt
-  #       pp -v 2 hello.pl > v_2.txt
-  #       pp -v 3 hello.pl > v_3.txt
-  #
-  #       pp -v    hello.pl > v.txt
-  #       pp -vv   hello.pl > vv.txt
-  #       pp -vvv  hello.pl > vvv.txt
   #
   #       pp -o hello.exe -v hello.pl   > o_v.txt
   #       pp -o hello.exe -vv hello.pl  > o_vv.txt
@@ -4269,44 +4295,21 @@ sub pp_minus_v_tests {
 print "hello";
 ';
 #..............................................
+
   my @command_strings = (
-
-        "$RUN_PP -v 1 hello.pl > v_1.txt",
-        "$RUN_PP -v 2 hello.pl > v_2.txt",
-        "$RUN_PP -v 3 hello.pl > v_3.txt",
-        "$RUN_PP -v    hello.pl > v.txt",
-        "$RUN_PP -vv   hello.pl > vv.txt",
-        "$RUN_PP -vvv  hello.pl > vvv.txt",
-        "$RUN_PP -o hello.exe -v hello.pl   > o_v.txt",
-        "$RUN_PP -o hello.exe -vv hello.pl  > o_vv.txt",
-        "$RUN_PP -o hello.exe -vvv hello.pl > o_vvv.txt",
-        "$RUN_PP -o hello.exe -v 1 hello.pl > o_v_1.txt",
-        "$RUN_PP -o hello.exe -v 2 hello.pl > o_v_2.txt",
-        "$RUN_PP -o hello.exe -v 3 hello.pl > o_v_3.txt",
-        "$RUN_PP -v 1 hello.pl -o hello.exe > v_1_h_o.txt",
-        "$RUN_PP -v 2 hello.pl -o hello.exe > v_2_h_o.txt",
-        "$RUN_PP -v 3 hello.pl -o hello.exe > v_3_h_o.txt",
+        "$RUN_PP -o o_v${_out} -v $hello_pl_file   > o_v.txt",
+        "$RUN_PP -o o_vv${_out} -vv $hello_pl_file  > o_vv.txt",
+        "$RUN_PP -o o_vvv${_out} -vvv $hello_pl_file > o_vvv.txt",
+        "$RUN_PP -o o_v_1${_out} -v 1 $hello_pl_file > o_v_1.txt",
+        "$RUN_PP -o o_v_2${_out} -v 2 $hello_pl_file > o_v_2.txt",
+        "$RUN_PP -o o_v_3${_out} -v 3 $hello_pl_file > o_v_3.txt",
+        "$RUN_PP -v 1 $hello_pl_file -o v_1_h_o${_out} > v_1_h_o.txt",
+        "$RUN_PP -v 2 $hello_pl_file -o v_2_h_o${_out} > v_2_h_o.txt",
+        "$RUN_PP -v 3 $hello_pl_file -o v_3_h_o${_out} > v_3_h_o.txt",
   );
-
-  if ($os !~ m/^Win|cygwin/i) {
-    @converted_array = ();
-    foreach $command_string (@command_strings) {
-        $command_string =~ s/hello.exe/hello.out/g;
-        push(@converted_array, ($command_string));
-    }
-    @command_strings = ();
-    push(@command_strings, @converted_array);
-
-  }
 
 
   my @text_files_to_examine = (
-        'v_1.txt',
-        'v_2.txt',
-        'v_3.txt',
-        'v.txt',
-        'vv.txt',
-        'vvv.txt',
         'o_v.txt',
         'o_vv.txt',
         'o_vvv.txt',
@@ -4407,47 +4410,11 @@ print "hello";
     }
 
     #..........................................................
-    # Remove any executables from prior iterations
-    if ($text_file_to_examine =~  m/o/) {
-      $file_to_send_to_pipe = $hello_executable;
-      if (-e($hello_executable)) {
-        # Remove any executables from prior sub tests
-        if (!(unlink($hello_executable))) {
-          $$message_ref =  "\namsg346: "                      .
-              "Test $test_and_sub_test: $test_name_string "   .
-              "cannot remove file $hello_executable\n";
-          return(EXIT_FAILURE);
-        }
-      } # exists
-    } else {
-      if (-e($a_default_executable)) {
-        # Remove any executables from prior sub tests
-        if (!(unlink($a_default_executable))) {
-          $$message_ref =  "\namsg348: "                      .
-              "Test $test_and_sub_test: $test_name_string "   .
-              "cannot remove file $a_default_executable\n";
-          return(EXIT_FAILURE);
-        }
-      } # exists
-      $file_to_send_to_pipe = $a_default_executable;
-    }
-
-    #..........................................................
     $cmd = $command_strings[$i];
     if (system("$cmd")) {
       $$message_ref = "\namsg350: sub ${test_name_string}_$test_and_sub_test" .
                       " cannot system $cmd\n";
       return (EXIT_FAILURE);
-    } else {
-      if ($verbose) {
-        print ("sub $test_name_string ");
-        print ("Hopefully, \"$cmd\" created $test_dir/");
-        if ($text_file_to_examine =~  m/o/) {
-          print ("$hello_executable\n");
-        } else {
-          print ("$a_default_executable\n");
-        }
-      }
     }
     #..........................................................
     if ( ($i % $MODULUS) == 0) {
@@ -4526,32 +4493,6 @@ print "hello";
         print ("\.\.\.\n");
       }
     }
-
-    #..........................................................
-    # Now to see if the created executable works
-    $error = pipe_a_command
-                           (
-                             $test_number,
-                             $i,
-                             $test_name_string,
-                             $test_dir,
-                             $pipe_command_string,
-                             $file_to_send_to_pipe,
-                             "hello",
-                             $os,
-                             $verbose,
-                             $message_ref,
-                             $print_cannot_locate_message,
-                          );
-    if ($error == EXIT_FAILURE) {
-      $$message_ref = 
-        " Test $test_and_sub_test \n" . $$message_ref . 
-        "\nDid $cmd produce $file_to_send_to_pipe?\n";
-      return ($error);
-    }
-
-    #.................................................................
-
 
   } # for $i
   #..........................................................
@@ -4851,6 +4792,7 @@ sub test_par_clean {
   my $ignore_errors = $TRUE;
   my $left_over_cache_dirs = 0;
   my $should_be_cache_dirs = 0;
+  my $common_hello_executable = $hello_executable;
 
   #..........................................................
   $$message_ref = "";
@@ -4895,6 +4837,8 @@ sub test_par_clean {
   #.................................................................
   $ENV{PAR_GLOBAL_CLEAN} = 0;
   #.................................................................
+  ($hello_executable = $common_hello_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
   $cmd = "$RUN_PP -o \"$hello_executable\" \"$hello_pl_file\" ";
   print ("\namsg452: About to $cmd with PAR_GLOBAL_CLEAN = 0\n") if ($verbose);
   if (system("$cmd")) {
@@ -4972,6 +4916,8 @@ sub test_par_clean {
   #.................................................................
   $ENV{PAR_GLOBAL_CLEAN} = 1;
   #.................................................................
+  ($hello_executable = $common_hello_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
   $cmd = "$RUN_PP -o \"$hello_executable\" \"$hello_pl_file\" ";
   print ("\namsg461: About to $cmd with PAR_GLOBAL_CLEAN = 1\n") if ($verbose);
   if (system("$cmd")) {
@@ -5047,6 +4993,8 @@ sub test_par_clean {
   }
 
   #.................................................................
+  ($hello_executable = $common_hello_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
   if ( $Config{useshrplib} and ($Config{useshrplib} ne 'false') ) {
     # Perl was built as shared library, so the -d option is valid.
     #.................................................................
@@ -5109,6 +5057,7 @@ sub test_par_clean {
   #######################
   # Next sub test
   #######################
+
   #.................................................................
   print ("amsg489:Removing $par_scratch_dir caches\n") if $verbose;
   $error = deltree($par_scratch_dir, 0, $message_ref, $ignore_errors);
@@ -5125,6 +5074,8 @@ sub test_par_clean {
   }
 
   #.................................................................
+  ($hello_executable = $common_hello_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
   if ( $Config{useshrplib} and ($Config{useshrplib} ne 'false') ) {
     # Perl was built as shared library, so the -d option is valid.
     #.................................................................
@@ -5189,6 +5140,7 @@ sub test_par_clean {
   #######################
   # Next sub test
   #######################
+
   #.................................................................
   print ("amsg502: Removing $par_scratch_dir caches\n") if $verbose;
   $error = deltree($par_scratch_dir, 0, $message_ref, $ignore_errors);
@@ -5211,6 +5163,8 @@ sub test_par_clean {
   #.................................................................
   $ENV{PAR_GLOBAL_CLEAN} = 0;
   #.................................................................
+  ($hello_executable = $common_hello_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
   # Careful!  The -C should clean the cache
   $cmd = "$RUN_PP -C -o \"$hello_executable\" \"$hello_pl_file\" ";
   print ("\namsg505: About to $cmd with PAR_GLOBAL_CLEAN = 0\n") if ($verbose);
@@ -5281,6 +5235,8 @@ sub test_par_clean {
   #.................................................................
   $ENV{PAR_GLOBAL_CLEAN} = 1;
   #.................................................................
+  ($hello_executable = $common_hello_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
   $cmd = "$RUN_PP -C -o \"$hello_executable\" \"$hello_pl_file\" ";
   print ("\bamsg521: About to $cmd with PAR_GLOBAL_CLEAN = 1\n") if ($verbose);
   if (system("$cmd")) {
@@ -5362,6 +5318,8 @@ sub test_par_clean {
   print ("\namsg537: There are $left_over_cache_dirs cache dirs\n") if $verbose;
    
   #.................................................................
+  ($hello_executable = $common_hello_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
   if ( $Config{useshrplib} and ($Config{useshrplib} ne 'false') ) {
     # Perl was built as shared library, so the -d option is valid.
     #.................................................................
@@ -5465,6 +5423,8 @@ sub test_par_clean {
   # Since $ENV{PAR_GLOBAL_CLEAN} is 1, the -C should do NOTHING.
   #.................................................................
   #.................................................................
+  ($hello_executable = $common_hello_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
   if ( $Config{useshrplib} and ($Config{useshrplib} ne 'false') ) {
     # Perl was built as shared library, so the -d option is valid.
     #.................................................................
@@ -5526,7 +5486,6 @@ sub test_par_clean {
   #.................................................................
   return(EXIT_SUCCESS);
   #.................................................................
-  
   }
 }
 #########################################################################
@@ -5650,16 +5609,16 @@ sub create_small_minus_a_pl_file {
   }
 
 #......................................................................
-my $pl_verbiage = 
-'#!/usr/bin/perl' . "\n" .
-'use PAR;' . "\n" .
-'my $line;' . "\n" .
-"\n" .
-'my $text = "";' . "\n" .
-'$text = PAR::read_file("' . quotemeta($modified_fqpn) . '");' . "\n" .
-"\n" .
-'print($text);' . "\n" .
-"\n";
+my $pl_verbiage = <<'...';
+#!/usr/bin/perl
+use PAR;
+my $line;
+
+my $text = PAR::read_file('MODIFIED_FQPN');
+
+print($text);
+...
+$pl_verbiage =~ s/MODIFIED_FQPN/$modified_fqpn/;
 
 #......................................................................
   $error = create_file($hello_pl_file,
@@ -5783,13 +5742,15 @@ sub pp_test_small_minus_a {
   my $print_cannot_locate_message = $FALSE;
   my $message = "";
 
-  my $expected_results = "hello";
+  my $expected_results = "";
   my $textfile = File::Spec->catdir($test_dir, "text");
   my $orig_fqpn = $textfile;
   my $forward_fqpn;
   my $forward_with_slash_fqpn;
   my $forward_no_slash_fqpn;
   my $modified_fqpn;
+  my $common_hello_executable = $hello_executable;
+
 
   ($forward_fqpn = $textfile) =~ s!\\!\/!g;
   ($forward_with_slash_fqpn = $forward_fqpn) =~ s!^\w:!!;
@@ -5817,6 +5778,9 @@ sub pp_test_small_minus_a {
   #.................................................................
 
   #.................................................................
+  ($hello_executable = $common_hello_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+  $expected_results = "subtest $sub_test";
+
   if (!(chdir("$test_dir"))) {
       $$message_ref = "\namsg590: sub $test_name_string cannot " .
                       "chdir $test_dir\n:$!:\n";
@@ -5824,7 +5788,7 @@ sub pp_test_small_minus_a {
   }
 
   #.................................................................
-  $error = create_file($textfile, "", $verbose, $message_ref, "hello");
+  $error = create_file($textfile, "", $verbose, $message_ref, $expected_results);
   if ($error == EXIT_FAILURE) {
     $$message_ref = "\namsg592: sub $test_name_string: " . $$message_ref;
     return (EXIT_FAILURE);
@@ -5922,6 +5886,9 @@ sub pp_test_small_minus_a {
   #.................................................................
   #                            Sub Test 2
   #.................................................................
+  ($hello_executable = $common_hello_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+  $expected_results = "subtest $sub_test";
+
   if (!(chdir("$test_dir"))) {
       $$message_ref = "\namsg598: sub $test_name_string cannot " .
                       "chdir $test_dir\n:$!:\n";
@@ -5929,7 +5896,7 @@ sub pp_test_small_minus_a {
   }
 
   #.................................................................
-  $error = create_file($textfile, "", $verbose, $message_ref, "hello");
+  $error = create_file($textfile, "", $verbose, $message_ref, $expected_results);
   if ($error == EXIT_FAILURE) {
     $$message_ref = "\namsg600: sub $test_name_string: " . $$message_ref;
     return (EXIT_FAILURE);
@@ -6014,6 +5981,9 @@ sub pp_test_small_minus_a {
   #.................................................................
   #                             Sub Test 3
   #.................................................................
+  ($hello_executable = $common_hello_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+  $expected_results = "subtest $sub_test";
+
   if (!(chdir("$test_dir"))) {
       $$message_ref = "\namsg604: sub $test_name_string cannot " .
                       "chdir $test_dir\n:$!:\n";
@@ -6021,7 +5991,7 @@ sub pp_test_small_minus_a {
   }
 
   #.................................................................
-  $error = create_file($textfile, "", $verbose, $message_ref, "hello");
+  $error = create_file($textfile, "", $verbose, $message_ref, $expected_results);
   if ($error == EXIT_FAILURE) {
     $$message_ref = "\namsg606: sub $test_name_string: " . $$message_ref;
     return (EXIT_FAILURE);
@@ -6106,6 +6076,8 @@ sub pp_test_small_minus_a {
   # Second test group
   #                             Sub Test 4
   #.................................................................
+  ($hello_executable = $common_hello_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+  $expected_results = "subtest $sub_test";
 
   $modified_fqpn = $forward_with_slash_fqpn;
 
@@ -6117,7 +6089,7 @@ sub pp_test_small_minus_a {
   }
 
   #.................................................................
-  $error = create_file($textfile, "", $verbose, $message_ref, "hello");
+  $error = create_file($textfile, "", $verbose, $message_ref, $expected_results);
   if ($error == EXIT_FAILURE) {
     $$message_ref = "\namsg614: sub $test_name_string: " . $$message_ref;
     return (EXIT_FAILURE);
@@ -6238,35 +6210,34 @@ sub create_large_minus_a_pl_file {
     print ("all_text_files is $all_text_files\n");
   }
 
-  $all_text_files =~ s!^\w:!!;  
-  $all_text_files =~ s!^\\!!;
-  $all_text_files =~ s!\\\\!\/!g;
+  $all_text_files =~ s!^(\w:|\\\\)!!;  
+  $all_text_files =~ s!\\!/!g;
+  $all_text_files =~ s!^/!!;
 
 #......................................................................
-my $pl_verbiage = 
-'#!/usr/bin/perl -w' . "\n" .
-"\n" .
-'use PAR;' . "\n" .
-'use strict;' . "\n" .
-"\n" .
-'my @files = split "[\r\n]+", PAR::read_file("' . quotemeta($all_text_files) . '");' . "\n" .
-"\n" .
-'my $file = "";' . "\n" .
-'my $text = "";' . "\n" .
-'my $accumulated_text = "";' . "\n" .
-'foreach $file (@files) {' . "\n" .
-'  $file =~ s!^\w:!!;  ' . "\n" .
-'  $file =~ s!^\\\\!!;' . "\n" .
-'  $file =~ s!\\\\!\/!g;' . "\n" .
-'  $file =~ s!^\\/!!g;' . "\n" .
-"\n" .
-'  $text = PAR::read_file("$file");' . "\n" .
-'  chomp($text);' . "\n" .
-'  $accumulated_text = $accumulated_text . $text;' . "\n" .
-'}' . "\n" .
-'print $accumulated_text;'
-;
+my $pl_verbiage = <<'...';
+#!/usr/bin/perl -w
 
+use PAR;
+use strict;
+
+my @files = split "[\r\n]+", PAR::read_file('ALL_TEXT_FILES');
+
+my $file = "";
+my $text = "";
+my $accumulated_text = "";
+foreach $file (@files) {
+  $file =~ s!^(\w:|\\)!!;
+  $file =~ s!\\!/!g;
+  $file =~ s!^/!!g;
+
+  $text = PAR::read_file($file);
+  chomp($text);
+  $accumulated_text .= $text;
+}
+print $accumulated_text;
+...
+$pl_verbiage =~ s/ALL_TEXT_FILES/$all_text_files/;
 
 #......................................................................
   $error = create_file($hello_pl_file,
@@ -6280,6 +6251,7 @@ my $pl_verbiage =
   }
 
   print ("\namsg634: sub create_large_minus_a_pl_file was successful\n") if $verbose;
+
   return(EXIT_SUCCESS);
 
 }
@@ -6362,6 +6334,7 @@ sub pp_test_large_minus_A {
   my $all_text_files = "all_text_files";
   my $all_text_files_fqpn = File::Spec->catdir($test_dir, $all_text_files);
   my $expected_results = "hello01hello02";
+  my $common_hello_executable = $hello_executable;
 
   # Note: The fully qualified path name must be given for PAR::read_file
   my $textfile01 = File::Spec->catdir($test_dir, "text01");
@@ -6401,6 +6374,8 @@ sub pp_test_large_minus_A {
     $$message_ref = "\namsg644 sub $test_name_string: " . $$message_ref;
     return (EXIT_FAILURE);
   }
+
+  ($hello_executable = $common_hello_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
 
   #.................................................................
   $error = create_large_minus_a_pl_file ($test_name_string,
@@ -6493,6 +6468,8 @@ sub pp_test_large_minus_A {
   #.................................................................
   #                        Sub Test
   #.................................................................
+  ($hello_executable = $common_hello_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
   $error = create_large_minus_a_pl_file ($test_name_string,
                                          $sub_test,
                                          $verbose, 
@@ -6598,6 +6575,8 @@ sub pp_test_large_minus_A {
   #.................................................................
   #                        Sub Test
   #.................................................................
+  ($hello_executable = $common_hello_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
+
   $error = create_large_minus_a_pl_file ($test_name_string,
                                          $sub_test,
                                          $verbose, 
@@ -6783,8 +6762,6 @@ $RUN_PP  = "\"$PERL\" \"$PP\"";
 $RUN_PAR = "\"$PERL\" \"$PAR\"";
 
 
-my $_out = $Config{_exe} || '.out';
-
 my $hello_pl_file = "hello.pl";
 my $foo_pl_file = "foo.pl";
 my $bar_pl_file = "bar.pl";
@@ -6821,6 +6798,11 @@ if ($debug) {
 #  skip("Skipping  tests for brevity "  . "$test_number \n", 30);
 
 ########################### Next Test 001 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_hello_1";
 $error = prior_to_test($test_number,
                        $startdir,
@@ -6863,6 +6845,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 002 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_o_hello_hello_dot_pl";
 
 $error = prior_to_test($test_number,
@@ -6908,6 +6895,14 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 003 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
+$foo_pl_file = "foo$test_number.pl";
+$bar_pl_file = "bar$test_number.pl";
+
 $test_name_string = "pp_minus_o_foo_foo_dot_pl_bar_dot_pl";
 
 $error = prior_to_test($test_number,
@@ -6956,6 +6951,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 004 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_p_hello";
 
 $error = prior_to_test($test_number,
@@ -7002,6 +7002,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 005 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_p_minus_o_hello_dot_par_hello";
 
 $error = prior_to_test($test_number,
@@ -7048,6 +7053,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 006 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_o_hello_file_dot_par";
 
 $error = prior_to_test($test_number,
@@ -7096,6 +7106,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 007 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_S_minus_o_hello_file";
 
 $error = prior_to_test($test_number,
@@ -7143,6 +7158,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 008 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_p_minus_o_out_dot_par_file";
 
 $error = prior_to_test($test_number,
@@ -7188,6 +7208,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 009 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_B_with_small_minus_p_tests";
 
 $error = prior_to_test($test_number,
@@ -7233,6 +7258,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 010 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_B_with_large_minus_P_tests";
 
 $error = prior_to_test($test_number,
@@ -7278,6 +7308,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 011 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_e_print_hello";
 
 $error = prior_to_test($test_number,
@@ -7323,6 +7358,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 012 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_p_minus_e_print_hello";
 
 $error = prior_to_test($test_number,
@@ -7367,6 +7407,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 013 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_P_minus_e_print_hello";
 
 $error = prior_to_test($test_number,
@@ -7411,6 +7456,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 014 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_c_hello";
 
 $error = prior_to_test($test_number,
@@ -7457,6 +7507,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 015 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_x_hello";
 
 $error = prior_to_test($test_number,
@@ -7505,6 +7560,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 016 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_n_minus_x_hello";
 
 $error = prior_to_test($test_number,
@@ -7553,6 +7613,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 017 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_I_foo_hello";
 
 $error = prior_to_test($test_number,
@@ -7598,6 +7663,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 018 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_I_foo_minus_I_bar_hello";
 
 $error = prior_to_test($test_number,
@@ -7643,6 +7713,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 019 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_lib_foo_hello";
 
 $error = prior_to_test($test_number,
@@ -7688,6 +7763,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 020 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_lib_foo_minus_lib_bar_hello";
 
 $error = prior_to_test($test_number,
@@ -7733,6 +7813,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 021 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_M_foo_hidden_print_foo";
 
 $error = prior_to_test($test_number,
@@ -7778,6 +7863,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 022 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_M_foo_minus_M_bar_hello";
 
 $error = prior_to_test($test_number,
@@ -7822,6 +7912,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 023 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_X_module_foo";
 $error = prior_to_test($test_number,
                        $startdir,
@@ -7867,6 +7962,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 024 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_r_hello";
 $error = prior_to_test($test_number,
                        $startdir,
@@ -7912,6 +8012,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 025 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_r_hello_a_b_c";
 $error = prior_to_test($test_number,
                        $startdir,
@@ -7957,6 +8062,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 026 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_hello_to_log_file";
 $error = prior_to_test($test_number,
                        $startdir,
@@ -8002,6 +8112,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 027 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_name_four_ways";
 $error = prior_to_test($test_number,
                        $startdir,
@@ -8047,6 +8162,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 028 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_v_tests";
 $error = prior_to_test($test_number,
                        $startdir,
@@ -8073,8 +8193,6 @@ $error =
         $test_number,
         $test_dir,
         $hello_pl_file,
-        $hello_executable,
-        $a_default_executable,
         $verbose,
         \$message,
      );
@@ -8093,6 +8211,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 029 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_minus_V";
 $error = prior_to_test($test_number,
                        $startdir,
@@ -8137,6 +8260,11 @@ print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 
 ########################### Next Test 030 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_help_tests";
 $error = prior_to_test($test_number,
                        $startdir,
@@ -8182,6 +8310,11 @@ print ("\n\n\n") if ($error == EXIT_FAILURE);
 #      } # SKIP 
 
 ########################### Next Test 031 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "test_par_clean";
 $error = prior_to_test($test_number,
                        $startdir,
@@ -8232,6 +8365,11 @@ print ("\n\n\n") if ($error == EXIT_FAILURE);
 }
 
 ########################### Next Test 032 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_gui_tests";
 $error = prior_to_test($test_number,
                        $startdir,
@@ -8270,6 +8408,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 033 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_test_small_minus_a";
 $error = prior_to_test($test_number,
                        $startdir,
@@ -8315,6 +8458,11 @@ ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
 ########################### Next Test 034 ##################################
+$a_default_executable = "a$test_number$_out";
+$hello_executable = "hello$test_number$_out";
+$foo_executable = "foo$test_number$_out";
+$bar_executable = "bar$test_number$_out";
+
 $test_name_string = "pp_test_large_minus_A";
 $error = prior_to_test($test_number,
                        $startdir,
