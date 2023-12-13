@@ -88,6 +88,11 @@ sub pipe_a_command {
   my $log_file = "log_file_from_pipe";
   my $stdline = "";
 
+  # wrap the rest into an eval block so that we can restore the
+  # starting directory in case of an early return
+  my $result = eval
+  {
+
   #.................................................................
   if (!(chdir("$directory"))) {
       $$message_ref = "\n\[405\]" .
@@ -208,4 +213,18 @@ sub pipe_a_command {
   #.................................................................
   return (EXIT_SUCCESS);
 
+  }; # eval
+  if (!chdir($cwd1)) {
+      $$message_ref = "\n\[435\]" .
+            "sub $test_name_string cannot chdir back to $cwd1\n:$!:\n";
+      return (EXIT_FAILURE);
+  }
+  if ($@) {
+    $$message_ref = "\n\[440\]\n"                                  .
+       "An exception occured in test ${test_number}:\n$@\n";
+    return (EXIT_FAILURE);
+  }
+  return $result;
 }
+
+1;
