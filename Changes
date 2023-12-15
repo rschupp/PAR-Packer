@@ -1,3 +1,14 @@
+1.060  2023-07-20
+
+- automated_pp_test: use unique filenames for all pp generated executables
+  
+  Reusing the names of executables produces random test failures
+  at least on macOS, perhaps due to some antivirus software.
+
+- automated_pp_test: pipe_a_command() doesn't restore the directory where it's called
+  
+- switch doc "Please submit bug reports to ..." to GitHub issues
+
 1.059  2023-07-20
 
 - correctly propagate the exit value of a packed executable
