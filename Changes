@@ -1,4 +1,9 @@
-1.060  2023-07-20
+1.061  2023-12-22
+
+- no change (except for Changes) to sync GitHub tag and CPAN release
+  after a bungled upload to CPAN
+
+1.060  2023-12-15
 
 - automated_pp_test: use unique filenames for all pp generated executables
   
