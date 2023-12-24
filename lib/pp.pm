@@ -331,13 +331,19 @@ that causes trouble, you can turn this off by setting the
 environment variable C<PAR_VERBATIM> to C<1>.
 
 Since PAR 0.958, you can use an optional regular expression (I<REGEX> above)
-to select the files in the archive which should be filtered. Example:
+to select the files in the archive which should be filtered. The regular expression
+is matched against module names as they would appear as keys in %INC,
+e.g. C<Foo/Bar.pm> for module C<Foo::Bar>.  Examples:
 
-  pp -o foo.exe -F Bleach=warnings\.pm$ foo.pl
+  pp -o foo.exe -F 'Bleach=warnings\.pm$' foo.pl
 
 This creates a binary executable F<foo.exe> from F<foo.pl> packaging all files
 as usual except for files ending in C<warnings.pm> which are filtered with
 L<PAR::Filter::Bleach>.
+
+  pp -o foo.exe -F 'Bleach=^(?!Win32/)' foo.pl
+
+This "bleaches" all modules B<except> those in the C<Win32::> namespace.
 
 Note: The same restriction on C<__DATA__> sections holds as for B<--filter>.
 
