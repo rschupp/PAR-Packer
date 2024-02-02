@@ -1,7 +1,11 @@
 #undef readdir
 
-#ifdef _MSC_VER
-#include <io.h>
+#ifdef WIN32
+#include <windows.h>
+#include <wchar.h>
+#include <stdio.h>
+#include <shellapi.h>
+#include <stringapiset.h>
 #else
 #include <sys/types.h>
 #include <unistd.h>
@@ -148,30 +152,30 @@ void seek_to_subsystem( int fd ) {
 }
 
 /* algorithm stolen from Win32::ShellQuote, in particular quote_literal() */
-char* shell_quote(const char *src)
+wchar_t* shell_quote_wide(const wchar_t *src)
 {
     /* some characters from src may be replaced with two chars,
      * add enclosing quotes and trailing \0 */
-    char *dst = malloc(2 * strlen(src) + 3);
+    wchar_t *dst = malloc((2 * wcslen(src) + 3) * sizeof(wchar_t));
 
-    const char *p = src;
-    char *q = dst;
-    char c;
+    const wchar_t *p = src;
+    wchar_t *q = dst;
+    wchar_t c;
 
-    *q++ = '"';                         /* opening quote */
+    *q++ = L'"';                         /* opening quote */
 
-    while (c = *p)
+    while ((c = *p))
     {
-        if (c == '\\') 
+        if (c == L'\\')
         {
-            int n = strspn(p, "\\");    /* span of backslashes starting at p */
+            int n = wcsspn(p, L"\\");    /* span of backslashes starting at p */
 
-            memcpy(q, p, n);            /* copy the span */
+            wmemcpy(q, p, n);
             q += n;
 
-            if (p[n] == '\0' || p[n] == '"') /* span ends in quote or NUL */
+            if (p[n] == L'\0' || p[n] == L'"') /* span ends in quote or NUL */
             {
-                memcpy(q, p, n);        /* copy the span once more */
+                wmemcpy(q, p, n);
                 q += n;
             }
 
@@ -179,16 +183,73 @@ char* shell_quote(const char *src)
             continue;
         }
 
-        if (c == '"')
-            *q++ = '\\';                /* escape the following quote */
+        if (c == L'"')
+            *q++ = L'\\';                /* escape the following quote */
         *q++ = c;
         p++;
     }
 
-    *q++ = '"';                         /* closing quote */
-    *q++ = '\0';
+    *q++ = L'"';                         /* closing quote */
+    *q++ = L'\0';
 
     return dst;
+}
+
+void spawn_perl(const char *argv0, const char *my_perl, const char *stmpdir)
+{
+    typedef BOOL (WINAPI *pALLOW)(DWORD);
+    HINSTANCE hinstLib;
+    pALLOW ProcAdd;
+#ifndef ASFW_ANY
+#define ASFW_ANY -1
+#endif
+    LPWSTR *w_argv;
+    LPWSTR w_my_perl;
+    int w_argc, i, len, rc;
+
+    hinstLib = LoadLibrary("user32");
+    if (hinstLib != NULL) {
+        ProcAdd = (pALLOW) GetProcAddress(hinstLib, "AllowSetForegroundWindow");
+        if (ProcAdd != NULL)
+        {
+            (ProcAdd)(ASFW_ANY);
+        }
+    }
+
+    w_argv = CommandLineToArgvW(GetCommandLineW(), &w_argc);
+    if (w_argv == NULL)
+        par_die("%s: GetCommandLineW or CommandLineToArgvW failed: $^E=%u", 
+                argv0, GetLastError());
+
+    /* convert my_perl from local codepage to UTF-16 */
+    len = MultiByteToWideChar(CP_THREAD_ACP, 0, my_perl, -1, NULL, 0);
+    if (len == 0)
+        par_die("%s: failed to convert string to UTF-16: $^E=%u", 
+                argv0, GetLastError());
+    w_my_perl = malloc(len * sizeof(wchar_t));        /* len includes trailing NUL */
+    len = MultiByteToWideChar(CP_THREAD_ACP, 0, my_perl, -1, w_my_perl, len);
+    w_argv[0] = w_my_perl;
+
+    for (i = 0; i < w_argc; i++)
+    {
+        len = wcslen(w_argv[i]);
+        if (len == 0 
+            || w_argv[i][len-1] == L'\\'
+            || wcspbrk(w_argv[i], L" \t\n\r\v\""))
+        {
+            w_argv[i] = shell_quote_wide(w_argv[i]);
+        }
+    }    
+
+    par_setenv("PAR_SPAWNED", "1");
+
+    rc = _wspawnvp(P_WAIT, w_my_perl, (const wchar_t* const*)w_argv);
+    
+    free(w_my_perl);
+    LocalFree(w_argv);
+
+    par_cleanup(stmpdir);
+    exit(rc);
 }
 #endif
 
@@ -206,15 +267,6 @@ int main ( int argc, char **argv, char **env )
     char *my_file;
     char *my_perl;
     char *my_prog;
-#ifdef WIN32
-typedef BOOL (WINAPI *pALLOW)(DWORD);
-    HINSTANCE hinstLib;
-    pALLOW ProcAdd;
-    char **argp;
-#ifndef ASFW_ANY
-#define ASFW_ANY -1
-#endif
-#endif
 
     par_init_env();
 
@@ -350,36 +402,10 @@ typedef BOOL (WINAPI *pALLOW)(DWORD);
     }
 
     /* finally spawn the custom Perl interpreter */
-    argv[0] = my_perl;
 #ifdef WIN32
-    hinstLib = LoadLibrary("user32");
-    if (hinstLib != NULL) {
-        ProcAdd = (pALLOW) GetProcAddress(hinstLib, "AllowSetForegroundWindow");
-        if (ProcAdd != NULL)
-        {
-            (ProcAdd)(ASFW_ANY);
-        }
-    }
-
-    par_setenv("PAR_SPAWNED", "1");
-
-    /* quote argv strings if necessary, cf. Win32::ShellQuote */
-    for (argp = argv; *argp; argp++)
-    {
-        int len = strlen(*argp);
-        if ( len == 0 
-             || (*argp)[len-1] == '\\'
-             || strpbrk(*argp, " \t\n\r\v\"") )
-        {
-            *argp = shell_quote(*argp);
-        }
-    }
-
-    rc = spawnvp(P_WAIT, my_perl, (char* const*)argv);
-
-    par_cleanup(stmpdir);
-    exit(rc);
+    spawn_perl(argv[0], my_perl, stmpdir);       /* no return */
 #else
+    argv[0] = my_perl;
     execvp(my_perl, argv);
     par_die("%s: exec of %s (custom Perl interpreter) failed (errno=%i)\n", 
             argv[0], my_perl, errno);
