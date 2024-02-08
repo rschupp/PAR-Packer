@@ -8,7 +8,7 @@ require "./t/utils.pl";
 
 plan tests => 6;
 
-my $exe = pp_ok(-I => "t/blib/lib", -e => <<'...');
+my $exe = pp_ok(-I => "t/data/blib/lib", -I => "t/data/blib/arch", -e => <<'...');
 use XSFoo; 
 XSFoo::hello();
 

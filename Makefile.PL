@@ -65,13 +65,15 @@ WriteMakefile1(
       $have_cc ? (
         'script/parl.pod'     => 'blib/man1/parl.1' ) : (),
     },
-    EXE_FILES		=> [
+    EXE_FILES => [
         'script/par.pl',
         'script/pp',
         'script/tkpp',
     ],
-    DIR                       => [ 't/data', $have_cc ? 'myldr' : () ],
-    NEEDS_LINKING	      => $have_cc,
+    DIR => [ 
+        't/data/XSFoo', 
+        $have_cc ? 'myldr' : () 
+    ],
 
     META_MERGE      => {
       'meta-spec'             => { version => 2 },

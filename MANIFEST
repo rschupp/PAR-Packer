@@ -91,8 +91,8 @@ t/data/lib/Double/Colon/Barnie.pm
 t/data/lib/Double/Colon/Foo/Bar/Quux.pm
 t/data/lib/Double/Colon/Fred.pm
 t/data/lib/Myfile.pm
-t/data/lib/XSFoo.pm
-t/data/Makefile.PL
-t/data/XSFoo.xs
+t/data/XSFoo/lib/XSFoo.pm
+t/data/XSFoo/Makefile.PL
+t/data/XSFoo/XSFoo.xs
 t/test-proc
 t/utils.pl

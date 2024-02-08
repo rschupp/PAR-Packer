@@ -3,7 +3,7 @@ use ExtUtils::MakeMaker;
 
 WriteMakefile(
     NAME              => 'XSFoo',
-    VERSION_FROM      => 'lib/XSFoo.pm',
+    VERSION           => '0.01',
     PREREQ_PM         => {},
     ABSTRACT          => 'Test files for PAR::Packer',
     AUTHOR            => 'Roderich Schupp <roderich.schupp@gmail.com>',
@@ -11,7 +11,4 @@ WriteMakefile(
     LIBS              => [''],
     DEFINE            => '',
     INC               => '-I.',
-
-    INST_ARCHLIB      => '$(INST_LIB)',
-    clean             => { FILES => '../blib' },
 );

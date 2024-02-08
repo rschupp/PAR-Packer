@@ -28,7 +28,8 @@ sub pp_p_ok
     return $par;
 }
 
-my $par = pp_p_ok(-I => "t/blib/lib", -e => "use XSFoo;");
+my $par = pp_p_ok(-I => "t/data/blib/lib", -I => "t/data/blib/arch", 
+                  -e => "use XSFoo;");
 
 my ($out, $err) = run_ok($^X, "-MPAR=$par", -e => "use XSFoo; XSFoo::hello()");
 like($out, qr/greetings from XSFoo/, "output from XSFoo::hello matches");
