@@ -17,6 +17,7 @@ contrib/pare/pare_readme.txt
 contrib/pp_osx_codesign_fix/pp_osx_codesign_fix.c
 contrib/stdio/Stdio.pm
 contrib/stdio/Stdio_readme.txt
+cpanfile
 lib/App/Packer/PAR.pm
 lib/PAR/Filter.pm
 lib/PAR/Filter/Bleach.pm
@@ -71,6 +72,7 @@ t/85-crt-glob.t
 t/85-myfile.t
 t/86-xs-exe.t
 t/86-xs-par.t
+t/87-xs-cross.t
 t/90-exitcode.t
 t/90-gh41.t
 t/90-gh66.t
@@ -91,8 +93,14 @@ t/data/lib/Double/Colon/Barnie.pm
 t/data/lib/Double/Colon/Foo/Bar/Quux.pm
 t/data/lib/Double/Colon/Fred.pm
 t/data/lib/Myfile.pm
+t/data/XSBar/Makefile.PL
+t/data/XSBar/XSBar.pm
+t/data/XSBar/XSBar.xs
 t/data/XSFoo/lib/XSFoo.pm
 t/data/XSFoo/Makefile.PL
 t/data/XSFoo/XSFoo.xs
+t/data/XSQuux/Makefile.PL
+t/data/XSQuux/XSQuux.pm
+t/data/XSQuux/XSQuux.xs
 t/test-proc
 t/utils.pl

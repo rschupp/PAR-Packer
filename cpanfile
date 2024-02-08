@@ -21,6 +21,7 @@ on configure => sub {
     requires 'DynaLoader';
     requires 'ExtUtils::CBuilder';
     requires 'ExtUtils::Embed';
+    requires 'ExtUtils::Depends';
     requires 'File::Basename';
     requires 'File::Glob';
     requires 'File::Spec::Functions';
