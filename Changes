@@ -1,3 +1,26 @@
+1.062  2024-03-05
+
+- Fix #84: PAR::Packer packaged scripts lose the ability to parse UTF-8 arguments from the command line
+  
+  myldr/boot.c passes its arguments in argv (except argv[0]) down to the custom
+  perl interpreter using _spawnvp(). But this argv has already been converted to the
+  local code page, so the custom interpreter can't get it back using
+  GetCommandLineW(). Convert myldr/boot.c to use GetCommandLineW() and
+  CommandLineToArgvW() to get the "real" (UTF-16) command line and pass
+  that down via _wspawnvp(). Convert shell_quote() (to escape embedded
+  blanks, double quotes etc in the arguments) from using char to wchar_t.
+  Thanks to @fengzyf for the report and most of the work.
+
+- pod: explain how REGEX is applied in "--modfilter=FILTER=REGEX"
+
+- require PAR >= 1.020
+
+- add new test t/87-xs-cross.t to investigate rschupp/PAR#11
+
+- move some test modules around and fix up tests accordingly
+
+- bump version of actions/checkout
+
 1.061  2023-12-22
 
 - no change (except for Changes) to sync GitHub tag and CPAN release
