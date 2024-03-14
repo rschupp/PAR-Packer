@@ -1,21 +1,15 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 use strict;
-use File::Spec::Functions;
-use Data::Dumper;
+use warnings;
 
 use Test::More;
 require "./t/utils.pl";
 
-if (eval { require Archive::Unzip::Burst; 1; })
-{
-    plan skip_all => "Archive::Unzip::Burst detected";
-    # Archive::Unzip::Burst can't handle the archive constructed below
-}
-else
-{
-    plan tests => 4;
-}
+# Archive::Unzip::Burst can't handle the archive constructed below
+plan skip_all => "Archive::Unzip::Burst detected" if eval { require Archive::Unzip::Burst; 1; };
+
+plan tests => 4;
 
 my $hello = "hello, garbage\n";
 my $exe = pp_ok(-e => "print qq[$hello]");
