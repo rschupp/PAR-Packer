@@ -69,6 +69,7 @@ t/30-current_exec.t
 t/40-packer_cd_option.t
 t/80-doublecolon.t
 t/85-crt-glob.t
+t/85-ldlibpthname.t
 t/85-myfile.t
 t/86-xs-exe.t
 t/86-xs-par.t

@@ -63,21 +63,20 @@ static int isSafeDir(const char* val)
 
 void par_setup_libpath( const char * stmpdir )
 {
-    const char *val = NULL;
-    char *ld_path = LDLIBPTHNAME;
-    char *ld_path_env = NULL;
+    const char *ldlibpthname = stringify(LDLIBPTHNAME);
+    const char *val;
 
-    if ( (val = par_getenv(ld_path)) == NULL || strlen(val) == 0 ) {
-        par_setenv(ld_path, stmpdir);
+    if ( (val = par_getenv(ldlibpthname)) == NULL || strlen(val) == 0 ) {
+        par_setenv(ldlibpthname, stmpdir);
     }
-    else if ( !strstr(val, stmpdir) ) {
+    else {
         /* prepend stmpdir to (value of) environment variable */
-        ld_path_env = malloc( 
+       char *new_val = malloc( 
             strlen(stmpdir) + strlen(path_sep) + strlen(val) + 1);
         sprintf(
-            ld_path_env, "%s%s%s",
+            new_val, "%s%s%s",
             stmpdir, path_sep, val);
-        par_setenv(ld_path, ld_path_env);
+        par_setenv(ldlibpthname, new_val);
     }
 }
 
@@ -252,11 +251,12 @@ char *par_mktmpdir ( char **argv ) {
 #else
 #define STREQ(a,b) (strcmp(a,b) == 0)
 #endif
+        const char *parl_exe = stringify(PARL_EXE);
 	int prog_len = strlen(progname);
-	int parl_len = strlen(PARL_EXE);
+	int parl_len = strlen(parl_exe);
 
 	if (prog_len >= parl_len
-	    && STREQ(progname + prog_len - parl_len, PARL_EXE)
+	    && STREQ(progname + prog_len - parl_len, parl_exe)
 	    && (prog_len == parl_len || progname[prog_len - parl_len - 1] == dir_sep[0])
 	    && argv[1]
 	    && strlen(argv[1]) >= 4

@@ -253,7 +253,7 @@ void spawn_perl(const char *argv0, const char *my_perl, const char *stmpdir)
 }
 #endif
 
-char pp_version_info[] = "@(#) Packed by PAR::Packer " PAR_PACKER_VERSION;
+char pp_version_info[] = "@(#) Packed by PAR::Packer " stringify(PAR_PACKER_VERSION);
 
 /* the contents of this string (in the executable myldr/boot)
  * will be patched by script/par.pl if option "--clean" is used with pp
