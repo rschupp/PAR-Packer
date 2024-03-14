@@ -230,10 +230,15 @@ WriteMakefile(
 
 sub MY::postamble
 {
+    # Strawberry perl doesn't set $Config{ldlibpthname}
+    my $ldlibpthname = $^O eq 'MSWin32' ? "PATH" : ($Config{ldlibpthname} || "NA");
+    warn "No \$Config{ldlibpthname} specified for your OS ($^O)".
+	 "- PAR::Packer functionality may be limited" if $ldlibpthname eq "NA";
+
     my $make_frag = <<"EOT";
 LD=$ld
 CC=$cc
-CFLAGS=$cflags -DLDLIBPTHNAME=\\"$Config{ldlibpthname}\\" -DPARL_EXE=\\"parl$exe\\" -DPAR_PACKER_VERSION=\\"\$(VERSION)\\"
+CFLAGS=$cflags -DLDLIBPTHNAME=$ldlibpthname -DPARL_EXE=parl$exe -DPAR_PACKER_VERSION=\$(VERSION)
 OPTIMIZE=$optimize
 LDFLAGS=$Config{ldflags}
 PERL_LDFLAGS=$ldflags

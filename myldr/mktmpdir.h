@@ -67,6 +67,9 @@
 #define par_lstat stat
 #endif
 
+#define _stringify(s) #s
+#define stringify(s) _stringify(s)
+
 #if defined(WIN32) || defined(OS2)
 static const char *dir_sep = "\\";
 static const char *path_sep = ";";
