@@ -111,7 +111,6 @@ my $make;
 
 # create temporary directory to install modules into
 my $base = $ENV{PAR_TMPDIR} = tempdir(TMPDIR => 1, CLEANUP => 1);
-my @libs = (catdir($base, qw(lib perl5), $Config{archname}), catdir($base, qw(lib perl5)));
 
 # prepend the new installations to the perl search path for all sub processes
 # The reason is that configuring XSBar requires an installed XSQuux:
@@ -119,12 +118,16 @@ my @libs = (catdir($base, qw(lib perl5), $Config{archname}), catdir($base, qw(li
 #   (this will add dependencies of XSQuux, though there are none this time)
 # - auto/XSQuux/XSQuux.a (added to LIBS by ExtUtils::Depends::find_extra_libs())
 #   (this causes XSBar.xs.dll to link to XSQuux.xs.dll)
-$ENV{PERL5LIB} = join($Config{path_sep}, @libs, $ENV{PERL5LIB});
+{
+    my $perl5lib = catdir($base, qw(lib perl5));
+    $perl5lib .= "$Config{path_sep}$ENV{PERL5LIB}" if $ENV{PERL5LIB};
+    $ENV{PERL5LIB} = $perl5lib;
+}
 
 my $cwd = getcwd();
 my ($exe, $out, $err);
 
-foreach my $mod (qw(XSQuux XSBar))
+foreach my $mod (qw(XSQuux XSBar))      # must build XSQuux **before** XSBar
 {
     diag("build and install $mod");
     chdir(catdir($cwd, qw(t data), $mod)) or die "can't chdir to $mod source: $!";
