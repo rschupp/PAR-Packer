@@ -1,3 +1,32 @@
+1.063  2024-03-15
+
+- Fixes #86 "-l somelib.dll doesn't work in recent PAR::Packer versions"
+  
+  par_setup_libpath() in myldr/mktmpdir.c used to set all known
+  "search path for DLLs" environment variables (e.g. LD_LIBRARY_PATH
+  on Linux). The search path is set up so that the first directory
+  searched is a packed executable's cache directory (where the shared
+  perl library will be extracted to, also all packed "external" DLLs).
+  In 2017 (by 2ac7078) it was changed to only set the variable
+  relevant for the OS where PAR::Packer was build on, given by
+  $Config{ldlibpthname}. But some perl distributions
+  (e.g. Strawberry on Windows) do not specify $Config{ldlibpthname}.
+  
+  Hardwire "PATH" for MSWin32 and otherwise complain if this Config
+  variable is undefined.
+  
+  Add t/85-ldlibpthname.t: check that the value of the environment
+  variable for searching for DLLs, usually $ENV{$Config{ldlibpthname}},
+  starts with the cache directory, $ENV{PAR_TEMP}.
+
+- Skip t/87-xs-cross.t if ExtUtils::Depends 0.8001 is installed.
+  This version fails to build and install the "import lib"
+  corresponding to XSQuux.xs.dll and hence fails to build XSBar.xs.dll.
+  
+  The test works on GitHub CI, because the "strawberry" perl distribution
+  installed there comes with ExtUtils::Depends version 0.8000
+  (ie. **not** current) pre-installed.
+
 1.062  2024-03-05
 
 - Fix #84: PAR::Packer packaged scripts lose the ability to parse UTF-8 arguments from the command line
