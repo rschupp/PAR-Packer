@@ -1042,29 +1042,30 @@ sub _add_manifest {
     $files = $opt->{a} if ($opt->{a});
     $lists = $opt->{A} if ($opt->{A});
 
-    local $/ = "\n";
-    foreach my $list (@$lists) {
-        my $fh = $self->_open('<', $list, 'text');
-        while (my $line = <$fh>) {
-            chomp($line);
-            push(@$files, $line);
+    {
+        local $/ = "\n";
+        foreach my $list (@$lists) {
+            my $fh = $self->_open('<', $list, 'text');
+            while (my $line = <$fh>) {
+                chomp($line);
+                push(@$files, $line);
+            }
         }
     }
 
-    foreach my $file (grep length, @$files) {
-        $file =~ s{\\}{/}g;
+    foreach my $src_dst (grep length, @$files) {
+        $src_dst =~ s{\\}{/}g;
 
-        if ($file =~ /;/) {
-            push(@$return, [ split(/;/, $file) ]);
-        }
-        else {
-            my $alias = $file;
-            $alias =~ s{^[a-zA-Z]:}{} if $^O eq 'MSWin32';
-            $alias =~ s{^/}{};
-            push(@$return, [ $file, $alias ]);
-        }
+        my ($src, $dst) = split(";", $src_dst, 2);
+        $dst = $src unless defined $dst;
+
+        $dst =~ s{^[a-zA-Z]:}{} if $^O eq 'MSWin32';
+        $dst =~ s{^/}{};
+        die qq[--addfile/--addlist target path "$src_dst" must not contain components "." or ".."]
+            if grep { /^\.\.?$/ } split("/", $dst);
+        push(@$return, [ $src, $dst ]);
     }
-    return ($return);
+    return $return;
 }
 
 sub add_manifest {

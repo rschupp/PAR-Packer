@@ -1709,7 +1709,7 @@ sub pp_minus_P_minus_e_print_hello {
   }
   return ($error);
   #.................................................................
- 
+
 }
 
 #########################################################################
@@ -3661,7 +3661,7 @@ sub pp_minus_r_hello {
   # -------
   # . Create the perl file hello.pl with code that will print "hello".
   # . pipe "pp -r hello.pl" and collect the results.
-  # 
+  #
   # Success if "hello", failure otherwise.
   #
   #--------------------------------------------------------------------
@@ -3702,7 +3702,7 @@ print "hello";
 
   #..........................................................
   $pipe_command_string = "$RUN_PP -o \"$a_default_executable\"  -r \"$hello_pl_file\"";
-  $cmd = $pipe_command_string; # Just to keep our code 
+  $cmd = $pipe_command_string; # Just to keep our code
                                     # template here consistent.
   #.................................................................
   $error = pipe_a_command
@@ -3753,7 +3753,7 @@ sub pp_minus_r_hello_a_b_c {
   # -------
   # . Create the perl file hello.pl with code that will print "hello".
   # . pipe "pp -r hello.pl" and collect the results.
-  # 
+  #
   # Success if "hello", failure otherwise.
   #
   #--------------------------------------------------------------------
@@ -3793,9 +3793,9 @@ print "hello $ARGV[0] $ARGV[1] $ARGV[2]";
   }
 
   #..........................................................
-  $pipe_command_string = 
+  $pipe_command_string =
                 "$RUN_PP -o \"$a_default_executable\"  -r \"$hello_pl_file\" \"one\" \"two\" \"three\"";
-  $cmd = $pipe_command_string; # Just to keep our code 
+  $cmd = $pipe_command_string; # Just to keep our code
                                     # template here consistent.
   #.................................................................
   $error = pipe_a_command
@@ -3846,10 +3846,10 @@ sub pp_hello_to_log_file {
   # -------
   # . Create the perl file hello.pl with code that will print "hello".
   # . pipe "pp hello.pl --log=c" and collect the results.
-  # 
+  #
   # THIS IS A DO-NOTHING TEST ... SO FAR ...
   # At least it will show that --log=c does no harm
-  # 
+  #
   # Success if "hello", failure otherwise.
   #
   #--------------------------------------------------------------------
@@ -3914,7 +3914,7 @@ print "hello";
       print ("The log file $log_file has lines in it\n");
     }
   } else {
-    $$message_ref = 
+    $$message_ref =
         "sub ${test_name_string}_$sub_test command $cmd \n"  .
         "did not produce file $log_file or $log_file does not have " .
         "more than 10 bytes in it\n";
@@ -3945,7 +3945,7 @@ print "hello";
 
   #..........................................................
   if (!(unlink($a_default_executable))) {
-    $$message_ref = 
+    $$message_ref =
         "Test ${test_name_string}_$sub_test "   .
         "cannot remove file $a_default_executable\n";
     return(EXIT_FAILURE);
@@ -3971,7 +3971,7 @@ print "hello";
       print ("The log file $log_file has lines in it\n");
     }
   } else {
-    $$message_ref = 
+    $$message_ref =
         "sub ${test_name_string}_$sub_test command $cmd \n"  .
         "did not produce file $log_file or $log_file does not have " .
         "more than 10 bytes in it\n";
@@ -4021,12 +4021,12 @@ sub pp_name_four_ways {
   #--------------------------------------------------------------------
   # Goal: Test of four ways to name the created executable
   # ----
-  # 
+  #
   #     % pp hello.pl (produces default a.exe on windows)
   #     % pp -o output1.exe hello.pl
   #     % pp --output output2.exe hello.pl
   #     % pp --output=output3.exe hello.pl
-  # 
+  #
   # . Create the file hello.pl that will print "hello".
   # . system "pp hello.pl"
   # . system "pp -o output1.exe hello.pl"
@@ -4036,7 +4036,7 @@ sub pp_name_four_ways {
   #   and collect the results.  Each should be "hello".
   # . Get the size of the executables.
   # . Compare the sizes.  They should all be the same size.
-  # 
+  #
   # Success if "hello" in each case, failure otherwise.
   #
   #--------------------------------------------------------------------
@@ -4232,11 +4232,11 @@ sub pp_minus_v_tests {
   #       pp -o hello.exe -v hello.pl   > o_v.txt
   #       pp -o hello.exe -vv hello.pl  > o_vv.txt
   #       pp -o hello.exe -vvv hello.pl > o_vvv.txt
-  # 
+  #
   #       pp -o hello.exe -v 1 hello.pl > o_v_1.txt
   #       pp -o hello.exe -v 2 hello.pl > o_v_2.txt
   #       pp -o hello.exe -v 3 hello.pl > o_v_3.txt
-  # 
+  #
   #       pp -v 1 hello.pl -o hello.exe > v_1_h_o.txt
   #       pp -v 2 hello.pl -o hello.exe > v_2_h_o.txt
   #       pp -v 3 hello.pl -o hello.exe > v_3_h_o.txt
@@ -4247,7 +4247,7 @@ sub pp_minus_v_tests {
   #      shown .txt files.
   #    . Examine the three created text files for each set of five,
   #      for the patterns shown below.
-  # 
+  #
   #      For v 1
   #           pp:\s+Packing\s+hello.pl
   #           pp:\s+ Running.*parl\w*.exe
@@ -4260,15 +4260,15 @@ sub pp_minus_v_tests {
   #           pp:\s+Writing\s+PAR\s+on
   #           pp:.* making\s+MANIFEST
   #           pp:\s+ Running.*parl\w*.exe
-  # 
-  # 
+  #
+  #
   #  . pipe the created executable and collect the results.
   #    . If the created text file has an "o" in it,
   #      pipe hello.exe on Windows.
   #      Otherwise pipe just a.exe on windows.
-  # 
+  #
   #    Hello should be the result in each case.
-  # 
+  #
   #--------------------------------------------------------------------
 
   my $error = EXIT_FAILURE;
@@ -4326,13 +4326,13 @@ print "hello";
           'pp:\s+Packing\s+hello.pl',
           'pp:\s+Running.*parl\w*\.exe',
   );
-  
+
   my @results_to_expect_vv = (
           'pp:\s+Packing\s+hello.pl',
           'pp:\s+Writing\s+PAR\s+on',
           'pp:\s+Running.*parl\w*\.exe',
   );
-  
+
   my @results_to_expect_vvv = (
           'pp:\s+Packing\s+hello.pl',
           'pp:\s+Writing\s+PAR\s+on',
@@ -4350,7 +4350,7 @@ print "hello";
     }
     @results_to_expect_v = @converted_array;
   }
-    
+
   if ($os !~ m/^Win|cygwin/i) {
     @converted_array = ();
     foreach $line (@results_to_expect_vv) {
@@ -4359,7 +4359,7 @@ print "hello";
     }
     @results_to_expect_vv = @converted_array;
   }
-    
+
   if ($os !~ m/^Win|cygwin/i) {
     @converted_array = ();
     foreach $line (@results_to_expect_vvv) {
@@ -4523,13 +4523,13 @@ sub pp_minus_V {
   # . The string
   #     "Such use shall not be construed as a distribution"
   #   should be part of what was collected.
-  # 
+  #
   #--------------------------------------------------------------------
   my $error = EXIT_FAILURE;
   my $pipe_command_string_big_V = "$RUN_PP -V";
   my $pipe_command_string_minus_minus = "$RUN_PP --version";
   my $sub_test = 0;
-  my $expected_string = 
+  my $expected_string =
          "Such use shall not be construed as a distribution";
   my $cmd = "";
   my $print_cannot_locate_message = $FALSE;
@@ -4615,7 +4615,7 @@ sub pp_help_tests {
   # -------
   # . pipe "pp -h" and collect the results
   # . The string "PAR Packager" should have been collected.
-  # 
+  #
   #--------------------------------------------------------------------
   my $error = EXIT_FAILURE;
   my $pipe_command_string = "$RUN_PP -h";
@@ -4648,7 +4648,7 @@ sub pp_help_tests {
                         );
 
   if ($error == EXIT_FAILURE) {
-      $$message_ref = 
+      $$message_ref =
         "\nTest ${test_number}_$sub_test \n" . $$message_ref;
      return ($error);
   }
@@ -4672,7 +4672,7 @@ sub pp_help_tests {
                         );
 
   if ($error == EXIT_FAILURE) {
-      $$message_ref = 
+      $$message_ref =
         "\nTest ${test_number}_$sub_test \n" . $$message_ref;
   }
 
@@ -4697,11 +4697,11 @@ sub test_par_clean {
   #--------------------------------------------------------------------
   # Goal: Test PAR_GLOBAL_CLEAN with different parameters
   # ----
-  # Notes:  PAR_GLOBAL_CLEAN overides -C. If you set 
-  #         PAR_GLOBAL_CLEAN to 1 or 0, -C doesn't do anything. 
+  # Notes:  PAR_GLOBAL_CLEAN overides -C. If you set
+  #         PAR_GLOBAL_CLEAN to 1 or 0, -C doesn't do anything.
   #         If -C does work, it creates temp-pid dirs, not
   #         cache-sha1 dirs (important for how_many_cache_dirs()).
-  # 
+  #
   # Outline
   # -------
   # . Compute the name of the par scratchpad directory.
@@ -4733,7 +4733,7 @@ sub test_par_clean {
   #   . Pipe the hello executable and collect the results.
   #   . Success if "hello"
   #   . There should be 2 + $leftover cache directories.
-  # 
+  #
   # . Again, remove the cache dirs that we can, and
   #   count up $left_over_cache_dirs.
   # . Test when perl was built as shared library
@@ -5316,7 +5316,7 @@ sub test_par_clean {
   }
 
   print ("\namsg537: There are $left_over_cache_dirs cache dirs\n") if $verbose;
-   
+
   #.................................................................
   ($hello_executable = $common_hello_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
 
@@ -5416,7 +5416,7 @@ sub test_par_clean {
   }
 
   print ("\namsg553: There are $left_over_cache_dirs cache dirs\n") if $verbose;
-   
+
 
   #.................................................................
   $ENV{PAR_GLOBAL_CLEAN} = 1;
@@ -5491,7 +5491,7 @@ sub test_par_clean {
 #########################################################################
 
 #########################################################################
-sub pp_gui_tests { 
+sub pp_gui_tests {
   my (
        $test_name_string,
        $os,
@@ -5517,12 +5517,12 @@ sub pp_gui_tests {
   # . Test the out.exe for gui. We can use Win32::Exe
   #   itself to inspect the GUI of the resulting
   #   exe, so the snippet below should do:
-  # 
+  #
   #   my $exe = Win32::Exe->new('out.exe');
   #   is($exe->Subsystem, 'windows');
-  # Success if true in both cases, failure otherwise.  # 
-  # 
-  # 
+  # Success if true in both cases, failure otherwise.  #
+  #
+  #
   #--------------------------------------------------------------------
   my $error = EXIT_FAILURE;
   my $cmd = "$RUN_PP --gui -o $hello_executable $hello_pl_file";
@@ -5564,7 +5564,7 @@ sub pp_gui_tests {
     $$message_ref = "\npgt_msg570: sub $test_name_string: $$message_ref";
     return (EXIT_FAILURE);
   }
-  
+
   #.................................................................
   if (system("$cmd")) {
     $$message_ref = "\namsg572: sub $test_name_string cannot system $cmd:$!:\n";
@@ -5591,8 +5591,8 @@ sub pp_gui_tests {
 ########################################################################
 sub create_small_minus_a_pl_file {
   my ($test_name_string,
-      $sub_test, 
-      $verbose, 
+      $sub_test,
+      $verbose,
       $hello_pl_file,
       $modified_fqpn,
       $message_ref) = @_;
@@ -5670,13 +5670,13 @@ sub pp_test_small_minus_a {
   #     . Test the above line to work with
   #           pp -o hello.exe -a "c:/a/small_a/text;/a/small_a/text" hello.pl
   #   ........................................................................
-  # 
+  #
   # Detailed Outline
   # ----------------
   # Note: "fqpn" means "fully qualified path name"
   #  Examples:  Assume the text file c:\a\small_a\text
   #  $orig_fqpn = c:\a\small_a\text
-  #        This is the original fqpn 
+  #        This is the original fqpn
   #  $forward_fqpn = c:/a/small_a/text
   #        This is the original fqpn with forward slashes
   #  $forward_with_slash_fqpn = /a/small_a/text
@@ -5689,7 +5689,7 @@ sub pp_test_small_minus_a {
   # . Create $expected_results = "hello from open hello"
   #  . Create (As shown in Examples just above)
   #    . $orig_fqpn
-  #    . $forward_fqpn, 
+  #    . $forward_fqpn,
   #    . $forward_with_slash_fqpn
   #    . $forward_no_slash_fqpn
   #   ..................
@@ -5697,7 +5697,7 @@ sub pp_test_small_minus_a {
   #      my $text = PAR::read_file("$modified_fqpn");
   #      print($text);
   #   ..................
-  #    
+  #
   # ..............................................................
   # First test group
   #   . Obtain $modified_fqpn = $forward_no_slash_fqpn,
@@ -5717,17 +5717,6 @@ sub pp_test_small_minus_a {
   #   Test 3
   #     . Recreate $textfile
   #     . system (pp -o hello.exe -a "$forward_fqpn;$forward_no_slash_fqpn" hello.pl);
-  #     . Run hello.exe
-  #     . Delete $textfile and run hello.exe again
-  #     . Copy to, and run, hello.exe from a different directory
-  #
-  # ..............................................................
-  # Second test group
-  #   . Obtain $modified_fqpn = $forward_with_slash_fqpn,
-  #   Test 4
-  #     . Make all of the slashes to be forward slashes.
-  #     . Recreate $textfile
-  #     . system (pp -o hello.exe -a "$forward_fqpn;$forward_with_slash_fqpn" hello.pl);
   #     . Run hello.exe
   #     . Delete $textfile and run hello.exe again
   #     . Copy to, and run, hello.exe from a different directory
@@ -5767,7 +5756,7 @@ sub pp_test_small_minus_a {
       "\$forward_with_slash_fqpn = $forward_with_slash_fqpn\n"    .
       "\$forward_no_slash_fqpn = $forward_no_slash_fqpn\n"        .
       "\$$modified_fqpn = $modified_fqpn\n"
-      ; # 
+      ; #
     print $message;
   }
 
@@ -5797,7 +5786,7 @@ sub pp_test_small_minus_a {
   #.................................................................
   $error = create_small_minus_a_pl_file ($test_name_string,
                                          $sub_test,
-                                         $verbose, 
+                                         $verbose,
                                          $hello_pl_file,
                                          $modified_fqpn,
                                          $message_ref);
@@ -6072,129 +6061,13 @@ sub pp_test_small_minus_a {
   }
   #.................................................................
 
-  #.................................................................
-  # Second test group
-  #                             Sub Test 4
-  #.................................................................
-  ($hello_executable = $common_hello_executable) =~ s/(\Q$_out\E)$/-$sub_test$1/;
-  $expected_results = "subtest $sub_test";
-
-  $modified_fqpn = $forward_with_slash_fqpn;
-
-  #.................................................................
-  if (!(chdir("$test_dir"))) {
-      $$message_ref = "\namsg610: sub $test_name_string cannot " .
-                      "chdir $test_dir\n:$!:\n";
-      return (EXIT_FAILURE);
-  }
-
-  #.................................................................
-  $error = create_file($textfile, "", $verbose, $message_ref, $expected_results);
-  if ($error == EXIT_FAILURE) {
-    $$message_ref = "\namsg614: sub $test_name_string: " . $$message_ref;
-    return (EXIT_FAILURE);
-  }
-
-  #.................................................................
-  $error = create_small_minus_a_pl_file ($test_name_string,
-                                         $sub_test,
-                                         $verbose, 
-                                         $hello_pl_file,
-                                         $modified_fqpn,
-                                         $message_ref);
-  if ($error == EXIT_FAILURE) {
-    $$message_ref = "\namsg616: sub $test_name_string: " . $$message_ref;
-    return (EXIT_FAILURE);
-  }
-  #.................................................................
-
-  $cmd = "$RUN_PP -o $hello_executable -a \"$forward_fqpn;$forward_with_slash_fqpn\" hello.pl";
-  if (system("$cmd")) {
-    $$message_ref = "\namsg618: sub $test_name_string cannot system $cmd\n";
-    return (EXIT_FAILURE);
-  }
-
-  #.................................................................
-  $error = pipe_a_command
-                         (
-                           $test_number,
-                           $sub_test++,
-                           $test_name_string,
-                           $test_dir,
-                           $pipe_command_string,
-                           $hello_executable,
-                           $expected_results,
-                           $os,
-                           $verbose,
-                           $message_ref,
-                           $print_cannot_locate_message,
-                        );
-  if ($error == EXIT_FAILURE) {
-    $$message_ref =
-      $$message_ref . "\nDid $cmd produce $hello_executable?\n";
-    return ($error);
-  }
-
-  #.................................................................
-  print ("About to remove a file and try executable again\n") if ($verbose);
-  $error = remove_file_and_try_executable_again
-                                  (
-                                    $textfile,
-                                    $test_number,
-                                    $sub_test++,
-                                    $test_name_string,
-                                    $test_dir,
-                                    $pipe_command_string,
-                                    $hello_executable,
-                                    $expected_results,
-                                    $os,
-                                    $verbose,
-                                    $message_ref,
-                                    $print_cannot_locate_message,
-                                  );
-
-  if ($error == EXIT_FAILURE) {
-    return ($error);
-  }
-
-  #.................................................................
-  print ("About to test in a different subdir\n") if ($verbose);
-  $error = test_in_further_subdir (
-                                    $test_number,
-                                    $sub_test++,
-                                    $test_name_string,
-                                    $test_dir,
-                                    $SUBDIR4,
-                                    $pipe_command_string,
-                                    $hello_executable,
-                                    $expected_results,
-                                    $os,
-                                    $verbose,
-                                    $message_ref,
-                                    $print_cannot_locate_message,
-                                  );
-
-  #.................................................................
-  if ($error == EXIT_FAILURE) {
-    $$message_ref =
-      $$message_ref . "\nDid $cmd produce $hello_executable?\n";
-     return ($error);
-  }
-
-  #.................................................................
-
-
-  #.................................................................
-  return (EXIT_SUCCESS);
-  #.................................................................
-
 }
 
 ########################################################################
 sub create_large_minus_a_pl_file {
   my ($test_name_string,
-      $sub_test, 
-      $verbose, 
+      $sub_test,
+      $verbose,
       $hello_pl_file,
       $all_text_files,
       $message_ref) = @_;
@@ -6210,7 +6083,7 @@ sub create_large_minus_a_pl_file {
     print ("all_text_files is $all_text_files\n");
   }
 
-  $all_text_files =~ s!^(\w:|\\\\)!!;  
+  $all_text_files =~ s!^(\w:|\\\\)!!;
   $all_text_files =~ s!\\!/!g;
   $all_text_files =~ s!^/!!;
 
@@ -6286,43 +6159,43 @@ sub pp_test_large_minus_A {
   #  Note for PAR::read_file("path/list_file"): "path" does NOT
   #       contain the drive letter, colon or leading slash!!!
   #   ........................................................................
-  # 
+  #
   #
   # Outline
   # -------
-  # . Create the files (text1, text2) with a different line of 
+  # . Create the files (text1, text2) with a different line of
   #   text ("hello01", "hello02") in each.
   # . Create a fourth text file, all_text_files, and
   #   list the full path names of the first two files in it.
-  # 
+  #
   # . Create the file hello.pl that will
   #   . PAR::read_file the file all_text_files and get the names
   #     of the two files.
   #   . For each of the two files,
   #     . Strip any leading drive letter and colon
   #     . Strip any leading back slash.
-  #     . Convert remaining back slashes to forward slashes 
+  #     . Convert remaining back slashes to forward slashes
   #     . PAR::read_file the file and get it's contents.
   #   . Print the acumulated contents
-  # 
+  #
   # . system (pp -o hello.exe -A list_file -a list_file hello.pl)
   # . Run hello
   # . Delete all text files.
   # . Run hello again
   # . Copy hello to a different directory and run it again
-  # 
+  #
   # . system (pp -o hello.exe -A c:\path\list_file -a c:\path\list_file hello.pl)
   # . Run hello
   # . Delete all text files.
   # . Run hello again
   # . Copy hello to a different directory and run it again
-  # 
+  #
   # . system (pp -o hello.exe -A c:/path/list_file -a c:/path/list_file hello.pl)
   # . Run hello
   # . Delete all text files.
   # . Run hello again
   # . Copy hello to a different directory and run it again
-  # 
+  #
   #--------------------------------------------------------------------
 
   my $error = EXIT_FAILURE;
@@ -6365,7 +6238,7 @@ sub pp_test_large_minus_A {
   }
 
   #.................................................................
-  $error = create_file(  $all_text_files_fqpn, "", 
+  $error = create_file(  $all_text_files_fqpn, "",
                          $verbose,
                          $message_ref,
                          "$textfile01\n$textfile02",
@@ -6380,7 +6253,7 @@ sub pp_test_large_minus_A {
   #.................................................................
   $error = create_large_minus_a_pl_file ($test_name_string,
                                          $sub_test,
-                                         $verbose, 
+                                         $verbose,
                                          $hello_pl_file,
                                          $all_text_files,
                                          $message_ref);
@@ -6472,7 +6345,7 @@ sub pp_test_large_minus_A {
 
   $error = create_large_minus_a_pl_file ($test_name_string,
                                          $sub_test,
-                                         $verbose, 
+                                         $verbose,
                                          $hello_pl_file,
                                          $all_text_files_fqpn,
                                          $message_ref);
@@ -6481,7 +6354,7 @@ sub pp_test_large_minus_A {
     return (EXIT_FAILURE);
   }
   #.................................................................
-  $error = create_file(  $all_text_files_fqpn, "", 
+  $error = create_file(  $all_text_files_fqpn, "",
                          $verbose,
                          $message_ref,
                          "$textfile01\n$textfile02",
@@ -6579,7 +6452,7 @@ sub pp_test_large_minus_A {
 
   $error = create_large_minus_a_pl_file ($test_name_string,
                                          $sub_test,
-                                         $verbose, 
+                                         $verbose,
                                          $hello_pl_file,
                                          $all_text_files_fqpn,
                                          $message_ref);
@@ -6588,7 +6461,7 @@ sub pp_test_large_minus_A {
     return (EXIT_FAILURE);
   }
   #.................................................................
-  $error = create_file(  $all_text_files_fqpn, "", 
+  $error = create_file(  $all_text_files_fqpn, "",
                          $verbose,
                          $message_ref,
                          "$textfile01\n$textfile02",
@@ -6793,7 +6666,7 @@ if ($debug) {
   }
 }
 
-#SKIP: { 
+#SKIP: {
 #  $test_number = 31;
 #  skip("Skipping  tests for brevity "  . "$test_number \n", 30);
 
@@ -8307,7 +8180,7 @@ after_test($test_number++, $error, $message, $verbose);
 ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
 
-#      } # SKIP 
+#      } # SKIP
 
 ########################### Next Test 031 ##################################
 $a_default_executable = "a$test_number$_out";
@@ -8358,7 +8231,7 @@ if ($debug) {
 after_test($test_number++, $error, $message, $verbose);
 
 # XXX
-TODO: { 
+TODO: {
   todo_skip("Not yet clean", 1);
 ok ($error == EXIT_SUCCESS, "$test_name_string" . " $message");
 print ("\n\n\n") if ($error == EXIT_FAILURE);
