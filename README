@@ -4,8 +4,6 @@ and ".par" archives.
 
 The main front-end for PAR-Packer is the "pp" utility.
 
-Please type "perldoc PAR::FAQ" for frequently answered questions.
-
 For packing scripts with prerequisite modules into stand-alone scripts
 or executables (aka PerlApp, Perl2exe, or 'perlcc that works'), see
 "perldoc pp" and "perldoc tkpp".
@@ -31,7 +29,7 @@ Alternatively, if your CPAN shell is set up, you should just be able to do:
 
 As a last resort, you can manually install it. Download the tarball, untar it,
 then build it:
-  
+
   perl Makefile.PL
   make
   make test
@@ -42,7 +40,7 @@ Note that all of the above require that you have a C compiler installed.
 * Notes for Windows users
 
 If your Perl distribution is Strawberry Perl, you already have the
-MinGW C compiler installed. If you are using ActiveState Perl, 
+MinGW C compiler installed. If you are using ActiveState Perl,
 you may want to install the MinGW C compiler with:
 
   ppm install MinGW
