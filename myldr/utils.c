@@ -28,11 +28,11 @@
 
 #if defined __linux__ || defined __FreeBSD__
 
-/*  Look at /proc/$$/{exe,file} for the current executable 
+/*  Look at /proc/$$/{exe,file} for the current executable
 
     Returns malloc()ed string.  Caller must free.
     Returns NULL if can't be found.
-    
+
     Note that FreeBSD has /proc unmounted by default.  You'd think we could
     get this info via the kvm interface, but it turns out that to get
     kvm_getprocs()/kvm_read() to return any information we don't already
@@ -40,26 +40,26 @@
     couldn't get to work anyway.  Email me (philip-at-pied.nu) if want a
     stab at the code. */
 
-char *par_current_exec_proc( void ) 
+char *par_current_exec_proc( void )
 {
     char proc_path[MAXPATHLEN + 1], link[MAXPATHLEN + 1];
     char *ret = NULL;
     int n;
-    
-    n = sprintf( proc_path, "/proc/%i/%s", (int)getpid(), 
+
+    n = sprintf( proc_path, "/proc/%i/%s", (int)getpid(),
 #if defined __FreeBSD__
         "file"
 #else
         "exe"
 #endif
     );
-    if( n < 0 ) 
+    if( n < 0 )
         return NULL;
 
     n = readlink( proc_path, link, MAXPATHLEN);
     if( n < 0 )
         return NULL;
-    
+
     ret = (char *)malloc( n+1 );
     if( ret == NULL )
         return NULL;
@@ -68,7 +68,7 @@ char *par_current_exec_proc( void )
     ret[n] = '\0';
 
     return ret;
-} 
+}
 
 #endif
 
@@ -114,7 +114,7 @@ char *par_findprog(char *prog, const char *path) {
     /* Walk through PATH (path), looking for ourself (prog).
         This fails if we are invoked in an obscure manner;
         Basically, execvp( "/full/path/to/prog", "prog", NULL ) and
-        "/full/path/to" isn't in $PATH.  Of course, I can't think 
+        "/full/path/to" isn't in $PATH.  Of course, I can't think
         of a situation this will happen. */
 
     /* Note: use a copy of path as strtok() modifies its first argument */
@@ -235,7 +235,7 @@ void par_die(const char *format, ...)
     va_start(ap, format);
     vfprintf(stderr, format, ap);
     va_end(ap);
-    
+
     exit(255);
 }
 

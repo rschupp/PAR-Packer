@@ -39,7 +39,7 @@ static int isWritableDir(const char* val)
 {
     Stat_t statbuf;
 
-    return par_lstat(val, &statbuf) == 0 && 
+    return par_lstat(val, &statbuf) == 0 &&
            ( S_ISDIR(statbuf.st_mode) || S_ISLNK(statbuf.st_mode) ) &&
            access(val, W_OK) == 0;
 }
@@ -54,7 +54,7 @@ static int isSafeDir(const char* val)
 {
     Stat_t statbuf;
 
-    return par_lstat(val, &statbuf) == 0 && 
+    return par_lstat(val, &statbuf) == 0 &&
            S_ISDIR(statbuf.st_mode) &&
            statbuf.st_uid == getuid() &&
            (statbuf.st_mode & 0777) == 0700;
@@ -71,7 +71,7 @@ void par_setup_libpath( const char * stmpdir )
     }
     else {
         /* prepend stmpdir to (value of) environment variable */
-       char *new_val = malloc( 
+       char *new_val = malloc(
             strlen(stmpdir) + strlen(path_sep) + strlen(val) + 1);
         sprintf(
             new_val, "%s%s%s",
@@ -101,8 +101,8 @@ static off_t find_par_magic(int fd)
     char *p;
     off_t file_size = lseek(fd, 0, 2);
 
-    for (pos = (file_size-1) - (file_size-1) % CHUNK_SIZE; 
-         pos >= 0; 
+    for (pos = (file_size-1) - (file_size-1) % CHUNK_SIZE;
+         pos >= 0;
          pos -= CHUNK_SIZE) {
         CHECK(lseek(fd, pos, 0) != -1, "lseek failed");
         len = read(fd, buf, CHUNK_SIZE + magic_size);
@@ -121,13 +121,13 @@ char *par_mktmpdir ( char **argv ) {
     const char *key = NULL , *val = NULL;
 
     /* NOTE: all arrays below are NULL terminated */
-    const char *temp_dirs[] = { 
-        P_tmpdir, 
+    const char *temp_dirs[] = {
+        P_tmpdir,
 #ifdef WIN32
-        "C:\\TEMP", 
+        "C:\\TEMP",
 #endif
         ".", NULL };
-    const char *temp_keys[] = { "PAR_TMPDIR", "TMPDIR", "TEMPDIR", 
+    const char *temp_keys[] = { "PAR_TMPDIR", "TMPDIR", "TEMPDIR",
                                  "TEMP", "TMP", NULL };
     const char *user_keys[] = { "USER", "USERNAME", NULL };
 
@@ -157,13 +157,13 @@ char *par_mktmpdir ( char **argv ) {
     username = get_username_from_getpwuid();
     if ( !username ) { /* fall back to env vars */
         for ( i = 0 ; username == NULL && (key = user_keys[i]); i++) {
-            if ( (val = par_getenv(key)) && strlen(val) ) 
+            if ( (val = par_getenv(key)) && strlen(val) )
                 username = strdup(val);
         }
     }
     if ( username == NULL )
         username = "SYSTEM";
-   
+
     /* sanitize username: encode all bytes as 2 hex digits */
     {
         char *hexname = malloc(2 * strlen(username) + 1);
@@ -202,14 +202,14 @@ char *par_mktmpdir ( char **argv ) {
     }
 
     /* "$TEMP/par-$USER" */
-    stmp_len = 
+    stmp_len =
         strlen(tmpdir) +
         strlen(subdirbuf_prefix) +
         strlen(username) +
         strlen(subdirbuf_suffix) + 1024;
 
-    /* stmpdir is what we are going to return; 
-       top_tmpdir is the top $TEMP/par-$USER, needed to build stmpdir.  
+    /* stmpdir is what we are going to return;
+       top_tmpdir is the top $TEMP/par-$USER, needed to build stmpdir.
        NOTE: We need 2 buffers because snprintf() can't write to a buffer
        it is also reading from. */
     top_tmpdir = malloc( stmp_len );
@@ -219,7 +219,7 @@ char *par_mktmpdir ( char **argv ) {
 #else
     {
         if (mkdir(top_tmpdir, 0700) == -1 && errno != EEXIST) {
-            fprintf(stderr, "%s: creation of private subdirectory %s failed (errno=%i)\n", 
+            fprintf(stderr, "%s: creation of private subdirectory %s failed (errno=%i)\n",
                     argv[0], top_tmpdir, errno);
             return NULL;
         }
@@ -270,10 +270,10 @@ char *par_mktmpdir ( char **argv ) {
         off_t pos = find_par_magic(f);
         char buf[cache_marker_size];
 
-        if (pos >= 0) {                 
+        if (pos >= 0) {
             /* back up over pack(N) number and "\0CACHE" (or "\0CLEAN") */
-            pos -= FILE_offset_size + cache_marker_size;                  
-            lseek(f, pos, 0); 
+            pos -= FILE_offset_size + cache_marker_size;
+            lseek(f, pos, 0);
             CHECK(read(f, buf, cache_marker_size) == cache_marker_size, "short read");
             if (memcmp(buf, "\0CACHE", cache_marker_size) == 0) {
                 use_cache = 1;
@@ -347,7 +347,7 @@ static void par_rmtmpdir ( char *stmpdir ) {
     subsubdir = malloc( subsub_len );
 
     sprintf(subsubdir, "%s\\*.*", stmpdir);
-    
+
     hFile = _findfirst( subsubdir, &cur_file );
     if ( hFile == -1 ) return;
 
