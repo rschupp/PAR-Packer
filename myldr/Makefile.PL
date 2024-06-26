@@ -172,13 +172,13 @@ $boot_ldflags .= " $static_ldflags";
 if ($dynperl) {
     # on Debian derived distros make sure that the Debian package "libperl-dev"
     # is installed (which contains the /usr/lib/libperl.so symlink)
-    die qq[You need to install the distro (Debian, Ubuntu etc) package "libperl-dev"\n]
+    die qq[You are using Debian or Ubuntu and need to install package "libperl-dev"\n]
        if $^O =~ /^(linux|gnukfreebsd)$/i
-          && -x "/usr/bin/dpkg"
+          && -x "/usr/bin/dpkg-query"
                 # probably Debian or a derivative
-          && system("dpkg -S $^X >/dev/null 2>&1") == 0
+          && system("dpkg-query --search $^X >/dev/null 2>&1") == 0
                 # we're building with the system (distro) perl
-          && system("dpkg -l libperl-dev >/dev/null 2>&1") != 0;
+          && system("dpkg-query --status libperl-dev >/dev/null 2>&1") != 0;
                 # check install status of libperl-dev
 } else {
     my $file = $Config{libperl};
