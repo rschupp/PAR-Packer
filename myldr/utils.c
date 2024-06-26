@@ -133,17 +133,14 @@ char *par_findprog(char *prog, const char *path) {
             endp--;
         }
 
-        if (strlen(p) + 1 + strlen(prog) >= MAXPATHLEN) {
-            par_setenv("PAR_PROGNAME", prog);
-            return prog;
-        }
-
-        sprintf(filename, "%s%s%s", p, dir_sep, prog);
-        if (stat(filename, &statbuf) == 0 
-            && S_ISREG(statbuf.st_mode)
-            && access(filename, X_OK) == 0) {
-                par_setenv("PAR_PROGNAME", filename);
-                return strdup(filename);
+        if (strlen(p) + strlen(dir_sep) + strlen(prog) + 1 < sizeof(filename)) {
+            sprintf(filename, "%s%s%s", p, dir_sep, prog);
+            if (stat(filename, &statbuf) == 0
+                && S_ISREG(statbuf.st_mode)
+                && access(filename, X_OK) == 0) {
+                    par_setenv("PAR_PROGNAME", filename);
+                    return strdup(filename);
+            }
         }
     }
 
