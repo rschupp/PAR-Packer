@@ -1,9 +1,6 @@
 XS(XS_Internals_PAR_BOOT) {
     GV* tmpgv;
-    AV* tmpav;
-    SV** svp;
     int i;
-    int ok = 0;
     char *buf;
 
     TAINT;

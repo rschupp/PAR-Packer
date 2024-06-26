@@ -136,7 +136,7 @@ char *par_mktmpdir ( char **argv ) {
 
     char *progname = NULL, *username = NULL;
     char *stmpdir = NULL, *top_tmpdir = NULL;
-    int f, j, k, stmp_len = 0;
+    int f, stmp_len = 0;
     char sha1[cache_name_size + 1];
 
     if ( (val = par_getenv("PAR_TEMP")) && strlen(val) ) {
