@@ -5,7 +5,6 @@
 #include <wchar.h>
 #include <stdio.h>
 #include <shellapi.h>
-#include <stringapiset.h>
 #else
 #include <sys/types.h>
 #include <unistd.h>
