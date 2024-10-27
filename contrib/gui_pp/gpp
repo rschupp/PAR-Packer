@@ -46,7 +46,7 @@ if ( !$pp ) {
                    );
     exit(1);
 }
-if ( !open PP, "<$pp" ) {
+if ( !open PP, "<", $pp ) {
     $mw->messageBox( -title   => 'Error',
                      -icon    => 'error',
                      -message => "Can't open $pp: $!",
@@ -246,7 +246,7 @@ sub open_opts {
     }
     return if !$opts_file;
     my ( $save_chkd, $save_value );
-    if ( !open OH, "<$opts_file" ) {
+    if ( !open OH, "<", $opts_file ) {
         $mw->messageBox( -title   => 'Error',
                          -icon    => 'error',
                          -message => "$opts_file: $!",
@@ -294,7 +294,7 @@ sub save_opts {
         $save_chkd{ $opts[$_] }  = $chkd[$_];
         $save_value{ $opts[$_] } = $value[$_];
     }
-    if ( !open OH, ">$opts_file" ) {
+    if ( !open OH, ">", $opts_file ) {
         $mw->messageBox( -title   => 'Error',
                          -icon    => 'error',
                          -message => "$opts_file: $!",
@@ -310,7 +310,7 @@ sub save_opts {
 sub open_hist {
     return if !-e $gpp_history;
     my ( $source_hist, $output_hist, $opts_hist );
-    if ( !open HH, "<$gpp_history" ) {
+    if ( !open HH, "<", $gpp_history ) {
         $mw->messageBox( -title   => 'Error',
                          -icon    => 'error',
                          -message => "$gpp_history: $!",
@@ -351,7 +351,7 @@ sub open_hist {
 } ## end sub open_hist
 
 sub save_hist {
-    if ( !open HH, ">$gpp_history" ) {
+    if ( !open HH, ">", $gpp_history ) {
         $mw->messageBox( -title   => 'Error',
                          -icon    => 'error',
                          -message => "$gpp_history: $!",
@@ -375,7 +375,7 @@ sub view_log {
     my $file = $$log_file_ref;
     $file =~ s/^"(.*)"$/$1/;
     return if !$file;
-    if ( !open LH, "<$file" ) {
+    if ( !open LH, "<", $file ) {
         $mw->messageBox( -title   => 'Error',
                          -icon    => 'error',
                          -message => "$file: $!",
@@ -398,7 +398,7 @@ sub view_log {
         $fb->Button( -text => 'Close', -command => sub { $lw->withdraw() } )
           ->pack( -side => 'left', -expand => 'y', -fill => 'x' );
         $fb->Button( -text    => 'Clear Log file',
-                     -command => sub { open LH, ">$file"; close LH; $lw->withdraw() }
+                     -command => sub { open LH, ">", $file; close LH; $lw->withdraw() }
                    )->pack( -side => 'right' );
         $lwt = $lw->Scrolled( "Text",
                               -scrollbars => 'osw',

@@ -25,10 +25,10 @@ Usage: pare [-l <logfile>] -u <usedfile> <reducedfiles> . . .
 my $lh;
 if ( $opt{l} ) {
     my $mode = -f $opt{l} ? '>>' : '>';
-    open $lh, "$mode$opt{l}" or die "Can't open log file $opt{l}: $!\n";
+    open $lh, "<", "$mode$opt{l}" or die "Can't open log file $opt{l}: $!\n";
 }
 else {
-    open $lh, ">&STDOUT";
+    open $lh, ">&", \*STDOUT;
 }
 print $lh <<".";
 -----------------------------------

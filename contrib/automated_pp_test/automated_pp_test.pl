@@ -126,7 +126,7 @@ sub how_many_cache_dirs {
 
   if ( -e($par_scratch_dir) ) {
 
-    if (!(opendir(DIR, "$par_scratch_dir"))) {
+    if (!(opendir(DIR, $par_scratch_dir))) {
       $$message_ref = "hmcd_msg020: Cannot opendir $par_scratch_dir:$!:\n";
       return(EXIT_FAILURE);
     }
@@ -206,7 +206,7 @@ sub deltree {
 
    $dir_handle = $dir_handle . $level;
 
-   if (!(opendir ($dir_handle, "$dir"))) {
+   if (!(opendir ($dir_handle, $dir))) {
      $$message_ref = "deltree_msg048: Could not read $dir:$!:\n";
      print ("$$message_ref\n");
      return(EXIT_FAILURE);
@@ -314,7 +314,7 @@ sub create_file {
 
   $$message_ref = "";
 
-  if (!(open(OUTFILE, ">$test_file"))) {
+  if (!(open(OUTFILE, ">", $test_file))) {
       $$message_ref = "\n\[CF01\]Cannot open file $test_file:$!:\n";
       return (EXIT_FAILURE);
   }
@@ -4431,7 +4431,7 @@ print "hello";
     $text_file_to_examine = $text_files_to_examine[$i];
     if (-e($text_file_to_examine)) {
 
-      if (open (FH, "$text_file_to_examine")) {
+      if (open (FH, "<", $text_file_to_examine)) {
 
         # Slurp in all the lines of the file at once
         local $/; $all_lines = <FH>;
@@ -6661,7 +6661,7 @@ END {
 if ($debug) {
   # Open up a debug log to log the tests that passed
   $debug_log = File::Spec->catfile($startdir, "debug.log");
-  if(!(open (DEBUG, ">$debug_log"))) {
+  if(!(open (DEBUG, ">", $debug_log))) {
     die ("Cannot open debug log $debug_log:$!:\n");
   }
 }

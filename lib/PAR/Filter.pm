@@ -75,7 +75,7 @@ sub apply {
     if (!ref $ref) {
 	$name ||= $filename = $ref;
 	local $/;
-	open my $fh, $ref or die $!;
+	open my $fh, "<", $ref or die $!;
 	binmode($fh);
 	my $content = <$fh>;
 	$ref = \$content;

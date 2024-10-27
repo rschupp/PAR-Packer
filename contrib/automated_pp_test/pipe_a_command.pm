@@ -126,7 +126,7 @@ sub pipe_a_command {
   # a pipe.  Capture the stdout and stderr of the pipe and 
   # print it to the log file.
   #################################################################
-  if (!(open (PIPE_LOGFILE, ">$log_file"))){
+  if (!(open (PIPE_LOGFILE, ">", $log_file))){
         $$message_ref = "\n\[415\]sub $test_name_string cannot " .
                         "open $log_file\n";
         return (EXIT_FAILURE);
@@ -143,7 +143,7 @@ sub pipe_a_command {
   }
 
 
-  if (!(open (CMD_STDOUT_AND_STDERR, "$cmd 2>&1 |"))){
+  if (!(open (CMD_STDOUT_AND_STDERR, "-|", "$cmd 2>&1"))){
     close(PIPE_LOGFILE);
         $$message_ref = "\n\[420\]sub $test_name_string cannot " .
                         "open a pipe for $cmd 2>&1 |\n";
@@ -163,7 +163,7 @@ sub pipe_a_command {
   close(CMD_STDOUT_AND_STDERR);
   #................................................................
   # Slurp in the results to a single scaler.
-  if (open (FH, "$log_file")) {
+  if (open (FH, "<", $log_file)) {
 
     # Slurp in all the lines of the file at once
     local $/; $results = <FH>;

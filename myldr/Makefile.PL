@@ -204,7 +204,7 @@ $sha1_defines .= qq[ -DU64TYPE="$Config{u64type}"]
 # usernamefrompwuid.h. If not, set I_PWD to undefined in that header.
 # -- Steffen
 my $configh = "$Config{archlibexp}/CORE/config.h";
-open PWOUT, '> usernamefrompwuid.h' or die "open 'usernamefrompwuid.h': $!";
+open PWOUT, '>', 'usernamefrompwuid.h' or die "open 'usernamefrompwuid.h': $!";
 if (not -f $configh) {
     print PWOUT "#undef I_PWD\n";
 }

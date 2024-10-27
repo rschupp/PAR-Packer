@@ -484,7 +484,7 @@ in the $ENV{PAR_TEMP}."/inc/" dir. After packing with "-A a.lst", I can read
 some.dat with a standard filehandle:
 
         my $file = $ENV{PAR_TEMP}."/inc/deep/dir/a_new_name.dat";
-        open FH, "<$file";
+        open FH, "<", $file;
         print while (<FH>);
         close FH;
 
