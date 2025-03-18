@@ -26,6 +26,7 @@ lib/PAR/Filter/Obfuscate.pm
 lib/PAR/Filter/PatchContent.pm
 lib/PAR/Filter/PodStrip.pm
 lib/PAR/Packer.pm
+lib/PAR/Packer/Troubleshooting.pod
 lib/PAR/StrippedPARL/Base.pm
 lib/pp.pm
 LICENSE

@@ -1,0 +1,213 @@
+=head1 NAME
+
+PAR::Packer::Troubleshooting - Common Problems Packing Scripts with F<pp>
+
+=head1 SYNOPSIS
+
+Explain some common problems and remedies when packing scripts with F<pp>.
+
+=head1 DESCRIPTION
+
+=head2 Missing modules
+
+When you run the packed executable, it aborts with a message similar to
+
+    Can't locate Foo/Bar.pm in @INC (you may need to install the Foo::Bar module) 
+      (@INC contains: ...) at script/pp5yBDq.pl line 1.
+    BEGIN failed--compilation aborted at script/pp5yBDq.pl line 1.
+
+Your script C<require>s module C<Foo::Bar> (perhaps indirectly from
+another module), but F<pp> did not pack it into the executable.
+F<pp> uses L<Module::ScanDeps> to recursively scan your script for
+C<require>ed modules. Sometimes this scan is incomplete due to the 
+many ways Perl allows you to express your desire to load a module.
+
+Try to pack with options B<--compile> or B<--execute> to resolve
+the problem. If this fails, explicitly add the indicated module
+with option B<-M>, i.e.
+
+    % pp -M Foo::Bar ...
+
+You may have to repeat adding modules, the wildcard variants of
+B<-M> may come in handy here.
+
+=head2 Missing native DLLs
+
+The packed executable runs fine on the machine where it was generated,
+but aborts with a message similar to the following when run on another machine
+(that may not have Perl installed)
+
+    Can't load 'C:\Users\myuser\AppData\Local\Temp\3\par-74686f6b65\temp-1772\inc\lib/auto/Net/SSLeay/SSLeay.dll' for module Net::SSLeay:
+      load_file:The specified module could not be found at <embedded>/DynaLoader.pm line 206. at <embedded>/PAR/Heavy.pm line 95.
+
+Here the DLL part (F<.../auto/Net/SSLeay/SSLeay.dll>) of an XS module (L<Net::SSLeay>) 
+B<has> been packed, but it's linked against a native DLL that has B<not> been packed. The
+native DLL is obviously present on the machine used to pack, but
+not on the other machine. Note that F<pp> (or rather L<Module::ScanDeps>)
+does B<not> detect such a non-Perl dependency and hence won't
+pack the native DLL, you would have to add it by hand (using 
+option B<--link>).
+
+B<TL;DR> Use F<pp_autolink> from C<App::PP::Autolink> to automate 
+packing in native DLLs and be done with it or read on for the gory details.
+
+Inspecting F<.../auto/Net/SSLeay/SSLeay.dll> (using tools like F<objdump>) shows
+that it's linked against native DLLs F<libssl*.dll> and F<libcrypto*.dll>.
+These DLLs come from I<OpenSSL>. Note the wildcards in the above filenames,
+they stand for version numbers. Once you have the exact filenames,
+you can add theses DLLs to the F<pp> command line with C<--link ...>.
+But we're not done: F<libcrypto*.dll> is
+typically linked against F<libz*.dll>, so you have to C<--link ...> that one, too.
+Note that this example uses the Windows specific suffix ".dll",
+but the problem also exists on Linux or macOS. 
+
+=head2 "Attempt to reload ... aborted. Compilation failed in require ..."
+
+There are several scenarios where "Attempt to reload ..." can be emitted:
+it's just an indication that a previous C<require> of I<something> failed,
+but this error was suppressed, and then I<something> was C<require>d again.
+The original error would have told us the actual reason, but it's gone.
+
+Here's an example, F<foo.pl>. 
+
+    use strict;
+    use warnings;
+    use feature qw( say state );
+
+    eval {
+        say "first Foo";
+        require Foo;
+    };
+    #say "require failed: $@" if $@;   # <---
+
+    say "Text::ParseWords ...";
+    require Text::ParseWords;
+
+    say "second Foo";
+    require Foo;
+
+Now run
+
+    % echo "use Bar; 1;" > Foo.pm
+    % echo "use Quux; 1;" > Bar.pm
+
+    % perl -I. foo.pl
+    first Foo
+    Text::ParseWords ...
+    second Foo
+    Attempt to reload Foo.pm aborted.
+    Compilation failed in require at foo.pl line 28.
+
+Uncomment the line with the arrow to see the actual reason: 
+"Can't locate Quux.pm in @INC ... at Bar.pm line 1.", i.e. F<Quux.pm> is missing.
+Note that the original error message doesn't mention "Quux.pm".
+
+Now try this:
+
+    % echo "{" > Quux.pm        # yes, that's a syntax error
+    % perl -I. foo.pl 
+    first Foo
+    Text::ParseWords ...
+    second Foo
+    Attempt to reload Foo.pm aborted.
+    Compilation failed in require at foo.pl line 28.
+
+Same output as above.  Again, uncomment the line with the arrow to see the actual reason: 
+"Missing right curly or square bracket at Quux.pm line 1 ...
+syntax error at Quux.pm line 1, at EOF". So F<Quux.pm> exists, but could not be 
+loaded due to a syntax error. There are other reason why loading a module might fail,
+e.g. L</"Missing native DLLs">.
+
+Here's a recipe to narrow down the problem. Add the following
+B<before the first Perl statement> of F<foo.pl>:
+
+    BEGIN {
+        my $required;
+        unshift @INC, sub {
+            (undef, $required) = @_;
+            my (undef, $filename, $line) = caller();
+            print STDERR "require $required from ${filename}:${line}\n";
+            return;
+        };
+        push @INC, sub { print STDERR "MISSING $required\n"; return; };
+    }
+
+This logs any attempt to C<require> I<something> including the call site.
+It can't record whether the C<require> succeeded nor the error in case it failed.
+But if the failure is simply a missing module, it will print "MISSING I<something>".
+
+Now try the two variants above again. Here's the "missing module" case
+(showing only C<stderr>):
+
+    require strict.pm from foo.pl:14
+    require warnings.pm from foo.pl:15
+    require feature.pm from foo.pl:16
+    require Foo.pm from foo.pl:22
+    require Bar.pm from Foo.pm:1
+    require Quux.pm from Bar.pm:1
+    MISSING Quux.pm
+    require Text/ParseWords.pm from foo.pl:27
+    require Exporter.pm from /usr/lib/x86_64-linux-gnu/perl-base/Text/ParseWords.pm:8
+    Attempt to reload Foo.pm aborted.
+    Compilation failed in require at foo.pl line 28.
+
+and the "failing to load" case:
+
+    require strict.pm from foo.pl:14
+    require warnings.pm from foo.pl:15
+    require feature.pm from foo.pl:16
+    require Foo.pm from foo.pl:22
+    require Bar.pm from Foo.pm:1
+    require Quux.pm from Bar.pm:1
+    require Text/ParseWords.pm from foo.pl:27
+    require Exporter.pm from /usr/lib/x86_64-linux-gnu/perl-base/Text/ParseWords.pm:8
+    Attempt to reload Foo.pm aborted.
+    Compilation failed in require at foo.pl line 28.
+
+So the strategy to find the cause for "Attempt to reload I<something>" is:
+
+=over 4
+
+=item *
+
+Find the first occurence of "require> I<something>" in the ouput.
+
+=item *
+
+Walk down the "call chain" of nested C<require>s while staying "below" I<something>.
+The culprit is typically the last module mentioned on a "require ... from ..." line.
+
+=item *
+
+If the next line is "MISSING I<something>" then it's a case of
+L</"Missing modules"> with I<something> the culprit.
+Otherwise it's a failure to load I<something>, probably L</"Missing native DLLs">.
+
+=back
+
+In the above example the "call chain" is
+
+  foo.pl -> Foo.pm -> Bar.pm -> Quux.pm
+
+(F<Text/ParseWords.pm> is C<require>d from F<foo.pl>, hence "above" F<Foo.pm>).
+This would implicate F<Quux.pm>. Note that the "call chain" doesn't have
+to look regular like above, that's only the case if all C<require>s stem
+from C<use> statements that are executed at B<compile> time. The picture may
+be skewed if B<runtime> C<require> statement are used.
+
+=head1 SEE ALSO
+
+L<pp>, L<App::PP::Autolink>, L<PAR>, L<PAR::Packer>
+
+=head1 COPYRIGHT
+
+Copyright 2025 by Roderich Schupp <roderich.schupp@gmail.com>.
+
+This document is free documentation; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+
+See F<LICENSE>.
+
+
+=cut
+

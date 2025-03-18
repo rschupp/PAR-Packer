@@ -519,7 +519,7 @@ machine that doesn't have perl installed:
 
     % pp -o packed.exe source.pl        # makes packed.exe
     # Now, deploy 'packed.exe' to target machine...
-    $ packed.exe                        # run it
+    % packed.exe                        # run it
 
 =item Perl interpreter only, without core modules:
 
@@ -530,7 +530,7 @@ your program uses:
 
     % pp -B -P -o packed.pl source.pl   # makes packed.pl
     # Now, deploy 'packed.pl' to target machine...
-    $ perl packed.pl                    # run it
+    % perl packed.pl                    # run it
 
 =item Perl with core modules installed:
 
@@ -540,7 +540,7 @@ a significantly smaller file than the previous version:
 
     % pp -P -o packed.pl source.pl      # makes packed.pl
     # Now, deploy 'packed.pl' to target machine...
-    $ perl packed.pl                    # run it
+    % perl packed.pl                    # run it
 
 =item Perl with PAR.pm and its dependencies installed:
 
@@ -551,7 +551,7 @@ relies upon the perl interpreter and libraries on the target machine.
     % echo "use PAR 'source.par';" > packed.pl;
     % cat source.pl >> packed.pl;       # makes packed.pl
     # Now, deploy 'source.par' and 'packed.pl' to target machine...
-    $ perl packed.pl                    # run it, perl + core modules required
+    % perl packed.pl                    # run it, perl + core modules required
 
 =back
 
@@ -563,60 +563,12 @@ the host and target machines.  Use C<--dependent> if you
 are willing to ship the shared library with the application, which
 can significantly reduce the executable size.
 
-=head1 TROUBLESHOOTING
-
-=head2 When you run the packed executable, it aborts with a message similar to
-
-    Can't locate Foo/Bar.pm in @INC (you may need to install the Foo::Bar module) 
-      (@INC contains: ...) at script/pp5yBDq.pl line 1.
-    BEGIN failed--compilation aborted at script/pp5yBDq.pl line 1.
-
-Your script C<require>s module C<Foo::Bar> (perhaps indirectly from
-another module), but F<pp> did not pack it into the executable.
-F<pp> uses L<Module::ScanDeps> to recursively scan your script for
-C<require>ed modules. Sometimes this scan is incomplete due to the 
-many ways Perl allows you to express your desire to load a module.
-
-Try to pack with options B<--compile> or B<--execute> to resolve
-the problem. If this fails, explicitly add the indicated module
-with option B<-M>, i.e.
-
-    pp -M Foo::Bar ...
-
-You may have to repeat adding modules, the wildcard variants of
-B<-M> may come in handy here.
-
-=head2 The packed executable runs fine on the machine where it was generated, but aborts with a message similar to the following when run on another machine (that may not have Perl installed)
-
-    Can't load 'C:\Users\myuser\AppData\Local\Temp\3\par-74686f6b65\temp-1772\inc\lib/auto/Net/SSLeay/SSLeay.dll' for module Net::SSLeay:
-      load_file:The specified module could not be found at <embedded>/DynaLoader.pm line 206. at <embedded>/PAR/Heavy.pm line 95.
-
-Here the DLL part (F<.../auto/Net/SSLeay/SSLeay.dll>) of an XS module (L<Net::SSLeay>) 
-B<has> been packed, but it's linked against a native DLL that has B<not> been packed. The
-native DLL is obviously present on the machine used to pack, but
-not on the other machine. Note that F<pp> (or rather L<Module::ScanDeps>)
-does B<not> detect such a non-Perl dependency and hence won't
-pack the native DLL, you would have to add it by hand (using 
-option B<--link>).
-
-B<TL;DR> Use F<pp_autolink> from C<App::PP::Autolink> to automate 
-packing in native DLLs and be done with it or read on for the gory details.
-
-Inspecting F<.../auto/Net/SSLeay/SSLeay.dll> using e.g. F<objdump> shows
-that it's linked against native DLLs F<libssl*.dll> and F<libcrypto*.dll>.
-These DLLs come from I<OpenSSL>. Note the wildcards in the above filenames,
-they stand for version numbers. Once you have the exact filenames,
-you can add theses DLLs to the F<pp> command line with "--link ...".
-But we're not done: F<libcrypto*.dll> is
-typically linked against F<libz*.dll>, so you have to "--link ..." that one, too.
-Note that this example uses the Windows specific suffix ".dll",
-but the problem also exists on Linux or macOS. 
-
 =head1 SEE ALSO
 
 L<tkpp>, L<par.pl>, L<parl>, L<perlcc>
 
-L<PAR>, L<PAR::Packer>, L<Module::ScanDeps>, L<App::PP::Autolink> 
+L<PAR::Packer::Troubleshooting>, L<App::PP::Autolink>, 
+L<PAR>, L<PAR::Packer>, L<Module::ScanDeps> 
 
 L<Getopt::Long>, L<Getopt::ArgvFile>
 
