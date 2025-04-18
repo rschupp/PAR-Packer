@@ -49,9 +49,7 @@ static const char sccsid[] = "@(#)setenv.c	8.1 (Berkeley) 6/4/93";
  *	This routine *should* be a static; don't use it.
  */
 static char *
-__findenv(name, offset)
-	register const char *name;
-	int *offset;
+__findenv(register const char *name, int *offset)
 {
 	extern char **environ;
 	register int len;
@@ -76,8 +74,7 @@ __findenv(name, offset)
 }
 
 static char *
-par_getenv(name)
-    const char *name;
+par_getenv(const char *name)
 {
     int i;
 
@@ -90,9 +87,7 @@ par_getenv(name)
  *	"value".  If rewrite is set, replace any current value.
  */
 static int
-par_setenv(name, value)
-	const char *name;
-	register const char *value;
+par_setenv(const char *name, register const char *value)
 {
 #ifdef WIN32
 	char* p = (char*)malloc((size_t)(strlen(name) + strlen(value) + 2));
@@ -153,8 +148,7 @@ par_setenv(name, value)
  *	Delete environmental variable "name".
  */
 static void
-par_unsetenv(name)
-	const char *name;
+par_unsetenv(const char *name)
 {
 #ifdef WIN32
 	par_setenv(name, "");
