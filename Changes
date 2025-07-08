@@ -1,3 +1,28 @@
+1.064  2024-07-08
+
+- add PAR::Packer::Troubleshooting (for pp)
+
+- fix gcc-15 warnings "old-style function definition"
+
+- .github/workflows/perl.yml: add perl 5.40
+
+- usee three-argument open() everywhere
+
+- myldr/boot.c: don't #include stringapiset.h:
+  some old toolchains don't have it, declaration of MultiByteToWideChar()
+  should be covered by #include'ing Windows.h anyway
+
+- fix check for package "libperl-dev" on Debian-based systems
+
+- remove reference to PAR::FAQ (obsolete)
+
+- disallow "." or ".." in --addfile or --addlist target paths;
+  also strip leading slashes when adding these files to
+  the zip (Archive::Zip allows this!)
+
+- README: remove https://groups.google.com/g/perl.par ...
+  (as it will not be updated anymore)
+
 1.063  2024-03-15
 
 - Fixes #86 "-l somelib.dll doesn't work in recent PAR::Packer versions"
