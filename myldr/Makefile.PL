@@ -228,6 +228,8 @@ WriteMakefile(
     macro       => { FIXIN => '$(NOOP)' },
 );
 
+
+no warnings 'redefine';		# already defined in ../Makefile.PL
 sub MY::postamble
 {
     # Strawberry perl doesn't set $Config{ldlibpthname}
