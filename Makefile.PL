@@ -55,10 +55,7 @@ WriteMakefile1(
     TEST_REQUIRES => {
       'Test::More'            => 0,
       'IPC::Run3'             => '0.048',
-      for_win32(
-        'ExtUtils::Depends'   => 0,
-      # 'Win32::Exe'          => '0.17'
-      ),
+      'ExtUtils::Depends'     => 0,             # only required on MSWin32
     },
     NEEDS_LINKING	      => $have_cc,
 
