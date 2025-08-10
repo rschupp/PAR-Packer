@@ -34,4 +34,5 @@ on build => sub {
 on test => sub {
     requires 'IPC::Run3', '0.048';
     requires 'Test::More';
+    requires 'ExtUtils::Depends';
 };
