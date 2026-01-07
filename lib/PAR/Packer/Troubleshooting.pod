@@ -195,6 +195,24 @@ to look regular like above, that's only the case if all C<require>s stem
 from C<use> statements that are executed at B<compile> time. The picture may
 be skewed if B<runtime> C<require> statement are used.
 
+=head2 Code signing on macOS
+
+When you run signature verification on a F<pp>-generated executable, you  
+get an error:
+
+  test % pp -o helloworld HelloWorld.pl
+  test % codesign -v ./helloworld
+  ./helloworld: main executable failed strict validation
+
+There is a helper program in F<contrib/pp_osx_codesign_fix/pp_osx_codesign_fix.c>.
+Compile it (for build instructions see the top of the file) and run it
+on your F<pp>-generated executable B<before> C<codesign>ing it:
+
+  test % contrib/pp_osx_codesign_fix/pp_osx_codesign_fix ./helloworld
+
+Note that, once this utility has run on a F<pp>-generated binary, 
+it won't run any more (without presumably disabling Gatekeeper) as it has no signature.
+
 =head1 SEE ALSO
 
 L<pp>, L<App::PP::Autolink>, L<PAR>, L<PAR::Packer>
