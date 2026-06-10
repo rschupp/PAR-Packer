@@ -318,7 +318,7 @@ int main ( int argc, char **argv, char **env )
             struct stat buffer;
             char *archthinbin = malloc(strlen(ftmpdir) + 1 + strlen(par_basename(my_prog)) + 1);
             sprintf(archthinbin, "%s/%s", ftmpdir, par_basename(my_prog));
-            char* lipo_argv[] = { "lipo", "-extract_family", arch, "-output", archthinbin, my_prog, NULL };
+            char* lipo_argv[] = { "lipo", "-extract", arch, "-output", archthinbin, my_prog, NULL };
             pid_t pid = fork();
             if (pid == -1) 
                 par_die("%s: fork failed (errno=%i)\n",  argv[0], errno);
