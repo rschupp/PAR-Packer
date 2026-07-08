@@ -19,6 +19,8 @@ jobs:
     name: Perl ${{ matrix.perl }} on ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Set up perl
         uses: shogo82148/actions-setup-perl@v1
         id: setup
